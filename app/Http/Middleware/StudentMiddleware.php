@@ -20,7 +20,7 @@ class StudentMiddleware
         }
 
         $user = auth()->user();
-        if ($user->usertype !== 'student' && $user->role !== 'student') {
+        if ($user->usertype !== 'student') {
             abort(403, 'Access denied. Student privileges required.');
         }
 
