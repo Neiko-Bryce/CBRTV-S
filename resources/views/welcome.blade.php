@@ -124,6 +124,15 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 102, 51, 0.2);
         }
+        .btn-gold {
+            background: linear-gradient(135deg, var(--cpsu-gold) 0%, #E8D08A 100%);
+            color: var(--cpsu-green-dark);
+        }
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #B8941F 0%, var(--cpsu-gold) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
         .hero {
             background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 100%);
             color: white;
@@ -138,9 +147,20 @@
             right: -20%;
             width: 800px;
             height: 800px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
             border-radius: 50%;
             filter: blur(80px);
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(60px);
         }
         .hero-container {
             max-width: 1280px;
@@ -195,7 +215,7 @@
         .layer-base {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(0, 102, 51, 0.05) 0%, rgba(212, 175, 55, 0.03) 100%);
+            background: linear-gradient(135deg, rgba(0, 102, 51, 0.05) 0%, rgba(212, 175, 55, 0.08) 100%);
             border-radius: 3rem;
             transform: translateZ(-50px);
             backdrop-filter: blur(10px);
@@ -243,7 +263,7 @@
             border-radius: 1.5rem;
             box-shadow: 
                 0 15px 50px rgba(0, 0, 0, 0.2),
-                0 0 0 2px rgba(212, 175, 55, 0.3);
+                0 0 0 2px rgba(212, 175, 55, 0.4);
             transform: translateZ(60px) rotateY(-1deg);
             animation: layerFloat3 16s ease-in-out infinite;
             display: flex;
@@ -341,7 +361,7 @@
             font-weight: 600;
         }
         .submit-vote-btn {
-            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 50%, var(--cpsu-gold) 100%);
             color: white;
             border: none;
             border-radius: 0.625rem;
@@ -354,7 +374,7 @@
         }
         .submit-vote-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 102, 51, 0.3);
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
         }
         .geometric-shapes {
             position: absolute;
@@ -549,6 +569,9 @@
             color: var(--cpsu-green);
             line-height: 1;
         }
+        .stat-badge:nth-child(2) .stat-badge-value {
+            color: var(--cpsu-gold-dark);
+        }
         .stat-badge-label {
             font-size: 0.7rem;
             color: #64748b;
@@ -649,7 +672,7 @@
             background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-gold) 50%, var(--cpsu-green-light) 100%);
             border-radius: 2rem;
             z-index: -1;
-            opacity: 0.3;
+            opacity: 0.4;
             filter: blur(15px);
             animation: glow 3s ease-in-out infinite;
         }
@@ -680,6 +703,12 @@
             width: 28px;
             height: 28px;
             color: var(--cpsu-green);
+        }
+        .floating-icon:nth-child(2) {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(232, 208, 138, 0.1) 100%);
+        }
+        .floating-icon:nth-child(2) svg {
+            color: var(--cpsu-gold-dark);
         }
         .floating-icon:nth-child(1) {
             top: -30px;
@@ -764,6 +793,9 @@
             justify-content: center;
             flex-shrink: 0;
         }
+        .vote-item:nth-of-type(2) .vote-icon {
+            background: linear-gradient(135deg, var(--cpsu-gold) 0%, #E8D08A 100%);
+        }
         .vote-icon svg {
             width: 24px;
             height: 24px;
@@ -794,6 +826,9 @@
             height: 100%;
             background: linear-gradient(90deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
             border-radius: 9999px;
+        }
+        .vote-item:nth-of-type(2) .vote-progress-bar {
+            background: linear-gradient(90deg, var(--cpsu-gold) 0%, #E8D08A 100%);
         }
         .vote-item:nth-of-type(1) .vote-progress-bar {
             animation: progress1 2s ease-in-out infinite;
@@ -850,7 +885,8 @@
             border-radius: 9999px;
             font-size: 0.875rem;
             margin-bottom: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
         }
         .hero h1 {
             font-size: 3.5rem;
@@ -858,6 +894,13 @@
             line-height: 1.1;
             margin-bottom: 1.5rem;
             letter-spacing: -0.02em;
+        }
+        .text-gold {
+            background: linear-gradient(135deg, var(--cpsu-gold) 0%, #E8D08A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
         }
         .hero p {
             font-size: 1.25rem;
@@ -892,6 +935,16 @@
         .btn-hero-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+        .btn-hero-gold {
+            background: linear-gradient(135deg, var(--cpsu-gold) 0%, #E8D08A 100%);
+            color: var(--cpsu-green-dark);
+            border: none;
+        }
+        .btn-hero-gold:hover {
+            background: linear-gradient(135deg, #B8941F 0%, var(--cpsu-gold) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
         .section {
             padding: 5rem 2rem;
         }
@@ -912,6 +965,13 @@
             font-size: 0.875rem;
             font-weight: 600;
             margin-bottom: 1rem;
+        }
+        #features .section-badge,
+        #about .section-badge {
+            background: linear-gradient(135deg, var(--cpsu-gold) 0%, #E8D08A 100%);
+            color: var(--cpsu-green-dark);
+            border: 1.5px solid rgba(212, 175, 55, 0.5);
+            font-weight: 700;
         }
         .section-header h2 {
             font-size: 2.5rem;
@@ -957,6 +1017,19 @@
             height: 28px;
             color: var(--cpsu-green);
         }
+        .feature-card:nth-child(2) .feature-icon,
+        .feature-card:nth-child(4) .feature-icon {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(232, 208, 138, 0.1) 100%);
+        }
+        .feature-card:nth-child(2) .feature-icon svg,
+        .feature-card:nth-child(4) .feature-icon svg {
+            color: var(--cpsu-gold-dark);
+        }
+        .feature-card:nth-child(2):hover,
+        .feature-card:nth-child(4):hover {
+            border-color: var(--cpsu-gold);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+        }
         .feature-card h3 {
             font-size: 1.5rem;
             font-weight: 700;
@@ -980,11 +1053,18 @@
             border: 1px solid #e2e8f0;
             text-align: center;
         }
+        .stat-card:nth-child(2) {
+            border-color: rgba(212, 175, 55, 0.3);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+        }
         .stat-value {
             font-size: 3rem;
             font-weight: 700;
             color: var(--cpsu-green);
             margin-bottom: 0.5rem;
+        }
+        .stat-card:nth-child(2) .stat-value {
+            color: var(--cpsu-gold-dark);
         }
         .stat-label {
             color: #64748b;
@@ -1334,13 +1414,13 @@
                     </svg>
                     <span>Central Philippine State University</span>
                 </div>
-                <h1 class="heading-font">Cloud Based<br>Real-Time Voting<br>System</h1>
+                <h1 class="heading-font">Cloud Based<br><span class="text-gold">Real-Time Voting</span><br>System</h1>
                 <p>Empowering Central Philippine State University with a secure, transparent, and efficient digital voting platform for student elections, faculty decisions, and institutional surveys.</p>
                 <div class="hero-actions">
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}" class="btn btn-hero btn-hero-primary">Get Started</a>
                     @endif
-                    <a href="#features" class="btn btn-hero btn-hero-secondary">Explore Features</a>
+                    <a href="#features" class="btn btn-hero btn-hero-gold">Explore Features</a>
                 </div>
             </div>
             <div class="hero-visual">
@@ -1636,7 +1716,7 @@
             <p>Join Central Philippine State University in embracing the future of digital democracy. Register today and experience secure, transparent, and efficient voting.</p>
             <div class="hero-actions" style="justify-content: center;">
                 @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-hero btn-hero-primary">Create Your Account</a>
+                    <a href="{{ route('register') }}" class="btn btn-hero btn-hero-gold">Create Your Account</a>
                 @endif
                 @if (Route::has('login'))
                     <a href="{{ route('login') }}" class="btn btn-hero btn-hero-secondary">Sign In to Dashboard</a>

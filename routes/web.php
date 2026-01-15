@@ -11,7 +11,7 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
-        $userType = $user->usertype ?? $user->role ?? 'student';
+        $userType = $user->usertype ?? 'student';
         
         if ($userType === 'admin') {
             return redirect()->route('admin.dashboard');
@@ -27,10 +27,17 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin-only routes:
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/dashboard', function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
         return view('admin.dashboard');
-    })->name('admin.dashboard');
+    })->name('dashboard');
+    
+    // Users Management
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    
+    // Students Management
+    Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
+    Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
 });
 
 // Student-only routes:

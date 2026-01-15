@@ -39,7 +39,6 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => $request->password, // Will be hashed by model
             'usertype' => $request->usertype,
-            'role' => $request->usertype, // Keep for backward compatibility
         ]);
 
         event(new Registered($user));

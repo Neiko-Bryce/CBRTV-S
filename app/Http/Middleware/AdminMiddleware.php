@@ -20,7 +20,7 @@ class AdminMiddleware
         }
 
         $user = auth()->user();
-        if ($user->usertype !== 'admin' && $user->role !== 'admin') {
+        if ($user->usertype !== 'admin') {
             abort(403, 'Access denied. Admin privileges required.');
         }
 
