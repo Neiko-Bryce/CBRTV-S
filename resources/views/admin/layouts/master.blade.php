@@ -3,31 +3,7 @@
     darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches),
     userMenuOpen: false,
     sidebarOpen: false
-}" x-init="
-    // Initialize dark mode on page load
-    if (darkMode) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-    
-    // Watch for changes
-    $watch('darkMode', val => {
-        localStorage.setItem('darkMode', val);
-        if (val) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    });
-    
-    // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (!localStorage.getItem('darkMode')) {
-            darkMode = e.matches;
-        }
-    });
-" :class="{ 'dark': darkMode }">
+}" x-init="if(darkMode){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')};$watch('darkMode',val=>{localStorage.setItem('darkMode',val);val?document.documentElement.classList.add('dark'):document.documentElement.classList.remove('dark')});window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{if(!localStorage.getItem('darkMode')){darkMode=e.matches}})" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -552,12 +528,38 @@
                         
                         <div class="flex items-center space-x-2">
                             <!-- Search -->
-                            <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                                <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                <input type="text" placeholder="Search..." class="bg-transparent border-none outline-none text-sm w-32 text-primary placeholder:text-secondary">
-                            </div>
+                            @if(request()->routeIs('admin.students.*'))
+                                <form method="GET" action="{{ route('admin.students.index') }}" id="headerSearchForm" class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                                    <button type="submit" class="flex-shrink-0" title="Search">
+                                        <svg class="w-4 h-4 text-secondary hover:text-primary cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </button>
+                                    <input 
+                                        type="text" 
+                                        name="search" 
+                                        id="headerSearchInput"
+                                        value="{{ request('search') }}"
+                                        placeholder="Search students by ID or name..." 
+                                        class="bg-transparent border-none outline-none text-sm w-48 md:w-64 text-primary placeholder:text-secondary focus:w-56 md:focus:w-72 transition-all"
+                                        autocomplete="off"
+                                    >
+                                    @if(request('search'))
+                                        <button type="button" onclick="window.location.href='{{ route('admin.students.index') }}'" class="p-1 rounded hover:bg-[var(--hover-bg)] flex-shrink-0" title="Clear search">
+                                            <svg class="w-3 h-3 text-secondary hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </form>
+                            @else
+                                <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    <input type="text" placeholder="Search..." class="bg-transparent border-none outline-none text-sm w-32 text-primary placeholder:text-secondary">
+                                </div>
+                            @endif
                             
                             <!-- Dark Mode Toggle -->
                             <button @click="darkMode = !darkMode" class="header-btn p-2 rounded-lg" type="button" title="Toggle Dark Mode">
@@ -658,14 +660,14 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-xs font-semibold text-primary">CPSU Voting System</p>
+                                <p class="text-xs font-semibold text-primary">Cloud Based Real-Time Voting System</p>
                             </div>
                         </div>
                         
                         <div class="flex items-center space-x-4 text-xs text-secondary">
                             <span>&copy; {{ date('Y') }} CPSU. All rights reserved.</span>
                             <span class="hidden sm:inline">|</span>
-                            <span class="hidden sm:inline">v1.0.0</span>
+                            <span class="hidden sm:inline">NBFNTLG</span>
                         </div>
                     </div>
                 </div>
@@ -674,5 +676,27 @@
     </div>
     
     @stack('scripts')
+    
+    @if(request()->routeIs('admin.students.*'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchForm = document.getElementById('headerSearchForm');
+            const searchInput = document.getElementById('headerSearchInput');
+            
+            if (searchForm && searchInput) {
+                // Handle Enter key
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchForm.submit();
+                    }
+                });
+                
+                // Auto-focus search input when on students page (optional)
+                // searchInput.focus();
+            }
+        });
+    </script>
+    @endif
 </body>
 </html>

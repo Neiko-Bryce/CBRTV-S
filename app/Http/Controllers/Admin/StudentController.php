@@ -14,11 +14,51 @@ class StudentController extends Controller
     /**
      * Display a listing of the students.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::latest()->paginate(15);
+        $query = Student::query();
         
-        return view('admin.students.index', compact('students'));
+        // Handle search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = trim($request->search);
+            $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+            $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
+            
+            $query->where(function($q) use ($searchTerm, $likeOperator, $isPostgres) {
+                // Search by Student ID (case-insensitive)
+                $q->where('student_id_number', $likeOperator, "%{$searchTerm}%")
+                  // Search by First Name
+                  ->orWhere('fname', $likeOperator, "%{$searchTerm}%")
+                  // Search by Middle Name
+                  ->orWhere('mname', $likeOperator, "%{$searchTerm}%")
+                  // Search by Last Name
+                  ->orWhere('lname', $likeOperator, "%{$searchTerm}%");
+                
+                // Search by Full Name (concatenated) - database-specific
+                if ($isPostgres) {
+                    // PostgreSQL: Use || for concatenation and ILIKE for case-insensitive
+                    $q->orWhereRaw("(COALESCE(fname, '') || ' ' || COALESCE(mname, '') || ' ' || COALESCE(lname, '')) ILIKE ?", ["%{$searchTerm}%"]);
+                } else {
+                    // MySQL: Use CONCAT
+                    $q->orWhereRaw("CONCAT(COALESCE(fname, ''), ' ', COALESCE(mname, ''), ' ', COALESCE(lname, '')) LIKE ?", ["%{$searchTerm}%"]);
+                }
+            });
+        }
+        
+        // Order by ID to keep students in stable position even after updates
+        // This ensures updated students stay in their current position in the table
+        $students = $query->orderBy('id', 'asc')->paginate(15)->withQueryString();
+        
+        // Get statistics for ALL students (not just current page or search results)
+        $stats = [
+            'total' => Student::count(),
+            'male' => Student::where('gender', 'Male')->count(),
+            'female' => Student::where('gender', 'Female')->count(),
+            'other' => Student::where('gender', 'Other')->count(),
+            'campuses' => Student::distinct('campus')->count('campus')
+        ];
+        
+        return view('admin.students.index', compact('students', 'stats'));
     }
 
     /**
@@ -227,9 +267,11 @@ class StudentController extends Controller
                     ], 422);
                 }
                 
-                // Try to load the spreadsheet
+                // Try to load the spreadsheet with read-data-only to reduce memory for large files
                 try {
-                    $spreadsheet = IOFactory::load($filePath);
+                    $reader = IOFactory::createReader(IOFactory::identify($filePath));
+                    $reader->setReadDataOnly(true);
+                    $spreadsheet = $reader->load($filePath);
                 } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
                     Log::error('PhpSpreadsheet Reader error: ' . $e->getMessage());
                     return response()->json([
@@ -598,14 +640,19 @@ class StudentController extends Controller
                 'empty_row' => 0,
                 'other' => 0
             ];
+            // Track gender counts for imported students
+            $genderCounts = [
+                'Male' => 0,
+                'Female' => 0,
+                'Other' => 0,
+                'null' => 0
+            ];
             
-            // Get existing student IDs once - use case-insensitive lookup for PostgreSQL
+            // Get existing student IDs once (pluck for lower memory) - case-insensitive lookup
             try {
-                $existingStudents = Student::select('student_id_number')->get();
                 $existingStudentIds = [];
-                foreach ($existingStudents as $student) {
-                    // Store both original and lowercase for case-insensitive comparison
-                    $existingStudentIds[strtolower($student->student_id_number)] = $student->student_id_number;
+                foreach (Student::pluck('student_id_number') as $id) {
+                    $existingStudentIds[strtolower($id)] = $id;
                 }
                 Log::info('Found ' . count($existingStudentIds) . ' existing students in database');
             } catch (\Exception $e) {
@@ -625,6 +672,7 @@ class StudentController extends Controller
             Log::info('Starting to process rows...');
             
             $processedRows = 0;
+            $insertChunkSize = 250;
             foreach ($rows as $rowIndex => $row) {
                 $processedRows++;
                 
@@ -791,26 +839,86 @@ class StudentController extends Controller
                     $ext = isset($headerMap['ext']) ? trim($getCellValue($headerMap['ext'])) : null;
                     $gender = null;
                     
-                    // Handle gender with more flexibility
+                    // Handle gender with more flexibility - normalize and clean the value
                     if (isset($headerMap['gender'])) {
-                        $genderValue = trim($getCellValue($headerMap['gender']));
-                        if (!empty($genderValue)) {
-                            $genderValueLower = strtolower($genderValue);
-                            // Map common variations
-                            if (in_array($genderValueLower, ['male', 'm', 'man', 'masculine'])) {
-                                $gender = 'Male';
-                            } elseif (in_array($genderValueLower, ['female', 'f', 'woman', 'feminine'])) {
-                                $gender = 'Female';
-                            } elseif (in_array($genderValueLower, ['other', 'o', 'prefer not to say'])) {
-                                $gender = 'Other';
-                            } elseif (in_array($genderValue, ['Male', 'Female', 'Other'])) {
-                                $gender = $genderValue;
+                        $genderValue = $getCellValue($headerMap['gender']);
+                        $originalGenderValue = $genderValue; // Keep for logging
+                        
+                        // Convert to string and clean
+                        $genderValue = trim((string)$genderValue);
+                        
+                        // Debug: Log first few raw gender values to see what we're getting
+                        static $genderDebugCount = 0;
+                        if ($genderDebugCount < 5 && !empty($genderValue)) {
+                            Log::info("Raw gender value from Excel (row " . ($rowIndex + 2) . "): '{$originalGenderValue}' -> cleaned: '{$genderValue}'");
+                            $genderDebugCount++;
+                        }
+                        
+                        // Handle common Excel issues: "NULL", "N/A", empty strings
+                        if (empty($genderValue) || 
+                            strtolower($genderValue) === 'null' || 
+                            strtolower($genderValue) === 'n/a' ||
+                            strtolower($genderValue) === 'na') {
+                            $gender = null;
+                        } else {
+                            // Remove any non-alphabetic characters except spaces
+                            $genderValue = preg_replace('/[^a-zA-Z\s]/', '', $genderValue);
+                            $genderValue = trim($genderValue);
+                            
+                            if (!empty($genderValue)) {
+                                // Normalize to lowercase for comparison
+                                $genderValueLower = strtolower($genderValue);
+                                // Remove any extra spaces
+                                $genderValueLower = preg_replace('/\s+/', ' ', $genderValueLower);
+                                $genderValueLower = trim($genderValueLower);
+                                            
+                                // Map common variations - comprehensive matching
+                                // Male variations
+                                if (in_array($genderValueLower, ['male', 'm', 'man', 'masculine', 'masc']) ||
+                                    preg_match('/^male/i', $genderValueLower) ||
+                                    $genderValueLower === 'm') {
+                                    $gender = 'Male';
+                                }
+                                // Female variations
+                                elseif (in_array($genderValueLower, ['female', 'f', 'woman', 'feminine', 'fem']) ||
+                                       preg_match('/^female/i', $genderValueLower) ||
+                                       $genderValueLower === 'f') {
+                                    $gender = 'Female';
+                                }
+                                // Other variations
+                                elseif (in_array($genderValueLower, ['other', 'o']) ||
+                                       preg_match('/^other/i', $genderValueLower) ||
+                                       preg_match('/prefer.*not/i', $genderValueLower)) {
+                                    $gender = 'Other';
+                                }
+                                // Check if already in correct format (case-insensitive)
+                                elseif (in_array(strtolower($genderValue), ['male', 'female', 'other'])) {
+                                    // Capitalize first letter
+                                    $gender = ucfirst(strtolower($genderValue));
+                                }
+                                // Exact match with proper case
+                                elseif (in_array($genderValue, ['Male', 'Female', 'Other'])) {
+                                    $gender = $genderValue;
+                                }
+                                else {
+                                    // Log unrecognized gender values for debugging (first 20 only)
+                                    static $genderLogCount = 0;
+                                    if ($genderLogCount < 20) {
+                                        $originalValue = $getCellValue($headerMap['gender']);
+                                        Log::warning("Unrecognized gender value: '{$genderValue}' (original: '{$originalValue}', cleaned: '{$genderValueLower}') - setting to null");
+                                        $genderLogCount++;
+                                    }
+                                    $gender = null;
+                                }
+                            } else {
+                                $gender = null;
                             }
                         }
                     }
                     
                     // Prepare data - ensure correct column names and data types in proper order
                     // Capture ALL data from the file, including empty values
+                    // Use empty string for course/yearlevel/section when missing (DB columns are NOT NULL)
                     $data = [
                         'student_id_number' => $studentId,
                         'campus' => $campus,
@@ -819,21 +927,26 @@ class StudentController extends Controller
                         'mname' => ($mname !== null && $mname !== '') ? $mname : null,
                         'ext' => ($ext !== null && $ext !== '') ? $ext : null,
                         'gender' => $gender,
-                        'course' => ($course !== null && $course !== '') ? $course : null,
-                        'yearlevel' => ($yearlevel !== null && $yearlevel !== '') ? $yearlevel : null,
-                        'section' => ($section !== null && $section !== '') ? $section : null,
+                        'course' => ($course !== null && (string)$course !== '') ? $course : '',
+                        'yearlevel' => ($yearlevel !== null && (string)$yearlevel !== '') ? $yearlevel : '',
+                        'section' => ($section !== null && (string)$section !== '') ? $section : '',
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
                     
                     $studentsToInsert[] = $data;
                     
+                    // Insert in chunks to limit memory and avoid timeouts
+                    if (count($studentsToInsert) >= $insertChunkSize) {
+                        $this->insertStudentChunk($studentsToInsert, $imported, $skipped, $errors, $skipReasons, $genderCounts);
+                        $studentsToInsert = [];
+                    }
+                    
                     // Log first few and periodic rows for verification
-                    if (count($studentsToInsert) <= 5) {
-                        Log::info("Prepared student #" . count($studentsToInsert) . " (row " . ($rowIndex + 2) . "): ID={$studentId}, Name={$lname}");
-                    } elseif (count($studentsToInsert) % 500 === 0) {
-                        // Log every 500th student
-                        Log::info("Prepared " . count($studentsToInsert) . " students so far... (row " . ($rowIndex + 2) . ")");
+                    if (($imported + count($studentsToInsert)) <= 5) {
+                        Log::info("Prepared student (row " . ($rowIndex + 2) . "): ID={$studentId}, Name={$lname}");
+                    } elseif (($imported + count($studentsToInsert)) % 500 === 0) {
+                        Log::info("Prepared " . ($imported + count($studentsToInsert)) . " students so far... (row " . ($rowIndex + 2) . ")");
                     }
 
                 } catch (\Exception $e) {
@@ -878,24 +991,25 @@ class StudentController extends Controller
             Log::info('========================================');
             Log::info('Total rows in file (including header): ' . $totalRows);
             Log::info('Total data rows processed: ' . $processedRows);
-            Log::info('Students prepared for insert: ' . count($studentsToInsert));
+            $totalPrepared = $imported + count($studentsToInsert);
+            Log::info('Students prepared for insert: ' . $totalPrepared . ' (remaining in buffer: ' . count($studentsToInsert) . ')');
             Log::info('Rows skipped: ' . $skipped);
             Log::info('Skip reasons breakdown: ' . json_encode($skipReasons));
             
             // Log detailed statistics
             if ($totalRows > 0) {
                 $dataRows = $totalRows - 1; // Exclude header
-                $successRate = $dataRows > 0 ? (count($studentsToInsert) / $dataRows) * 100 : 0;
-                Log::info("Success rate: " . number_format($successRate, 2) . "% (" . count($studentsToInsert) . " out of {$dataRows} data rows)");
+                $successRate = $dataRows > 0 ? ($totalPrepared / $dataRows) * 100 : 0;
+                Log::info("Success rate: " . number_format($successRate, 2) . "% (" . $totalPrepared . " out of {$dataRows} data rows)");
                 
                 if ($successRate < 50 && $dataRows > 10) {
                     Log::warning("LOW SUCCESS RATE! Only " . number_format($successRate, 2) . "% of rows were prepared for import.");
                 }
             }
             
-            // Log sample of prepared students for verification
+            // Log sample of prepared students for verification (remainder in buffer)
             if (count($studentsToInsert) > 0) {
-                Log::info('Sample prepared students (first 3): ' . json_encode(array_slice($studentsToInsert, 0, 3)));
+                Log::info('Sample of remaining to insert (first 3): ' . json_encode(array_slice($studentsToInsert, 0, 3)));
                 if (count($studentsToInsert) > 10) {
                     Log::info('Sample prepared students (middle 2): ' . json_encode(array_slice($studentsToInsert, floor(count($studentsToInsert)/2), 2)));
                     Log::info('Sample prepared students (last 2): ' . json_encode(array_slice($studentsToInsert, -2)));
@@ -909,11 +1023,9 @@ class StudentController extends Controller
                 Log::error('========================================');
             }
 
-            // Insert all students - use individual transactions for PostgreSQL compatibility
+            // Insert remaining students (chunks already inserted in loop via insertStudentChunk)
             if (!empty($studentsToInsert)) {
-                Log::info('Preparing to insert ' . count($studentsToInsert) . ' students');
-                
-                // Test database connection first
+                Log::info('Preparing to insert ' . count($studentsToInsert) . ' remaining students');
                 try {
                     DB::connection()->getPdo();
                 } catch (\Exception $e) {
@@ -925,115 +1037,19 @@ class StudentController extends Controller
                         'skipped' => 0
                     ], 500);
                 }
-                
-                // For PostgreSQL, insert one at a time to avoid transaction abort issues
-                $isPostgres = DB::connection()->getDriverName() === 'pgsql';
-                
-                if ($isPostgres) {
-                    // PostgreSQL: Insert one at a time with individual transactions
-                    Log::info('Using PostgreSQL - inserting one at a time');
-                    $totalToInsert = count($studentsToInsert);
-                    $insertProgress = 0;
-                    
-                    foreach ($studentsToInsert as $index => $studentData) {
-                        try {
-                            DB::beginTransaction();
-                            DB::table('students')->insert($studentData);
-                            DB::commit();
-                            $imported++;
-                            $insertProgress++;
-                            
-                            // Log progress every 100 records
-                            if ($insertProgress % 100 === 0) {
-                                Log::info("Insert progress: {$insertProgress}/{$totalToInsert} ({$imported} imported, {$skipped} skipped)");
-                            }
-                        } catch (\Illuminate\Database\QueryException $e) {
-                            if (DB::transactionLevel() > 0) {
-                                DB::rollBack();
-                            }
-                            $skipped++;
-                            $errorMsg = $e->getMessage();
-                            
-                            // Check for specific error types
-                            if (strpos($errorMsg, 'duplicate key') !== false || 
-                                strpos($errorMsg, 'unique constraint') !== false ||
-                                strpos($errorMsg, 'already exists') !== false) {
-                                $skipReasons['duplicate_in_db']++;
-                                if (count($errors) < 50) {
-                                    $errors[] = "Student ID '{$studentData['student_id_number']}' already exists in database";
-                                }
-                            } else {
-                                $skipReasons['other']++;
-                                if (count($errors) < 50) {
-                                    $errorPreview = strlen($errorMsg) > 150 ? substr($errorMsg, 0, 150) . '...' : $errorMsg;
-                                    $errors[] = "Failed to save Student ID '{$studentData['student_id_number']}': " . $errorPreview;
-                                }
-                            }
-                            Log::error('Failed to insert student ' . $studentData['student_id_number'] . ': ' . $errorMsg);
-                        } catch (\Exception $e) {
-                            if (DB::transactionLevel() > 0) {
-                                DB::rollBack();
-                            }
-                            $skipped++;
-                            $skipReasons['other']++;
-                            if (count($errors) < 50) {
-                                $errors[] = "Failed to save Student ID '{$studentData['student_id_number']}': " . $e->getMessage();
-                            }
-                            Log::error('Failed to insert student ' . $studentData['student_id_number'] . ': ' . $e->getMessage());
-                        }
-                    }
-                    
-                    Log::info("PostgreSQL insert completed: {$imported} imported, {$skipped} skipped out of {$totalToInsert} total");
-                    
-                    // Verify the actual count in database
-                    $actualCount = Student::whereIn('student_id_number', array_column($studentsToInsert, 'student_id_number'))->count();
-                    if ($actualCount != $imported) {
-                        Log::warning("Mismatch: Expected {$imported} students in database but found {$actualCount}");
-                    } else {
-                        Log::info("Verification: All {$imported} students confirmed in database");
-                    }
-                } else {
-                    // MySQL/SQLite: Use bulk inserts with transaction
-                    DB::beginTransaction();
-                    try {
-                        // Insert in chunks
-                        $chunks = array_chunk($studentsToInsert, 100);
-                        
-                        foreach ($chunks as $chunkIndex => $chunk) {
-                            try {
-                                DB::table('students')->insert($chunk);
-                                $imported += count($chunk);
-                                Log::info("Successfully inserted chunk " . ($chunkIndex + 1) . " with " . count($chunk) . " students");
-                            } catch (\Illuminate\Database\QueryException $e) {
-                                Log::error('QueryException inserting chunk ' . ($chunkIndex + 1) . ': ' . $e->getMessage());
-                                // Try individual inserts for this chunk
-                                foreach ($chunk as $studentData) {
-                                    try {
-                                        DB::table('students')->insert($studentData);
-                                        $imported++;
-                                    } catch (\Exception $insertError) {
-                                        $skipped++;
-                                        $skipReasons['other']++;
-                                        if (count($errors) < 20) {
-                                            $errors[] = "Failed to save Student ID '{$studentData['student_id_number']}': " . $insertError->getMessage();
-                                        }
-                                        Log::error('Failed to insert student ' . $studentData['student_id_number'] . ': ' . $insertError->getMessage());
-                                    }
-                                }
-                            }
-                        }
-                        
-                        DB::commit();
-                        Log::info("Transaction committed. Imported: {$imported}, Skipped: {$skipped}");
-                    } catch (\Exception $e) {
-                        DB::rollBack();
-                        Log::error('Transaction failed: ' . $e->getMessage());
-                        throw $e;
-                    }
-                }
+                $this->insertStudentChunk($studentsToInsert, $imported, $skipped, $errors, $skipReasons, $genderCounts);
             } else {
                 Log::warning('No students to insert after processing all rows');
             }
+
+            // Get total gender counts for ALL students in database (not just imported)
+            $totalGenderCounts = [
+                'Male' => Student::where('gender', 'Male')->count(),
+                'Female' => Student::where('gender', 'Female')->count(),
+                'Other' => Student::where('gender', 'Other')->count(),
+                'null' => Student::whereNull('gender')->count(),
+                'total' => Student::count()
+            ];
 
             // If nothing was imported, return error with helpful info
             if ($imported === 0) {
@@ -1141,14 +1157,38 @@ class StudentController extends Controller
                 $message .= " WARNING: Only " . number_format(($imported / $totalDataRows) * 100, 1) . "% of rows were imported. Please check the errors below.";
             }
 
+            // Add gender breakdown to message
+            if ($imported > 0) {
+                $genderBreakdown = [];
+                if ($genderCounts['Male'] > 0) {
+                    $genderBreakdown[] = $genderCounts['Male'] . ' Male';
+                }
+                if ($genderCounts['Female'] > 0) {
+                    $genderBreakdown[] = $genderCounts['Female'] . ' Female';
+                }
+                if ($genderCounts['Other'] > 0) {
+                    $genderBreakdown[] = $genderCounts['Other'] . ' Other';
+                }
+                if ($genderCounts['null'] > 0) {
+                    $genderBreakdown[] = $genderCounts['null'] . ' (no gender specified)';
+                }
+                if (!empty($genderBreakdown)) {
+                    $message .= " (" . implode(', ', $genderBreakdown) . ")";
+                }
+            }
+
             Log::info("Final import summary: {$imported} imported, {$skipped} skipped out of {$totalDataRows} data rows, " . count($errors) . " errors logged");
+            Log::info("Gender counts (this import): " . json_encode($genderCounts));
+            Log::info("Total gender counts (all students): " . json_encode($totalGenderCounts));
             Log::info("Import statistics: " . json_encode([
                 'total_rows_in_file' => $totalRowsInFile,
                 'data_rows' => $totalDataRows,
                 'imported' => $imported,
                 'skipped' => $skipped,
                 'import_rate' => $totalDataRows > 0 ? number_format(($imported / $totalDataRows) * 100, 2) . '%' : '0%',
-                'skip_reasons' => $skipReasons
+                'skip_reasons' => $skipReasons,
+                'gender_counts_imported' => $genderCounts,
+                'total_gender_counts' => $totalGenderCounts
             ]));
 
             return response()->json([
@@ -1160,6 +1200,8 @@ class StudentController extends Controller
                 'total_data_rows' => $totalDataRows,
                 'total_processed' => $totalProcessed,
                 'skip_reasons' => $skipReasons,
+                'gender_counts' => $genderCounts, // Gender counts for this import
+                'total_gender_counts' => $totalGenderCounts, // Total gender counts for ALL students
                 'errors' => array_slice($errors, 0, 200) // Show more errors for debugging
             ]);
 
@@ -1189,5 +1231,146 @@ class StudentController extends Controller
                 'skipped' => 0
             ], 500);
         }
+    }
+
+    /**
+     * Insert a batch of students in chunks. Uses bulk insert with fallback to
+     * one-by-one on unique constraint or other DB errors. Works with MySQL and PostgreSQL.
+     */
+    private function insertStudentChunk(array $batch, int &$imported, int &$skipped, array &$errors, array &$skipReasons, array &$genderCounts = null): void
+    {
+        if (empty($batch)) {
+            return;
+        }
+        
+        // Initialize genderCounts if not provided
+        if ($genderCounts === null) {
+            $genderCounts = ['Male' => 0, 'Female' => 0, 'Other' => 0, 'null' => 0];
+        }
+        
+        $dbChunkSize = 100;
+        $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+        $chunks = array_chunk($batch, $dbChunkSize);
+        
+        Log::info('insertStudentChunk: Processing ' . count($batch) . ' students in ' . count($chunks) . ' DB chunk(s)');
+
+        foreach ($chunks as $chunkIndex => $chunk) {
+            try {
+                DB::table('students')->insert($chunk);
+                $imported += count($chunk);
+                
+                // Track gender counts for successfully inserted chunk
+                foreach ($chunk as $studentData) {
+                    $gender = $studentData['gender'] ?? null;
+                    if ($gender === 'Male') {
+                        $genderCounts['Male']++;
+                    } elseif ($gender === 'Female') {
+                        $genderCounts['Female']++;
+                    } elseif ($gender === 'Other') {
+                        $genderCounts['Other']++;
+                    } else {
+                        $genderCounts['null']++;
+                    }
+                }
+                
+                Log::info("Successfully bulk inserted chunk " . ($chunkIndex + 1) . ": " . count($chunk) . " students (total imported: {$imported})");
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Log why bulk insert failed
+                $errMsg = $e->getMessage();
+                Log::warning("Bulk insert failed for chunk " . ($chunkIndex + 1) . " (" . count($chunk) . " students): " . $errMsg);
+                Log::info("Falling back to one-by-one insert for this chunk");
+                
+                // Fallback: insert one-by-one for this chunk
+                foreach ($chunk as $studentData) {
+                    try {
+                        if ($isPostgres) {
+                            DB::beginTransaction();
+                        }
+                        DB::table('students')->insert($studentData);
+                        if ($isPostgres) {
+                            DB::commit();
+                        }
+                        $imported++;
+                        
+                        // Track gender count for successfully inserted student
+                        $gender = $studentData['gender'] ?? null;
+                        if ($gender === 'Male') {
+                            $genderCounts['Male']++;
+                        } elseif ($gender === 'Female') {
+                            $genderCounts['Female']++;
+                        } elseif ($gender === 'Other') {
+                            $genderCounts['Other']++;
+                        } else {
+                            $genderCounts['null']++;
+                        }
+                    } catch (\Illuminate\Database\QueryException $qe) {
+                        if ($isPostgres && DB::transactionLevel() > 0) {
+                            DB::rollBack();
+                        }
+                        $skipped++;
+                        $qeMsg = $qe->getMessage();
+                        if (strpos($qeMsg, 'duplicate') !== false || strpos($qeMsg, 'unique') !== false || strpos($qeMsg, 'already exists') !== false) {
+                            $skipReasons['duplicate_in_db']++;
+                        } else {
+                            $skipReasons['other']++;
+                        }
+                        if (count($errors) < 50) {
+                            $errors[] = "Student ID '{$studentData['student_id_number']}': " . (strlen($qeMsg) > 120 ? substr($qeMsg, 0, 120) . '...' : $qeMsg);
+                        }
+                        Log::error('Insert failed ' . $studentData['student_id_number'] . ': ' . $qeMsg);
+                    } catch (\Exception $ex) {
+                        if ($isPostgres && DB::transactionLevel() > 0) {
+                            DB::rollBack();
+                        }
+                        $skipped++;
+                        $skipReasons['other']++;
+                        if (count($errors) < 50) {
+                            $errors[] = "Student ID '{$studentData['student_id_number']}': " . $ex->getMessage();
+                        }
+                        Log::error('Insert failed ' . $studentData['student_id_number'] . ': ' . $ex->getMessage());
+                    }
+                }
+                Log::info("Finished one-by-one fallback for chunk " . ($chunkIndex + 1) . " (QueryException) - imported: {$imported}, skipped: {$skipped} from this chunk");
+            } catch (\Exception $e) {
+                // Non-QueryException: fallback one-by-one
+                foreach ($chunk as $studentData) {
+                    try {
+                        if ($isPostgres) {
+                            DB::beginTransaction();
+                        }
+                        DB::table('students')->insert($studentData);
+                        if ($isPostgres) {
+                            DB::commit();
+                        }
+                        $imported++;
+                        
+                        // Track gender count for successfully inserted student
+                        $gender = $studentData['gender'] ?? null;
+                        if ($gender === 'Male') {
+                            $genderCounts['Male']++;
+                        } elseif ($gender === 'Female') {
+                            $genderCounts['Female']++;
+                        } elseif ($gender === 'Other') {
+                            $genderCounts['Other']++;
+                        } else {
+                            $genderCounts['null']++;
+                        }
+                    } catch (\Exception $ex) {
+                        if ($isPostgres && DB::transactionLevel() > 0) {
+                            DB::rollBack();
+                        }
+                        $skipped++;
+                        $skipReasons['other']++;
+                        if (count($errors) < 50) {
+                            $errors[] = "Student ID '{$studentData['student_id_number']}': " . $ex->getMessage();
+                        }
+                        Log::error('Insert failed ' . $studentData['student_id_number'] . ': ' . $ex->getMessage());
+                    }
+                }
+                Log::info("Finished one-by-one fallback for chunk " . ($chunkIndex + 1) . " (non-QueryException) - imported: {$imported}, skipped: {$skipped} from this chunk");
+            }
+        }
+        
+        Log::info('insertStudentChunk completed: imported=' . $imported . ', skipped=' . $skipped . ' from ' . count($batch) . ' total students');
     }
 }

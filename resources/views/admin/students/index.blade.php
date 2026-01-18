@@ -136,7 +136,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-secondary">Total Students</p>
-                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);">{{ $students->total() }}</p>
+                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);">{{ $stats['total'] ?? $students->total() }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-secondary">Male</p>
-                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);">{{ $students->where('gender', 'Male')->count() }}</p>
+                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);">{{ $stats['male'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +162,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-secondary">Female</p>
-                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-gold-dark);">{{ $students->where('gender', 'Female')->count() }}</p>
+                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-gold-dark);">{{ $stats['female'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--cpsu-green-dark);">
@@ -175,7 +175,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-secondary">Campuses</p>
-                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-gold-dark);">{{ $students->pluck('campus')->unique()->count() }}</p>
+                    <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-gold-dark);">{{ $stats['campuses'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--cpsu-green-dark);">
@@ -185,6 +185,13 @@
             </div>
         </div>
     </div>
+
+    @if(request('search'))
+        <div class="mb-4 p-3 rounded-lg text-sm" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+            <span style="color: var(--text-secondary);">Found <strong style="color: var(--text-primary);">{{ $students->total() }}</strong> result(s) for "<strong style="color: var(--cpsu-green);">{{ request('search') }}</strong>"</span>
+            <a href="{{ route('admin.students.index') }}" class="ml-3 text-sm font-medium" style="color: var(--cpsu-green);">Clear search</a>
+        </div>
+    @endif
 
     <!-- Students Table -->
     <div class="card rounded-lg shadow-sm overflow-hidden">
@@ -301,10 +308,103 @@
             </table>
         </div>
 
-        <!-- Pagination -->
-        @if($students->hasPages())
+        <!-- Enhanced Pagination -->
+        @if($students->hasPages() || $students->total() > 0)
         <div class="px-6 py-4 border-t transition-colors" style="border-color: var(--border-color);">
-            {{ $students->links() }}
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <!-- Pagination Info -->
+                <div class="text-sm" style="color: var(--text-secondary);">
+                    @if($students->total() > 0)
+                        Showing <strong style="color: var(--text-primary);">{{ $students->firstItem() }}</strong> to 
+                        <strong style="color: var(--text-primary);">{{ $students->lastItem() }}</strong> of 
+                        <strong style="color: var(--cpsu-green);">{{ $students->total() }}</strong> 
+                        {{ $students->total() === 1 ? 'student' : 'students' }}
+                        @if(request('search'))
+                            <span class="ml-2">for "<strong style="color: var(--cpsu-green);">{{ request('search') }}</strong>"</span>
+                        @endif
+                    @else
+                        No students found
+                    @endif
+                </div>
+                
+                <!-- Pagination Links -->
+                @if($students->hasPages())
+                <div class="flex items-center space-x-1">
+                    <!-- First Page -->
+                    @if($students->onFirstPage())
+                        <span class="px-3 py-2 rounded-lg text-sm font-medium opacity-50 cursor-not-allowed" style="background-color: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                            </svg>
+                        </span>
+                    @else
+                        <a href="{{ $students->url(1) }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:bg-[var(--hover-bg)]" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" title="First page">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                            </svg>
+                        </a>
+                    @endif
+                    
+                    <!-- Previous Page -->
+                    @if($students->onFirstPage())
+                        <span class="px-3 py-2 rounded-lg text-sm font-medium opacity-50 cursor-not-allowed" style="background-color: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </span>
+                    @else
+                        <a href="{{ $students->previousPageUrl() }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:bg-[var(--hover-bg)]" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" title="Previous page">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </a>
+                    @endif
+                    
+                    <!-- Page Numbers -->
+                    @foreach($students->getUrlRange(max(1, $students->currentPage() - 2), min($students->lastPage(), $students->currentPage() + 2)) as $page => $url)
+                        @if($page == $students->currentPage())
+                            <span class="px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                                {{ $page }}
+                            </span>
+                        @else
+                            <a href="{{ $url }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-[var(--hover-bg)]" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                                {{ $page }}
+                            </a>
+                        @endif
+                    @endforeach
+                    
+                    <!-- Next Page -->
+                    @if($students->hasMorePages())
+                        <a href="{{ $students->nextPageUrl() }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:bg-[var(--hover-bg)]" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" title="Next page">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    @else
+                        <span class="px-3 py-2 rounded-lg text-sm font-medium opacity-50 cursor-not-allowed" style="background-color: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </span>
+                    @endif
+                    
+                    <!-- Last Page -->
+                    @if($students->hasMorePages())
+                        <a href="{{ $students->url($students->lastPage()) }}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:bg-[var(--hover-bg)]" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" title="Last page">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    @else
+                        <span class="px-3 py-2 rounded-lg text-sm font-medium opacity-50 cursor-not-allowed" style="background-color: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                            </svg>
+                        </span>
+                    @endif
+                </div>
+                @endif
+            </div>
         </div>
         @endif
     </div>
@@ -483,7 +583,7 @@
                         <label for="importFile" class="block text-sm font-medium text-primary mb-2">Select Excel File</label>
                         <input type="file" id="importFile" name="file" accept=".xlsx,.xls,.csv" required class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
                         <div id="importFile-error" class="text-red-500 text-sm mt-1"></div>
-                        <p class="text-xs text-secondary mt-2">Supported formats: .xlsx, .xls, .csv (Max: 10MB)</p>
+                        <p class="text-xs text-secondary mt-2">Supported: .xlsx, .xls, .csv. Max 1GB; under 50MB recommended for 1000+ rows.</p>
                     </div>
                     
                     <div class="info-box-blue border rounded-lg p-4">
@@ -625,13 +725,29 @@
             if (data.success) {
                 closeModal('importModal');
                 let message = data.message;
+                
+                // Add gender statistics if available
+                if (data.total_gender_counts) {
+                    const counts = data.total_gender_counts;
+                    message += '\n\n📊 Total Students by Gender:';
+                    message += `\n   • Male: ${counts.Male || 0}`;
+                    message += `\n   • Female: ${counts.Female || 0}`;
+                    if (counts.Other > 0) {
+                        message += `\n   • Other: ${counts.Other || 0}`;
+                    }
+                    if (counts.null > 0) {
+                        message += `\n   • Not Specified: ${counts.null || 0}`;
+                    }
+                    message += `\n   • Total: ${counts.total || 0} students`;
+                }
+                
                 if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
                     message += '\n\nErrors:\n' + data.errors.slice(0, 10).join('\n');
                     if (data.errors.length > 10) {
                         message += `\n... and ${data.errors.length - 10} more errors.`;
                     }
                 }
-                showNotification(data.message, 'success');
+                showNotification(message, 'success');
                 // Reload page to refresh table
                 setTimeout(() => location.reload(), 2000);
             } else {
