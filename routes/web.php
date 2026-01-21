@@ -74,9 +74,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Candidates Management
     Route::get('candidates', [\App\Http\Controllers\Admin\CandidateController::class, 'index'])->name('candidates.index');
-    Route::get('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'show'])->name('candidates.show');
+    Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPhoto'])->where('path', '.*')->name('candidates.photo');
     Route::get('candidates/positions/{electionId}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPositions'])->name('candidates.positions');
+    Route::get('candidates/positions-by-organization/{organizationId}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPositionsByOrganization'])->name('candidates.positions-by-organization');
+    Route::get('candidates/elections-by-organization/{organizationId}', [\App\Http\Controllers\Admin\CandidateController::class, 'getElectionsByOrganization'])->name('candidates.elections-by-organization');
     Route::get('candidates/partylists/{electionId}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPartylists'])->name('candidates.partylists');
+    Route::get('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'show'])->name('candidates.show');
     Route::post('candidates', [\App\Http\Controllers\Admin\CandidateController::class, 'store'])->name('candidates.store');
     Route::post('candidates/multiple', [\App\Http\Controllers\Admin\CandidateController::class, 'storeMultiple'])->name('candidates.store-multiple');
     Route::put('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'update'])->name('candidates.update');
