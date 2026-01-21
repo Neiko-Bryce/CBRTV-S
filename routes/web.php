@@ -35,9 +35,52 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Users Management
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     
+    // Elections Management
+    Route::resource('elections', \App\Http\Controllers\Admin\ElectionController::class);
+    Route::post('elections/{id}/update-status', [\App\Http\Controllers\Admin\ElectionController::class, 'updateStatus'])->name('elections.update-status');
+    Route::get('elections/stats/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getStats'])->name('elections.stats.get');
+    Route::get('elections/data/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getElectionsData'])->name('elections.data.get');
+    
     // Students Management
     Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
     Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
+    
+    // Student Account Management
+    Route::get('student-management', [\App\Http\Controllers\Admin\StudentAccountController::class, 'index'])->name('student-management.index');
+    Route::post('student-management/search', [\App\Http\Controllers\Admin\StudentAccountController::class, 'search'])->name('student-management.search');
+    Route::get('student-management/generate-password', [\App\Http\Controllers\Admin\StudentAccountController::class, 'generatePassword'])->name('student-management.generate-password');
+    Route::post('student-management/create-account', [\App\Http\Controllers\Admin\StudentAccountController::class, 'createAccount'])->name('student-management.create-account');
+    Route::post('student-management/{userId}/regenerate-password', [\App\Http\Controllers\Admin\StudentAccountController::class, 'regeneratePassword'])->name('student-management.regenerate-password');
+    Route::get('student-management/{userId}/password-history', [\App\Http\Controllers\Admin\StudentAccountController::class, 'getPasswordHistory'])->name('student-management.password-history');
+    Route::delete('student-management/{userId}/delete', [\App\Http\Controllers\Admin\StudentAccountController::class, 'deleteAccount'])->name('student-management.delete');
+    
+    // Organizations Management
+    Route::resource('organizations', \App\Http\Controllers\Admin\OrganizationController::class);
+    Route::get('organizations/{id}', [\App\Http\Controllers\Admin\OrganizationController::class, 'show'])->name('organizations.show');
+    
+    // Positions Management
+    Route::get('positions', [\App\Http\Controllers\Admin\PositionController::class, 'index'])->name('positions.index');
+    Route::get('positions/{id}', [\App\Http\Controllers\Admin\PositionController::class, 'show'])->name('positions.show');
+    Route::post('positions', [\App\Http\Controllers\Admin\PositionController::class, 'store'])->name('positions.store');
+    Route::put('positions/{id}', [\App\Http\Controllers\Admin\PositionController::class, 'update'])->name('positions.update');
+    Route::delete('positions/{id}', [\App\Http\Controllers\Admin\PositionController::class, 'destroy'])->name('positions.destroy');
+    
+    // Partylists Management
+    Route::get('partylists', [\App\Http\Controllers\Admin\PartylistController::class, 'index'])->name('partylists.index');
+    Route::get('partylists/{id}', [\App\Http\Controllers\Admin\PartylistController::class, 'show'])->name('partylists.show');
+    Route::post('partylists', [\App\Http\Controllers\Admin\PartylistController::class, 'store'])->name('partylists.store');
+    Route::put('partylists/{id}', [\App\Http\Controllers\Admin\PartylistController::class, 'update'])->name('partylists.update');
+    Route::delete('partylists/{id}', [\App\Http\Controllers\Admin\PartylistController::class, 'destroy'])->name('partylists.destroy');
+    
+    // Candidates Management
+    Route::get('candidates', [\App\Http\Controllers\Admin\CandidateController::class, 'index'])->name('candidates.index');
+    Route::get('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'show'])->name('candidates.show');
+    Route::get('candidates/positions/{electionId}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPositions'])->name('candidates.positions');
+    Route::get('candidates/partylists/{electionId}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPartylists'])->name('candidates.partylists');
+    Route::post('candidates', [\App\Http\Controllers\Admin\CandidateController::class, 'store'])->name('candidates.store');
+    Route::post('candidates/multiple', [\App\Http\Controllers\Admin\CandidateController::class, 'storeMultiple'])->name('candidates.store-multiple');
+    Route::put('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'update'])->name('candidates.update');
+    Route::delete('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'destroy'])->name('candidates.destroy');
 });
 
 // Student-only routes:

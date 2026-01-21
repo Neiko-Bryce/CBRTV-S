@@ -455,12 +455,12 @@
                 @csrf
 
                 <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
+                    <label for="email" class="form-label">Student ID</label>
                     <div class="input-container">
                         <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        <input type="email" 
+                        <input type="text" 
                                id="email" 
                                name="email" 
                                value="{{ old('email') }}" 
@@ -468,8 +468,9 @@
                                autofocus
                                autocomplete="username"
                                class="form-input"
-                               placeholder="Enter your email">
+                               placeholder="Enter Student ID ">
                     </div>
+                    <p class="text-xs text-gray-500 mt-1.5">Students: Use your Student ID </p>
                 </div>
 
                 <div class="form-group">

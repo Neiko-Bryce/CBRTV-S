@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'usertype',
+        'password_regenerated_count',
     ];
 
     /**
@@ -45,5 +46,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the student associated with this user account.
+     */
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'student_id_number', 'email');
+    }
+
+    /**
+     * Get the password regeneration history for this user.
+     */
+    public function passwordRegenerationHistory()
+    {
+        return $this->hasMany(\App\Models\PasswordRegenerationHistory::class);
     }
 }

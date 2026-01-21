@@ -552,6 +552,30 @@
                                         </button>
                                     @endif
                                 </form>
+                            @elseif(request()->routeIs('admin.elections.*'))
+                                <form method="GET" action="{{ route('admin.elections.index') }}" id="headerSearchForm" class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                                    <button type="submit" class="flex-shrink-0" title="Search">
+                                        <svg class="w-4 h-4 text-secondary hover:text-primary cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </button>
+                                    <input 
+                                        type="text" 
+                                        name="search" 
+                                        id="headerSearchInput"
+                                        value="{{ request('search') }}"
+                                        placeholder="Search elections by name, type, or venue..." 
+                                        class="bg-transparent border-none outline-none text-sm w-48 md:w-64 text-primary placeholder:text-secondary focus:w-56 md:focus:w-72 transition-all"
+                                        autocomplete="off"
+                                    >
+                                    @if(request('search'))
+                                        <button type="button" onclick="window.location.href='{{ route('admin.elections.index') }}'" class="p-1 rounded hover:bg-[var(--hover-bg)] flex-shrink-0" title="Clear search">
+                                            <svg class="w-3 h-3 text-secondary hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </form>
                             @else
                                 <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                                     <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -677,7 +701,7 @@
     
     @stack('scripts')
     
-    @if(request()->routeIs('admin.students.*'))
+    @if(request()->routeIs('admin.students.*') || request()->routeIs('admin.elections.*'))
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchForm = document.getElementById('headerSearchForm');
@@ -692,7 +716,7 @@
                     }
                 });
                 
-                // Auto-focus search input when on students page (optional)
+                // Auto-focus search input when on students/elections page (optional)
                 // searchInput.focus();
             }
         });
