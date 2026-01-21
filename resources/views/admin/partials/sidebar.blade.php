@@ -43,6 +43,8 @@
             <div class="mb-4 px-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-secondary transition-colors">Main Menu</p>
             </div>
+            
+            <!-- Dashboard -->
             <a href="{{ route('admin.dashboard') }}" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -50,31 +52,72 @@
                 <span class="font-medium">Dashboard</span>
             </a>
             
-            <a href="#" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
+            <!-- Student Management -->
+            <a href="{{ route('admin.student-management.index') }}" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.student-management.*') ? 'active' : '' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+                <span class="font-medium">Student Management</span>
+            </a>
+            
+            <!-- Elections -->
+            <a href="{{ route('admin.elections.index') }}" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.elections.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 <span class="font-medium">Elections</span>
             </a>
             
-            <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                </svg>
-                <span class="font-medium">Users</span>
-            </a>
+            <!-- Candidates Dropdown -->
+            <div x-data="{ open: {{ request()->routeIs('admin.organizations.*') || request()->routeIs('admin.positions.*') || request()->routeIs('admin.partylists.*') || request()->routeIs('admin.candidates.*') ? 'true' : 'false' }} }" class="relative">
+                <button @click="open = !open" class="nav-link w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.organizations.*') || request()->routeIs('admin.positions.*') || request()->routeIs('admin.partylists.*') || request()->routeIs('admin.candidates.*') ? 'active' : '' }}">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <span class="font-medium">Candidates</span>
+                    </div>
+                    <svg class="w-4 h-4 flex-shrink-0 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 transform scale-95"
+                     x-transition:enter-end="opacity-100 transform scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 transform scale-100"
+                     x-transition:leave-end="opacity-0 transform scale-95"
+                     @click.outside="open = false"
+                     class="mt-1 ml-4 space-y-1"
+                     style="display: none;">
+                    <a href="{{ route('admin.candidates.index') }}" class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.candidates.*') ? 'active' : '' }}">
+                        <div class="w-2 h-2 rounded-full {{ request()->routeIs('admin.candidates.*') ? 'bg-current' : 'bg-transparent border border-current' }}"></div>
+                        <span class="text-sm font-medium">Candidates</span>
+                    </a>
+                    <a href="{{ route('admin.organizations.index') }}" class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.organizations.*') ? 'active' : '' }}">
+                        <div class="w-2 h-2 rounded-full {{ request()->routeIs('admin.organizations.*') ? 'bg-current' : 'bg-transparent border border-current' }}"></div>
+                        <span class="text-sm font-medium">Organizations</span>
+                    </a>
+                    <a href="{{ route('admin.partylists.index') }}" class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.partylists.*') ? 'active' : '' }}">
+                        <div class="w-2 h-2 rounded-full {{ request()->routeIs('admin.partylists.*') ? 'bg-current' : 'bg-transparent border border-current' }}"></div>
+                        <span class="text-sm font-medium">Partylist</span>
+                    </a>
+                    <a href="{{ route('admin.positions.index') }}" class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.positions.*') ? 'active' : '' }}">
+                        <div class="w-2 h-2 rounded-full {{ request()->routeIs('admin.positions.*') ? 'bg-current' : 'bg-transparent border border-current' }}"></div>
+                        <span class="text-sm font-medium">Positions</span>
+                    </a>
+                </div>
+            </div>
             
-            <a href="{{ route('admin.students.index') }}" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                <span class="font-medium">Students</span>
-            </a>
-            
+            <!-- Tools Section -->
             <div class="my-4 px-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-secondary transition-colors">Tools</p>
             </div>
             
+            <!-- Analytics -->
             <a href="#" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -82,13 +125,42 @@
                 <span class="font-medium">Analytics</span>
             </a>
             
-            <a href="#" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                <span class="font-medium">Settings</span>
-            </a>
+            <!-- Settings Dropdown -->
+            <div x-data="{ open: {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') ? 'true' : 'false' }} }" class="relative">
+                <button @click="open = !open" class="nav-link w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span class="font-medium">Settings</span>
+                    </div>
+                    <svg class="w-4 h-4 flex-shrink-0 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 transform scale-95"
+                     x-transition:enter-end="opacity-100 transform scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 transform scale-100"
+                     x-transition:leave-end="opacity-0 transform scale-95"
+                     @click.outside="open = false"
+                     class="mt-1 ml-4 space-y-1"
+                     style="display: none;">
+                    <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <div class="w-2 h-2 rounded-full {{ request()->routeIs('admin.users.*') ? 'bg-current' : 'bg-transparent border border-current' }}"></div>
+                        <span class="text-sm font-medium">Users</span>
+                    </a>
+                    <a href="{{ route('admin.students.index') }}" class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                        <div class="w-2 h-2 rounded-full {{ request()->routeIs('admin.students.*') ? 'bg-current' : 'bg-transparent border border-current' }}"></div>
+                        <span class="text-sm font-medium">Students</span>
+                    </a>
+                </div>
+            </div>
         </nav>
     </div>
 </aside>
