@@ -59,6 +59,10 @@ use Illuminate\Support\Facades\Storage;
         font-size: 28px;
         font-weight: bold;
         cursor: pointer;
+        transition: color 0.2s;
+    }
+    .close:hover {
+        color: var(--text-primary);
     }
     .candidate-photo {
         width: 60px;
@@ -91,6 +95,25 @@ use Illuminate\Support\Facades\Storage;
     }
     .modal-body::-webkit-scrollbar-thumb:hover {
         background: var(--cpsu-green);
+    }
+    /* Table improvements */
+    .table-header th {
+        font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+    .table-row {
+        transition: background-color 0.15s ease;
+    }
+    .table-row:hover {
+        background-color: var(--hover-bg);
+    }
+    .candidate-photo {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        border: 2px solid var(--border-color);
+        display: block;
     }
 </style>
 @endpush
@@ -128,68 +151,78 @@ use Illuminate\Support\Facades\Storage;
     <!-- Candidates Table -->
     <div class="card rounded-lg shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full" style="border-collapse: separate; border-spacing: 0;">
-                <thead class="table-header">
+            <table class="min-w-full divide-y" style="border-collapse: separate; border-spacing: 0;">
+                <thead class="table-header" style="background-color: var(--bg-tertiary);">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Photo</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Candidate</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Organization</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Election</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Position</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Partylist</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Votes</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Actions</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Photo</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Candidate</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Organization</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Election</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Position</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Partylist</th>
+                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Votes</th>
+                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y" style="background-color: var(--card-bg);">
                     @forelse($candidates as $candidate)
-                    <tr class="table-row transition-colors border-b" style="border-color: var(--border-color);">
-                        <td class="px-4 py-4">
+                    <tr class="table-row transition-colors hover:bg-[var(--hover-bg)] border-b" style="border-color: var(--border-color);">
+                        <td class="px-5 py-4 whitespace-nowrap">
                             @if($candidate->photo)
                             <img src="{{ route('admin.candidates.photo', ['path' => $candidate->photo]) }}" 
                                  alt="{{ $candidate->candidate_name }}" 
                                  class="candidate-photo"
                                  onerror="this.style.display='none';">
+                            @else
+                            <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: var(--bg-tertiary); border: 2px solid var(--border-color);">
+                                <svg class="w-6 h-6" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
                             @endif
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-5 py-4">
                             <div class="text-sm font-semibold text-primary">{{ $candidate->candidate_name }}</div>
                             @if($candidate->student)
-                            <div class="text-xs text-secondary mt-1">{{ $candidate->student->student_id_number }}</div>
+                            <div class="text-xs text-secondary mt-0.5">{{ $candidate->student->student_id_number }}</div>
                             @endif
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-5 py-4">
                             <div class="text-sm text-primary">{{ $candidate->election->organization->name ?? '-' }}</div>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-5 py-4">
                             <div class="text-sm text-primary">{{ $candidate->election->election_name ?? '-' }}</div>
                         </td>
-                        <td class="px-4 py-4">
-                            <div class="text-sm text-primary">{{ $candidate->position->name ?? '-' }}</div>
+                        <td class="px-5 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: var(--bg-tertiary); color: var(--text-primary);">
+                                {{ $candidate->position->name ?? '-' }}
+                            </span>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-5 py-4">
                             @if($candidate->partylist)
                             <div class="flex items-center">
                                 @if($candidate->partylist->color)
-                                <div class="w-3 h-3 rounded-full mr-2" style="background-color: {{ $candidate->partylist->color }};"></div>
+                                <div class="w-3 h-3 rounded-full mr-2 flex-shrink-0" style="background-color: {{ $candidate->partylist->color }};"></div>
                                 @endif
                                 <div class="text-sm text-primary">{{ $candidate->partylist->name }}</div>
                             </div>
                             @else
-                            <span class="text-xs text-secondary">Independent</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-secondary" style="background-color: var(--bg-tertiary);">Independent</span>
                             @endif
                         </td>
-                        <td class="px-4 py-4 text-center">
-                            <div class="text-sm font-semibold text-primary">{{ $candidate->votes_count ?? 0 }}</div>
+                        <td class="px-5 py-4 text-center">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-semibold" style="background-color: rgba(0, 102, 51, 0.1); color: var(--cpsu-green);">
+                                {{ $candidate->votes_count ?? 0 }}
+                            </span>
                         </td>
-                        <td class="px-4 py-4 text-center">
-                            <div class="flex items-center justify-center space-x-2">
-                                <button onclick="editCandidate({{ $candidate->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
+                        <td class="px-5 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-1.5">
+                                <button onclick="editCandidate({{ $candidate->id }})" class="p-2 rounded-lg hover:bg-[var(--hover-bg)] transition-all duration-200" style="color: var(--cpsu-green-light);" title="Edit Candidate">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="deleteCandidate({{ $candidate->id }}, '{{ $candidate->candidate_name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
+                                <button onclick="openDeleteModal({{ $candidate->id }}, '{{ addslashes($candidate->candidate_name) }}')" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200" style="color: #dc2626;" title="Delete Candidate">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -201,6 +234,9 @@ use Illuminate\Support\Facades\Storage;
                     <tr>
                         <td colspan="8" class="px-6 py-16 text-center">
                             <div class="text-secondary opacity-75">
+                                <svg class="mx-auto h-12 w-12 mb-4" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
                                 <p class="text-lg font-semibold text-primary mb-1">No candidates found</p>
                                 <p class="text-sm text-secondary">Get started by creating a new candidate</p>
                             </div>
@@ -224,7 +260,7 @@ use Illuminate\Support\Facades\Storage;
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="text-xl font-semibold text-primary" id="modalTitle">Add New Candidate</h2>
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closeModal('candidateModal')">&times;</span>
         </div>
         <form id="candidateForm" method="POST" enctype="multipart/form-data">
             @csrf
@@ -253,6 +289,7 @@ use Illuminate\Support\Facades\Storage;
                             <select name="election_id" id="election_id" required onchange="loadPartylists(this.value)" class="w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent transition-all" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                                 <option value="">Select Organization First</option>
                             </select>
+                            <div id="electionMessage" class="mt-2 text-sm hidden"></div>
                         </div>
                         <div id="partylistDropdownSection">
                             <label class="block text-sm font-medium text-primary mb-1.5">Partylist (Optional)</label>
@@ -298,15 +335,60 @@ use Illuminate\Support\Facades\Storage;
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">Cancel</button>
+                <button type="button" onclick="closeModal('candidateModal')" class="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">Cancel</button>
                 <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-medium text-white btn-cpsu-primary shadow-sm hover:shadow-md transition-all">Save Candidate</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteCandidateModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-primary">Confirm Delete</h3>
+            <span class="close" onclick="closeModal('deleteCandidateModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(220, 38, 38, 0.1);">
+                    <svg class="w-6 h-6" style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-primary">Are you sure you want to delete this candidate?</p>
+                    <p class="text-sm text-secondary mt-1" id="deleteCandidateName"></p>
+                    <p class="text-xs mt-2" style="color: #dc2626;">This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('deleteCandidateModal')" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style="background-color: var(--bg-tertiary); color: var(--text-primary);" 
+                    onmouseover="this.style.backgroundColor='var(--hover-bg)'"
+                    onmouseout="this.style.backgroundColor='var(--bg-tertiary)'">
+                Cancel
+            </button>
+            <button onclick="confirmDeleteCandidate()" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style="background: #dc2626;" 
+                    onmouseover="this.style.background='#b91c1c'"
+                    onmouseout="this.style.background='#dc2626'">
+                Delete Candidate
+            </button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+// Display Laravel session messages
+@if(session('success'))
+showNotification('{{ session('success') }}', 'success');
+@endif
+
+@if(session('error'))
+showNotification('{{ session('error') }}', 'error');
+@endif
+
 let currentCandidateId = null;
 let candidateMode = 'single';
 
@@ -318,7 +400,7 @@ function filterByElection(electionId) {
     }
 }
 
-function loadOrganizationData(organizationId) {
+function loadOrganizationData(organizationId, includeElectionId = null) {
     if (!organizationId) {
         const positionSection = document.getElementById('positionSection');
         const electionSelect = document.getElementById('election_id');
@@ -395,25 +477,69 @@ function loadOrganizationData(organizationId) {
         });
     
     // Load elections for the organization
-    fetch(`/admin/candidates/elections-by-organization/${organizationId}`)
+    // If editing, include the current election ID so it shows even if completed
+    const electionUrl = includeElectionId 
+        ? `/admin/candidates/elections-by-organization/${organizationId}?include_election_id=${includeElectionId}`
+        : `/admin/candidates/elections-by-organization/${organizationId}`;
+    
+    fetch(electionUrl)
         .then(res => res.json())
         .then(data => {
             const electionSelect = document.getElementById('election_id');
             const partylistSelect = document.getElementById('partylist_id');
             
-            if (electionSelect) {
-                // Clear and reset election dropdown
-                electionSelect.innerHTML = '<option value="">Select Election</option>';
-                
-                console.log(`Loading ${data.elections.length} elections for organization ${organizationId}`);
-                
-                data.elections.forEach(election => {
-                    console.log(`  - Election ID: ${election.id}, Name: ${election.election_name}`);
+        if (electionSelect) {
+            // Clear and reset election dropdown
+            electionSelect.innerHTML = '<option value="">Select Election</option>';
+            
+            console.log(`Loading ${data.elections.length} upcoming/ongoing elections for organization ${organizationId}`);
+            
+            // Get the message container
+            const electionMessage = document.getElementById('electionMessage');
+            
+            // Hide message first
+            if (electionMessage) {
+                electionMessage.classList.add('hidden');
+                electionMessage.innerHTML = '';
+            }
+            
+            if (data.elections.length === 0) {
                     const option = document.createElement('option');
-                    option.value = election.id;
-                    option.textContent = election.election_name;
+                    option.value = '';
+                    option.textContent = 'No upcoming elections available';
+                    option.disabled = true;
                     electionSelect.appendChild(option);
-                });
+                    
+                    // Show message inside modal
+                    if (electionMessage) {
+                        electionMessage.className = 'mt-2 text-sm flex items-center space-x-2 p-3 rounded-lg';
+                        electionMessage.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+                        electionMessage.style.borderColor = '#dc2626';
+                        electionMessage.style.borderWidth = '1px';
+                        electionMessage.style.color = '#dc2626';
+                        electionMessage.innerHTML = `
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <span>No upcoming or ongoing elections found for this organization. Please create an upcoming election first.</span>
+                        `;
+                        electionMessage.classList.remove('hidden');
+                    }
+                } else {
+                    // Hide message if elections are found
+                    if (electionMessage) {
+                        electionMessage.classList.add('hidden');
+                        electionMessage.innerHTML = '';
+                    }
+                    
+                    data.elections.forEach(election => {
+                        console.log(`  - Election ID: ${election.id}, Name: ${election.election_name}, Status: ${election.status || 'N/A'}`);
+                        const option = document.createElement('option');
+                        option.value = election.id;
+                        option.textContent = election.election_name;
+                        electionSelect.appendChild(option);
+                    });
+                }
                 
                 // Ensure onchange handler is attached (re-attach after innerHTML change)
                 electionSelect.onchange = function() {
@@ -476,51 +602,27 @@ function loadPartylists(electionId) {
             console.log('Requested election ID:', electionId);
             console.log('Response election ID:', data.election_id);
             console.log('Response election name:', data.election_name);
-            console.log('Partylists count:', data.count || 0);
-            
-            // Show debug info if available
-            if (data.debug && data.debug.all_partylists) {
-                console.log('📋 All partylists in database:');
-                data.debug.all_partylists.forEach(pl => {
-                    console.log(`  - Partylist "${pl.name}" (ID: ${pl.id}) is registered for Election ID: ${pl.election_id}`);
-                });
-            }
+            console.log('Active partylists count:', data.count || 0);
             
             // Check if we have partylists in the response
             const partylists = data.partylists || [];
             
             if (Array.isArray(partylists) && partylists.length > 0) {
-                console.log(`✓ Found ${partylists.length} partylists for election ${electionId} (${data.election_name})`);
+                console.log(`✓ Found ${partylists.length} active partylists for election ${electionId} (${data.election_name})`);
                 
                 // Add each partylist as an option
                 partylists.forEach((pl, index) => {
-                    console.log(`  [${index + 1}] Adding partylist: ID=${pl.id}, Name="${pl.name}", Election ID=${pl.election_id}`);
+                    console.log(`  [${index + 1}] Adding partylist: ID=${pl.id}, Name="${pl.name}"`);
                     const option = document.createElement('option');
                     option.value = pl.id;
                     option.textContent = pl.name;
                     partylistSelect.appendChild(option);
                 });
                 
-                console.log('✓ Partylists successfully loaded into dropdown');
+                console.log('✓ Active partylists successfully loaded into dropdown');
             } else {
-                console.warn(`⚠ No partylists found for election ${electionId} (${data.election_name || 'Unknown'})`);
-                console.warn('');
-                console.warn('🔍 DEBUGGING INFO:');
-                if (data.debug && data.debug.all_partylists && data.debug.all_partylists.length > 0) {
-                    console.warn(`  Found ${data.debug.all_partylists.length} partylist(s) in database, but none match election ID ${electionId}:`);
-                    data.debug.all_partylists.forEach(pl => {
-                        const match = pl.election_id == electionId ? '✓ MATCH' : '✗ Different';
-                        console.warn(`    - "${pl.name}" (ID: ${pl.id}) → Election ID: ${pl.election_id} ${match}`);
-                    });
-                    console.warn('');
-                    console.warn('💡 SOLUTION:');
-                    console.warn('  The partylists were registered with different election IDs.');
-                    console.warn('  You need to register partylists specifically for Election ID ' + electionId + ' (' + data.election_name + ')');
-                    console.warn('  OR update the existing partylists to use the correct election_id.');
-                } else {
-                    console.warn('  No partylists found in database at all.');
-                    console.warn('  Please register partylists for this election first.');
-                }
+                console.log(`No active partylists found for election ${electionId} (${data.election_name || 'Unknown'})`);
+                // Keep "Independent" option - no need to show error, it's optional
             }
         })
         .catch(err => {
@@ -592,6 +694,13 @@ function openCreateModal(mode) {
     
     document.getElementById('election_id').innerHTML = '<option value="">Select Organization First</option>';
     document.getElementById('partylist_id').innerHTML = '<option value="">Independent (No Partylist)</option>';
+    
+    // Hide and reset election message
+    const electionMessage = document.getElementById('electionMessage');
+    if (electionMessage) {
+        electionMessage.classList.add('hidden');
+        electionMessage.innerHTML = '';
+    }
     document.getElementById('candidate_name').value = '';
     const photoInput = document.getElementById('photo');
     if (photoInput) photoInput.value = '';
@@ -633,7 +742,8 @@ function editCandidate(id) {
             // Load organization and set values
             if (data.election && data.election.organization_id) {
                 document.getElementById('organization_id').value = data.election.organization_id || '';
-                loadOrganizationData(data.election.organization_id);
+                // When editing, include the current election ID so it shows even if completed
+                loadOrganizationData(data.election.organization_id, data.election_id);
             }
             
             document.getElementById('election_id').value = data.election_id || '';
@@ -649,34 +759,71 @@ function editCandidate(id) {
             document.getElementById('candidateModal').classList.add('active');
         })
         .catch(err => {
-            alert('Error loading candidate data');
+            showNotification('Failed to load candidate data. Please try again.', 'error');
             console.error(err);
         });
 }
 
-function deleteCandidate(id, name) {
-    if (confirm(`Are you sure you want to delete "${name}"?`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/candidates/${id}`;
-        form.innerHTML = '@csrf @method("DELETE")';
-        document.body.appendChild(form);
-        form.submit();
-    }
+let currentDeleteCandidateId = null;
+
+function openDeleteModal(id, name) {
+    currentDeleteCandidateId = id;
+    document.getElementById('deleteCandidateName').textContent = `Candidate: ${name}`;
+    document.getElementById('deleteCandidateModal').classList.add('active');
 }
 
-function closeModal() {
-    document.getElementById('candidateModal').classList.remove('active');
-    // Clear photo preview when closing modal
-    clearPhotoPreview();
-    // Clear all partylist photo previews
-    const partylistPositions = document.getElementById('partylistPositions');
-    if (partylistPositions) {
-        const previewContainers = partylistPositions.querySelectorAll('[id^="photoPreviewContainer_"]');
-        previewContainers.forEach(container => {
-            const index = container.id.replace('photoPreviewContainer_', '');
-            clearPartylistPhotoPreview(index);
-        });
+function confirmDeleteCandidate() {
+    if (!currentDeleteCandidateId) {
+        return;
+    }
+
+    fetch(`/admin/candidates/${currentDeleteCandidateId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json().catch(() => ({ success: true, message: 'Candidate deleted successfully.' }));
+        }
+        throw new Error('Delete failed');
+    })
+    .then(data => {
+        closeModal('deleteCandidateModal');
+        showNotification(data.message || 'Candidate deleted successfully!', 'success');
+        // Reload the page to refresh the table
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+function closeModal(modalId) {
+    if (modalId === 'candidateModal' || !modalId) {
+        const modal = document.getElementById('candidateModal');
+        if (modal) {
+            modal.classList.remove('active');
+            // Clear photo preview when closing modal
+            clearPhotoPreview();
+            // Clear all partylist photo previews
+            const partylistPositions = document.getElementById('partylistPositions');
+            if (partylistPositions) {
+                const previewContainers = partylistPositions.querySelectorAll('[id^="photoPreviewContainer_"]');
+                previewContainers.forEach(container => {
+                    const index = container.id.replace('photoPreviewContainer_', '');
+                    clearPartylistPhotoPreview(index);
+                });
+            }
+        }
+    } else {
+        document.getElementById(modalId).classList.remove('active');
     }
 }
 
@@ -751,6 +898,7 @@ document.getElementById('candidateForm').addEventListener('submit', function(e) 
     e.preventDefault();
     const formData = new FormData(this);
     const url = this.action;
+    const isEdit = currentCandidateId !== null;
     
     fetch(url, {
         method: 'POST',
@@ -762,16 +910,81 @@ document.getElementById('candidateForm').addEventListener('submit', function(e) 
     })
     .then(res => {
         if (res.ok) {
-            window.location.reload();
-        } else {
-            alert('Error saving candidate');
+            return res.text();
         }
+        return res.text().then(text => {
+            throw new Error(text || 'Save failed');
+        });
+    })
+    .then(() => {
+        closeModal('candidateModal');
+        showNotification(
+            isEdit ? 'Candidate has been updated successfully.' : 'Candidate has been created successfully.',
+            'success'
+        );
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     })
     .catch(err => {
-        alert('Error saving candidate');
+        showNotification('Failed to save candidate. Please check your inputs and try again.', 'error');
         console.error(err);
     });
 });
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modals = ['candidateModal', 'deleteCandidateModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            closeModal(modalId);
+        }
+    });
+}
+
+// Show Notification
+function showNotification(message, type = 'success') {
+    const existingNotifications = document.querySelectorAll('.notification-toast');
+    existingNotifications.forEach(n => n.remove());
+
+    const notification = document.createElement('div');
+    notification.className = `notification-toast fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[300px] ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white`;
+    
+    notification.style.transform = 'translateX(100%)';
+    notification.style.opacity = '0';
+    notification.style.transition = 'all 0.3s ease-out';
+    
+    const icon = type === 'success' 
+        ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+        : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+    
+    notification.innerHTML = `
+        <div class="flex-shrink-0">${icon}</div>
+        <div class="flex-1">
+            <p class="font-medium">${message}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+    }, 10);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 4000);
+}
 </script>
 @endpush
 @endsection
