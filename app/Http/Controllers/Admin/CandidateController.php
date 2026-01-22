@@ -71,12 +71,25 @@ class CandidateController extends Controller
 
     /**
      * Get elections for a specific organization.
+     * Only returns upcoming or ongoing elections (not completed) for adding new candidates.
+     * When editing, we need to include the candidate's current election even if completed.
      */
-    public function getElectionsByOrganization($organizationId)
+    public function getElectionsByOrganization($organizationId, Request $request)
     {
-        $elections = Election::where('organization_id', $organizationId)
-            ->orderBy('election_name', 'asc')
-            ->get();
+        $query = Election::where('organization_id', $organizationId);
+        
+        // If editing a candidate, include their current election even if completed
+        if ($request->has('include_election_id') && $request->include_election_id) {
+            $query->where(function($q) use ($request) {
+                $q->whereIn('status', ['upcoming', 'ongoing'])
+                  ->orWhere('id', $request->include_election_id);
+            });
+        } else {
+            // For new candidates, only show upcoming/ongoing
+            $query->whereIn('status', ['upcoming', 'ongoing']);
+        }
+        
+        $elections = $query->orderBy('election_name', 'asc')->get();
         
         return response()->json(['elections' => $elections]);
     }
@@ -116,21 +129,15 @@ class CandidateController extends Controller
                 ]);
             }
             
-            // Get all partylists for this election
+            // Get all active partylists for this election
             $partylists = Partylist::where('election_id', $electionId)
+                ->where('is_active', true)
                 ->orderBy('name', 'asc')
                 ->get();
             
-            // Debug: Get all partylists to see what election_ids they have
-            $allPartylists = Partylist::select('id', 'name', 'election_id')
-                ->orderBy('election_id')
-                ->orderBy('name')
-                ->get();
+            \Log::info("Fetching active partylists for election ID: {$electionId}, Election Name: {$election->election_name}, Found: {$partylists->count()} active partylists");
             
-            \Log::info("Fetching partylists for election ID: {$electionId}, Election Name: {$election->election_name}, Found: {$partylists->count()} partylists");
-            \Log::info("All partylists in database: " . json_encode($allPartylists->toArray()));
-            
-            // Return as simple array format with debug info
+            // Return as simple array format
             return response()->json([
                 'partylists' => $partylists->map(function($partylist) {
                     return [
@@ -141,16 +148,7 @@ class CandidateController extends Controller
                 })->toArray(),
                 'election_id' => $electionId,
                 'election_name' => $election->election_name,
-                'count' => $partylists->count(),
-                'debug' => [
-                    'all_partylists' => $allPartylists->map(function($pl) {
-                        return [
-                            'id' => $pl->id,
-                            'name' => $pl->name,
-                            'election_id' => $pl->election_id
-                        ];
-                    })->toArray()
-                ]
+                'count' => $partylists->count()
             ]);
         } catch (\Exception $e) {
             \Log::error('Error fetching partylists: ' . $e->getMessage());
@@ -294,7 +292,7 @@ class CandidateController extends Controller
     /**
      * Remove the specified candidate from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $candidate = Candidate::findOrFail($id);
         
@@ -304,6 +302,13 @@ class CandidateController extends Controller
         }
         
         $candidate->delete();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Candidate deleted successfully.'
+            ]);
+        }
 
         return redirect()->route('admin.candidates.index')
             ->with('success', 'Candidate deleted successfully.');
