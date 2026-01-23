@@ -154,8 +154,8 @@ use Illuminate\Support\Facades\Storage;
             <table class="min-w-full divide-y" style="border-collapse: separate; border-spacing: 0;">
                 <thead class="table-header" style="background-color: var(--bg-tertiary);">
                     <tr>
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Photo</th>
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Candidate</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Candidate Photo</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Candidate Name</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Organization</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Election</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Position</th>
