@@ -124,6 +124,31 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 102, 51, 0.2);
         }
+        .btn-register-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .btn-register-hidden:focus {
+            position: static;
+            width: auto;
+            height: auto;
+            padding: 0.625rem 1.25rem;
+            margin: 0;
+            overflow: visible;
+            clip: auto;
+            white-space: normal;
+            opacity: 1;
+            pointer-events: auto;
+        }
         .btn-gold {
             background: linear-gradient(135deg, var(--cpsu-gold) 0%, #E8D08A 100%);
             color: var(--cpsu-green-dark);
@@ -1395,10 +1420,10 @@
             </div>
             <div class="nav-actions">
                 @if (Route::has('login'))
-                    <a href="{{ route('login') }}" class="btn btn-outline">Log in</a>
+                    <a href="{{ route('login') }}" class="btn btn-primary">Log in</a>
                 @endif
                 @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary btn-register-hidden" aria-label="Register">Register</a>
                 @endif
             </div>
         </div>
@@ -1417,8 +1442,8 @@
                 <h1 class="heading-font">Cloud Based<br><span class="text-gold">Real-Time Voting</span><br>System</h1>
                 <p>Empowering Central Philippine State University with a secure, transparent, and efficient digital voting platform for student elections, faculty decisions, and institutional surveys.</p>
                 <div class="hero-actions">
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="btn btn-hero btn-hero-primary">Get Started</a>
+                    @if (Route::has('login'))
+                        <a href="{{ route('login') }}" class="btn btn-hero btn-hero-primary">Get Started</a>
                     @endif
                     <a href="#features" class="btn btn-hero btn-hero-gold">Explore Features</a>
                 </div>
@@ -1715,12 +1740,10 @@
             <h2 class="heading-font">Ready to Transform CPSU Elections?</h2>
             <p>Join Central Philippine State University in embracing the future of digital democracy. Register today and experience secure, transparent, and efficient voting.</p>
             <div class="hero-actions" style="justify-content: center;">
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-hero btn-hero-gold">Create Your Account</a>
-                @endif
                 @if (Route::has('login'))
-                    <a href="{{ route('login') }}" class="btn btn-hero btn-hero-secondary">Sign In to Dashboard</a>
+                    <a href="{{ route('login') }}" class="btn btn-hero btn-hero-gold">Login to Your Account</a>
                 @endif
+                
             </div>
         </div>
     </section>
@@ -1747,12 +1770,7 @@
                         @if (Route::has('login'))
                             <li><a href="{{ route('login') }}">Login</a></li>
                         @endif
-                        @if (Route::has('register'))
-                            <li><a href="{{ route('register') }}">Register</a></li>
-                        @endif
-                        @auth
-                            <li><a href="{{ url('/dashboard') }}">Dashboard</a></li>
-                        @endauth
+                        
                     </ul>
                 </div>
             </div>
@@ -1800,6 +1818,58 @@
                         showPreloaderAndRedirect(href);
                     }
                 });
+            });
+
+            // Secret password to unlock Register page
+            let secretCode = '';
+            const secretPassword = 'cbrtvs';
+            const maxCodeLength = secretPassword.length;
+            let codeTimeout;
+
+            function resetSecretCode() {
+                secretCode = '';
+            }
+
+            function checkSecretCode() {
+                if (secretCode.toLowerCase() === secretPassword.toLowerCase()) {
+                    // Clear the code
+                    secretCode = '';
+                    
+                    // Redirect to register page
+                    @if (Route::has('register'))
+                        const registerUrl = '{{ route("register") }}';
+                        showPreloaderAndRedirect(registerUrl);
+                    @endif
+                }
+            }
+
+            // Listen for keyboard input globally
+            document.addEventListener('keydown', function(e) {
+                // Ignore if user is typing in an input field
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+                    return;
+                }
+
+                // Clear timeout if it exists
+                if (codeTimeout) {
+                    clearTimeout(codeTimeout);
+                }
+
+                // Add the pressed key to the secret code
+                secretCode += e.key.toLowerCase();
+
+                // Limit the code length to prevent memory issues
+                if (secretCode.length > maxCodeLength) {
+                    secretCode = secretCode.slice(-maxCodeLength);
+                }
+
+                // Check if the code matches
+                checkSecretCode();
+
+                // Reset the code after 2 seconds of inactivity
+                codeTimeout = setTimeout(function() {
+                    resetSecretCode();
+                }, 2000);
             });
         });
     </script>
