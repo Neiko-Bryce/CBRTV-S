@@ -30,6 +30,252 @@
             position: relative;
             overflow-x: hidden;
         }
+        /* Professional Preloader */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 50%, var(--cpsu-green-dark) 100%);
+            background-size: 200% 200%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            animation: gradientShift 8s ease infinite;
+        }
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        @keyframes gradientShift {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+        .preloader-content {
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+        .preloader-logo-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+        }
+        .preloader-logo {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: preloaderFloat 3s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        .preloader-logo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shine 3s ease-in-out infinite;
+        }
+        .preloader-logo svg {
+            width: 60px;
+            height: 60px;
+            color: white;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        }
+        @keyframes preloaderFloat {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+            }
+            50% {
+                transform: translateY(-15px) scale(1.05);
+            }
+        }
+        @keyframes shine {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .preloader-spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--cpsu-gold);
+            border-right-color: var(--cpsu-gold);
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+        .spinner-ring:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border-width: 3px;
+            border-top-color: white;
+            border-right-color: white;
+            border-bottom-color: rgba(255, 255, 255, 0.3);
+            border-left-color: rgba(255, 255, 255, 0.3);
+            animation-duration: 0.8s;
+            animation-direction: reverse;
+        }
+        .spinner-ring:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
+            border-width: 2px;
+            border-top-color: var(--cpsu-gold);
+            border-right-color: var(--cpsu-gold);
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+            animation-duration: 0.6s;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .preloader-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+            font-family: 'Playfair Display', serif;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: textPulse 2s ease-in-out infinite;
+        }
+        @keyframes textPulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+        .preloader-subtext {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .preloader-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        .preloader-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cpsu-gold) 0%, white 50%, var(--cpsu-gold) 100%);
+            background-size: 200% 100%;
+            width: 0%;
+            animation: progressBar 2s ease-in-out infinite, progressFill 1.5s ease forwards;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+        }
+        @keyframes progressBar {
+            0% {
+                background-position: 0% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        @keyframes progressFill {
+            0% {
+                width: 0%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+        @media (max-width: 768px) {
+            .preloader-logo-container {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 1.5rem;
+            }
+            .preloader-logo svg {
+                width: 50px;
+                height: 50px;
+            }
+            .preloader-spinner {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 1.25rem;
+            }
+            .preloader-text {
+                font-size: 1.25rem;
+            }
+            .preloader-subtext {
+                font-size: 0.875rem;
+            }
+            .preloader-progress-bar {
+                height: 3px;
+            }
+        }
+        @media (max-width: 480px) {
+            .preloader-logo-container {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 1.25rem;
+            }
+            .preloader-logo {
+                border-radius: 16px;
+            }
+            .preloader-logo svg {
+                width: 40px;
+                height: 40px;
+            }
+            .preloader-spinner {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 1rem;
+            }
+            .preloader-text {
+                font-size: 1.125rem;
+            }
+            .preloader-subtext {
+                font-size: 0.8125rem;
+            }
+        }
         .background-decoration {
             position: fixed;
             top: 0;
@@ -69,11 +315,14 @@
             min-height: 600px;
             position: relative;
             z-index: 1;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
         .left-section {
             background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 100%);
-            border-radius: 1rem 0 0 1rem;
-            padding: 4rem;
+            border-radius: 0;
+            padding: 3.5rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -108,15 +357,15 @@
             z-index: 1;
         }
         .logo-badge {
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .logo-badge svg {
@@ -125,23 +374,23 @@
         }
         .left-section h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             font-weight: 700;
             line-height: 1.2;
-            margin-bottom: 1rem;
+            margin-bottom: 0.875rem;
             letter-spacing: -0.02em;
         }
         .left-section .subtitle {
-            font-size: 1.125rem;
+            font-size: 1rem;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             line-height: 1.6;
         }
         .left-section .institution {
-            font-size: 1rem;
+            font-size: 0.9375rem;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.95);
-            margin-bottom: 3rem;
+            margin-bottom: 2.5rem;
             letter-spacing: 0.05em;
         }
         .features-list {
@@ -165,16 +414,15 @@
         }
         .right-section {
             background: white;
-            border-radius: 0 1rem 1rem 0;
+            border-radius: 0;
             padding: 3rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
         }
         .form-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.75rem;
         }
         .form-header h2 {
             font-family: 'Playfair Display', serif;
@@ -191,10 +439,10 @@
         .form-divider {
             height: 1px;
             background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-            margin: 1.5rem 0;
+            margin: 1.25rem 0;
         }
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
         .form-label {
             display: block;
@@ -254,8 +502,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             font-size: 0.875rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
         .checkbox-group {
             display: flex;
@@ -307,7 +557,7 @@
             transform: translateY(0);
         }
         .form-footer {
-            margin-top: 1.5rem;
+            margin-top: 1.25rem;
             text-align: center;
             font-size: 0.875rem;
             color: #64748b;
@@ -359,10 +609,16 @@
             flex-shrink: 0;
             margin-top: 0.125rem;
         }
+        /* Mobile Responsive Design */
         @media (max-width: 968px) {
+            body {
+                padding: 0.75rem;
+            }
             .login-wrapper {
                 grid-template-columns: 1fr;
                 max-width: 500px;
+                min-height: auto;
+                border-radius: 1rem;
             }
             .left-section {
                 border-radius: 1rem 1rem 0 0;
@@ -375,10 +631,287 @@
             .left-section h1 {
                 font-size: 2rem;
             }
+            .left-section .subtitle {
+                font-size: 0.9375rem;
+            }
+            .left-section .institution {
+                font-size: 0.875rem;
+                margin-bottom: 2rem;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+                align-items: flex-start;
+                padding-top: 1rem;
+            }
+            .login-wrapper {
+                max-width: 100%;
+                min-height: auto;
+            }
+            .left-section {
+                padding: 2rem 1.5rem;
+            }
+            .logo-badge {
+                width: 48px;
+                height: 48px;
+                margin-bottom: 1.25rem;
+            }
+            .logo-badge svg {
+                width: 24px;
+                height: 24px;
+            }
+            .left-section h1 {
+                font-size: 1.75rem;
+                margin-bottom: 0.75rem;
+            }
+            .left-section .subtitle {
+                font-size: 0.875rem;
+                margin-bottom: 1.25rem;
+            }
+            .left-section .institution {
+                font-size: 0.8125rem;
+                margin-bottom: 1.75rem;
+            }
+            .features-list {
+                gap: 0.875rem;
+            }
+            .features-list li {
+                font-size: 0.8125rem;
+            }
+            .features-list svg {
+                width: 16px;
+                height: 16px;
+            }
+            .right-section {
+                padding: 1.75rem 1.5rem;
+            }
+            .form-header {
+                margin-bottom: 1.5rem;
+            }
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+            .form-header p {
+                font-size: 0.8125rem;
+            }
+            .form-divider {
+                margin: 1rem 0;
+            }
+            .form-group {
+                margin-bottom: 1.125rem;
+            }
+            .form-label {
+                font-size: 0.8125rem;
+                margin-bottom: 0.4375rem;
+            }
+            .form-input {
+                padding: 0.6875rem 0.875rem 0.6875rem 2.5rem;
+                font-size: 0.875rem;
+            }
+            .input-icon {
+                width: 16px;
+                height: 16px;
+                left: 0.875rem;
+            }
+            .password-toggle {
+                width: 16px;
+                height: 16px;
+                right: 0.875rem;
+            }
+            .form-options {
+                margin-bottom: 1.125rem;
+                font-size: 0.8125rem;
+            }
+            .submit-btn {
+                padding: 0.8125rem;
+                font-size: 0.875rem;
+            }
+            .submit-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+            .form-footer {
+                margin-top: 1.125rem;
+                font-size: 0.8125rem;
+            }
+            .alert {
+                padding: 0.75rem 0.875rem;
+                font-size: 0.8125rem;
+                margin-bottom: 1.25rem;
+            }
+            .alert svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 0.5rem;
+                padding-top: 0.75rem;
+            }
+            .login-wrapper {
+                border-radius: 0.75rem;
+            }
+            .left-section {
+                padding: 1.75rem 1.25rem;
+                border-radius: 0.75rem 0.75rem 0 0;
+            }
+            .logo-badge {
+                width: 44px;
+                height: 44px;
+                margin-bottom: 1rem;
+            }
+            .logo-badge svg {
+                width: 22px;
+                height: 22px;
+            }
+            .left-section h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.625rem;
+            }
+            .left-section .subtitle {
+                font-size: 0.8125rem;
+                margin-bottom: 1rem;
+            }
+            .left-section .institution {
+                font-size: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+            .features-list {
+                gap: 0.75rem;
+            }
+            .features-list li {
+                font-size: 0.75rem;
+            }
+            .features-list svg {
+                width: 14px;
+                height: 14px;
+            }
+            .right-section {
+                padding: 1.5rem 1.25rem;
+                border-radius: 0 0 0.75rem 0.75rem;
+            }
+            .form-header {
+                margin-bottom: 1.25rem;
+            }
+            .form-header h2 {
+                font-size: 1.375rem;
+            }
+            .form-header p {
+                font-size: 0.75rem;
+            }
+            .form-divider {
+                margin: 0.875rem 0;
+            }
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            .form-input {
+                padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+                font-size: 0.8125rem;
+            }
+            .input-icon {
+                left: 0.75rem;
+            }
+            .password-toggle {
+                right: 0.75rem;
+            }
+            .submit-btn {
+                padding: 0.75rem;
+                font-size: 0.8125rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .left-section {
+                padding: 1.5rem 1rem;
+            }
+            .logo-badge {
+                width: 40px;
+                height: 40px;
+            }
+            .logo-badge svg {
+                width: 20px;
+                height: 20px;
+            }
+            .left-section h1 {
+                font-size: 1.375rem;
+            }
+            .left-section .subtitle {
+                font-size: 0.75rem;
+            }
+            .left-section .institution {
+                font-size: 0.6875rem;
+            }
+            .features-list li {
+                font-size: 0.6875rem;
+            }
+            .right-section {
+                padding: 1.25rem 1rem;
+            }
+            .form-header h2 {
+                font-size: 1.25rem;
+            }
+            .form-input {
+                padding: 0.5625rem 0.6875rem 0.5625rem 2rem;
+                font-size: 0.75rem;
+            }
+            .input-icon {
+                width: 14px;
+                height: 14px;
+            }
+            .password-toggle {
+                width: 14px;
+                height: 14px;
+            }
+            .submit-btn {
+                padding: 0.6875rem;
+                font-size: 0.75rem;
+            }
+            .form-footer {
+                font-size: 0.75rem;
+            }
+        }
+        @media (max-width: 360px) {
+            .left-section {
+                padding: 1.25rem 0.875rem;
+            }
+            .left-section h1 {
+                font-size: 1.25rem;
+            }
+            .right-section {
+                padding: 1.125rem 0.875rem;
+            }
+            .form-header h2 {
+                font-size: 1.125rem;
+            }
+            .form-input {
+                padding: 0.5rem 0.625rem 0.5rem 1.875rem;
+                font-size: 0.6875rem;
+            }
+            .submit-btn {
+                padding: 0.625rem;
+                font-size: 0.6875rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Professional Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-content">
+            <div class="preloader-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <div class="preloader-text">CPSU Voting System</div>
+            <div class="preloader-subtext">Loading your secure dashboard...</div>
+        </div>
+        <div class="preloader-progress-bar">
+            <div class="preloader-progress-fill" id="preloaderProgress"></div>
+        </div>
+    </div>
     <div class="background-decoration"></div>
     <div class="login-wrapper">
         <!-- Left Section: Branding -->
@@ -525,6 +1058,66 @@
     </div>
 
     <script>
+        // Professional Preloader
+        (function() {
+            const preloader = document.getElementById('preloader');
+            const progressFill = document.getElementById('preloaderProgress');
+            
+            // Simulate loading progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 12;
+                if (progress >= 95) {
+                    progress = 95;
+                }
+                if (progressFill) {
+                    progressFill.style.width = progress + '%';
+                }
+            }, 150);
+            
+            // Complete on page load
+            window.addEventListener('load', function() {
+                clearInterval(progressInterval);
+                
+                // Complete progress bar
+                if (progressFill) {
+                    progressFill.style.width = '100%';
+                }
+                
+                // Hide preloader after a short delay
+                setTimeout(() => {
+                    if (preloader) {
+                        preloader.classList.add('hidden');
+                        // Remove from DOM after animation
+                        setTimeout(() => {
+                            if (preloader && preloader.parentNode) {
+                                preloader.style.display = 'none';
+                            }
+                        }, 500);
+                    }
+                }, 400);
+            });
+            
+            // Fallback: Hide preloader after max 3 seconds
+            setTimeout(() => {
+                if (preloader && !preloader.classList.contains('hidden')) {
+                    clearInterval(progressInterval);
+                    if (progressFill) {
+                        progressFill.style.width = '100%';
+                    }
+                    setTimeout(() => {
+                        preloader.classList.add('hidden');
+                        setTimeout(() => {
+                            if (preloader && preloader.parentNode) {
+                                preloader.style.display = 'none';
+                            }
+                        }, 500);
+                    }, 200);
+                }
+            }, 3000);
+        })();
+
+        // Password toggle functionality
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
         const eyeIcon = document.getElementById('eyeIcon');

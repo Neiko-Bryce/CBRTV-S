@@ -194,7 +194,7 @@
             z-index: 1;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            gap: 3rem;
             align-items: center;
         }
         .hero-content {
@@ -202,7 +202,7 @@
         }
         .hero-visual {
             position: relative;
-            height: 600px;
+            height: 550px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -222,7 +222,7 @@
         .hero-main-image {
             position: relative;
             width: 100%;
-            height: 450px;
+            height: 420px;
             border-radius: 0;
             overflow: visible;
             background: transparent;
@@ -909,15 +909,15 @@
             backdrop-filter: blur(10px);
             border-radius: 9999px;
             font-size: 0.875rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             border: 1px solid rgba(212, 175, 55, 0.3);
             box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
         }
         .hero h1 {
             font-size: 3.5rem;
             font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
             letter-spacing: -0.02em;
         }
         .text-gold {
@@ -928,15 +928,17 @@
             font-weight: 700;
         }
         .hero p {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2.5rem;
-            line-height: 1.7;
+            margin-bottom: 2rem;
+            line-height: 1.65;
+            max-width: 90%;
         }
         .hero-actions {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
+            margin-top: 0.5rem;
         }
         .btn-hero {
             padding: 0.875rem 2rem;
@@ -971,7 +973,7 @@
             box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
         }
         .section {
-            padding: 5rem 2rem;
+            padding: 4rem 2rem;
         }
         .section-container {
             max-width: 1280px;
@@ -979,7 +981,7 @@
         }
         .section-header {
             text-align: center;
-            margin-bottom: 4rem;
+            margin-bottom: 3rem;
         }
         .section-badge {
             display: inline-block;
@@ -1013,11 +1015,11 @@
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+            gap: 1.5rem;
         }
         .feature-card {
             background: white;
-            padding: 2rem;
+            padding: 1.75rem;
             border-radius: 1rem;
             border: 1px solid #e2e8f0;
             transition: all 0.3s;
@@ -1068,12 +1070,12 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
         }
         .stat-card {
             background: white;
-            padding: 2rem;
+            padding: 1.75rem;
             border-radius: 1rem;
             border: 1px solid #e2e8f0;
             text-align: center;
@@ -1101,7 +1103,7 @@
         .about-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            gap: 3rem;
             align-items: center;
         }
         .about-content h2 {
@@ -1265,9 +1267,565 @@
             color: #64748b;
             font-size: 0.875rem;
         }
-        @media (max-width: 968px) {
+        /* Mobile: Same desktop layout, scaled down proportionally */
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+            .nav-container {
+                padding: 0.75rem 1rem;
+            }
+            .nav-logo {
+                width: 36px;
+                height: 36px;
+            }
+            .nav-logo svg {
+                width: 20px;
+                height: 20px;
+            }
+            .nav-brand-text h1 {
+                font-size: 1rem;
+            }
+            .nav-brand-text p {
+                font-size: 0.6875rem;
+            }
+            .nav-links {
+                display: none;
+            }
+            .nav-actions {
+                gap: 0.5rem;
+            }
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            .hero {
+                padding: 3rem 1rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+            .hero p {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            .hero-badge {
+                font-size: 0.75rem;
+                padding: 0.4375rem 0.875rem;
+                margin-bottom: 1.5rem;
+            }
+            .hero-badge svg {
+                width: 14px;
+                height: 14px;
+            }
+            .hero-container {
+                gap: 1.5rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+            .hero p {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+                max-width: 100%;
+            }
+            .hero-badge {
+                font-size: 0.75rem;
+                padding: 0.4375rem 0.875rem;
+                margin-bottom: 1.25rem;
+            }
+            .hero-visual {
+                height: 320px;
+            }
+            .hero-main-image {
+                height: 280px;
+            }
+            .btn-hero {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.875rem;
+            }
+            .btn-hero {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.875rem;
+                flex: 1;
+                min-width: 0;
+            }
+            .section {
+                padding: 2.5rem 1rem;
+            }
+            .section-header {
+                margin-bottom: 1.75rem;
+            }
+            .section-header h2 {
+                font-size: 1.75rem;
+                margin-bottom: 0.75rem;
+            }
+            .section-header p {
+                font-size: 0.9375rem;
+            }
+            .section-badge {
+                font-size: 0.75rem;
+                padding: 0.4375rem 0.875rem;
+                margin-bottom: 0.75rem;
+            }
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.875rem;
+            }
+            .feature-card {
+                padding: 1.25rem;
+            }
+            .feature-icon {
+                width: 44px;
+                height: 44px;
+                margin-bottom: 0.875rem;
+            }
+            .feature-icon svg {
+                width: 22px;
+                height: 22px;
+            }
+            .feature-card h3 {
+                font-size: 1.125rem;
+                margin-bottom: 0.5rem;
+            }
+            .feature-card p {
+                font-size: 0.8125rem;
+            }
+            .stats-grid {
+                gap: 0.875rem;
+                margin-top: 1.75rem;
+            }
+            .stat-card {
+                padding: 1.25rem;
+            }
+            .stat-value {
+                font-size: 2.25rem;
+            }
+            .stat-label {
+                font-size: 0.8125rem;
+            }
+            .about-grid {
+                gap: 1.25rem;
+            }
+            .about-content h2 {
+                font-size: 1.5rem;
+                margin-bottom: 0.875rem;
+            }
+            .about-content p {
+                font-size: 0.875rem;
+                margin-bottom: 0.875rem;
+            }
+            .benefits-list {
+                gap: 1rem;
+            }
+            .benefit-icon {
+                width: 36px;
+                height: 36px;
+            }
+            .benefit-icon svg {
+                width: 18px;
+                height: 18px;
+            }
+            .benefit-text {
+                font-size: 0.875rem;
+            }
+            .security-card {
+                padding: 1.25rem;
+            }
+            .security-icon {
+                width: 52px;
+                height: 52px;
+                margin-bottom: 0.875rem;
+            }
+            .security-icon svg {
+                width: 26px;
+                height: 26px;
+            }
+            .security-card h3 {
+                font-size: 1.125rem;
+            }
+            .security-card p {
+                font-size: 0.8125rem;
+            }
+            .cta-section h2 {
+                font-size: 1.5rem;
+            }
+            .cta-section p {
+                font-size: 0.875rem;
+                margin-bottom: 1.5rem;
+            }
+            .footer {
+                padding: 2.5rem 1rem 1.25rem;
+            }
+            .footer-grid {
+                gap: 1.25rem;
+                margin-bottom: 1.75rem;
+            }
+            .footer-brand h3 {
+                font-size: 1.125rem;
+            }
+            .footer-brand p {
+                font-size: 0.8125rem;
+            }
+            .footer-section h4 {
+                font-size: 0.9375rem;
+            }
+            .footer-links {
+                font-size: 0.8125rem;
+            }
+            .footer-bottom {
+                font-size: 0.6875rem;
+            }
+            .feature-icon {
+                width: 48px;
+                height: 48px;
+                margin-bottom: 1rem;
+            }
+            .feature-icon svg {
+                width: 24px;
+                height: 24px;
+            }
+            .feature-card h3 {
+                font-size: 1.25rem;
+            }
+            .feature-card p {
+                font-size: 0.875rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+            .stat-card {
+                padding: 1.5rem;
+            }
+            .stat-value {
+                font-size: 2.5rem;
+            }
+            .stat-label {
+                font-size: 0.875rem;
+            }
+            .about-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+            }
+            .about-content h2 {
+                font-size: 1.75rem;
+            }
+            .about-content p {
+                font-size: 0.9375rem;
+            }
+            .benefits-list {
+                gap: 1.25rem;
+            }
+            .benefit-icon {
+                width: 40px;
+                height: 40px;
+            }
+            .benefit-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+            .benefit-text {
+                font-size: 0.9375rem;
+            }
+            .security-card {
+                padding: 1.5rem;
+            }
+            .security-icon {
+                width: 56px;
+                height: 56px;
+                margin-bottom: 1rem;
+            }
+            .security-icon svg {
+                width: 28px;
+                height: 28px;
+            }
+            .security-card h3 {
+                font-size: 1.25rem;
+            }
+            .security-card p {
+                font-size: 0.875rem;
+            }
+            .cta-section h2 {
+                font-size: 1.75rem;
+            }
+            .cta-section p {
+                font-size: 0.9375rem;
+                margin-bottom: 2rem;
+            }
+            .footer {
+                padding: 3rem 1rem 1.5rem;
+            }
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+            .footer-brand h3 {
+                font-size: 1.25rem;
+            }
+            .footer-brand p {
+                font-size: 0.875rem;
+            }
+            .footer-section h4 {
+                font-size: 1rem;
+            }
+            .footer-links {
+                font-size: 0.875rem;
+            }
+            .footer-bottom {
+                font-size: 0.75rem;
+            }
         }
-        @media (max-width: 968px) {
+        @media (max-width: 640px) {
+            html {
+                font-size: 12px;
+            }
+            .nav-container {
+                padding: 0.625rem 0.875rem;
+            }
+            .hero {
+                padding: 2.5rem 0.875rem;
+            }
+            .hero-container {
+                gap: 1.25rem;
+            }
+            .hero h1 {
+                font-size: 1.75rem;
+                margin-bottom: 0.875rem;
+            }
+            .hero p {
+                font-size: 0.9375rem;
+                margin-bottom: 1.25rem;
+            }
+            .hero-badge {
+                font-size: 0.6875rem;
+                padding: 0.375rem 0.75rem;
+                margin-bottom: 1rem;
+            }
+            .hero-visual {
+                height: 280px;
+            }
+            .hero-main-image {
+                height: 250px;
+            }
+            .section {
+                padding: 2rem 0.875rem;
+            }
+            .section-header {
+                margin-bottom: 1.5rem;
+            }
+            .section-header h2 {
+                font-size: 1.5rem;
+                margin-bottom: 0.625rem;
+            }
+            .section-header p {
+                font-size: 0.875rem;
+            }
+            .btn-hero {
+                padding: 0.625rem 1.25rem;
+                font-size: 0.8125rem;
+            }
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.625rem;
+            }
+            .feature-card {
+                padding: 1rem;
+            }
+            .feature-icon {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 0.75rem;
+            }
+            .feature-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+            .feature-card h3 {
+                font-size: 1rem;
+            }
+            .feature-card p {
+                font-size: 0.75rem;
+            }
+            .stats-grid {
+                gap: 0.75rem;
+            }
+            .stat-card {
+                padding: 1rem;
+            }
+            .stat-value {
+                font-size: 2rem;
+            }
+            .about-grid {
+                gap: 0.875rem;
+            }
+            .about-content h2 {
+                font-size: 1.375rem;
+            }
+            .about-content p {
+                font-size: 0.8125rem;
+            }
+            .benefit-icon {
+                width: 32px;
+                height: 32px;
+            }
+            .benefit-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+            .benefit-text {
+                font-size: 0.8125rem;
+            }
+            .security-card {
+                padding: 1rem;
+            }
+            .security-icon {
+                width: 48px;
+                height: 48px;
+            }
+            .security-icon svg {
+                width: 24px;
+                height: 24px;
+            }
+            .security-card h3 {
+                font-size: 1rem;
+            }
+            .security-card p {
+                font-size: 0.75rem;
+            }
+            .cta-section h2 {
+                font-size: 1.375rem;
+            }
+            .cta-section p {
+                font-size: 0.8125rem;
+            }
+            .footer {
+                padding: 2rem 0.75rem 1rem;
+            }
+            .footer-grid {
+                gap: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            html {
+                font-size: 11px;
+            }
+            .hero {
+                padding: 2rem 0.75rem;
+            }
+            .hero h1 {
+                font-size: 1.5rem;
+            }
+            .hero p {
+                font-size: 0.875rem;
+            }
+            .hero-badge {
+                font-size: 0.6875rem;
+                padding: 0.375rem 0.75rem;
+            }
+            .hero-container {
+                gap: 1rem;
+            }
+            .hero h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.75rem;
+            }
+            .hero p {
+                font-size: 0.875rem;
+                margin-bottom: 1rem;
+            }
+            .hero-badge {
+                font-size: 0.625rem;
+                padding: 0.3125rem 0.625rem;
+                margin-bottom: 0.875rem;
+            }
+            .hero-visual {
+                height: 240px;
+            }
+            .hero-main-image {
+                height: 220px;
+            }
+            .btn-hero {
+                padding: 0.625rem 1.25rem;
+                font-size: 0.8125rem;
+            }
+            .section {
+                padding: 1.75rem 0.75rem;
+            }
+            .section-header {
+                margin-bottom: 1.25rem;
+            }
+            .section-header h2 {
+                font-size: 1.375rem;
+                margin-bottom: 0.5rem;
+            }
+            .section-header p {
+                font-size: 0.8125rem;
+            }
+            .feature-card {
+                padding: 1.25rem;
+            }
+            .stat-value {
+                font-size: 2rem;
+            }
+            .features-grid {
+                gap: 0.625rem;
+            }
+            .about-grid {
+                gap: 0.875rem;
+            }
+        }
+        @media (max-width: 360px) {
+            html {
+                font-size: 10px;
+            }
+            .hero h1 {
+                font-size: 1.375rem;
+            }
+            .hero p {
+                font-size: 0.8125rem;
+            }
+            .hero-container {
+                gap: 0.875rem;
+            }
+            .hero h1 {
+                font-size: 1.375rem;
+                margin-bottom: 0.625rem;
+            }
+            .hero p {
+                font-size: 0.8125rem;
+                margin-bottom: 0.875rem;
+            }
+            .hero-badge {
+                font-size: 0.5625rem;
+                padding: 0.25rem 0.5625rem;
+                margin-bottom: 0.75rem;
+            }
+            .hero-visual {
+                height: 220px;
+            }
+            .hero-main-image {
+                height: 200px;
+            }
+            .btn-hero {
+                padding: 0.5625rem 1rem;
+                font-size: 0.75rem;
+            }
+            .section-header h2 {
+                font-size: 1.25rem;
+            }
+            .features-grid {
+                gap: 0.5rem;
+            }
+            .about-grid {
+                gap: 0.75rem;
+            }
+        }
+        @media (min-width: 769px) and (max-width: 968px) {
             .hero-container {
                 grid-template-columns: 1fr;
                 gap: 3rem;
@@ -1278,84 +1836,106 @@
             .hero-main-image {
                 height: 350px;
             }
-        }
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
             .hero h1 {
-                font-size: 2.5rem;
+                font-size: 2.75rem;
             }
-            .hero-container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            .hero-visual {
-                height: 350px;
-            }
-            .hero-main-image {
-                height: 300px;
-            }
-            .about-grid {
-                grid-template-columns: 1fr;
-            }
-            .features-grid {
-                grid-template-columns: 1fr;
+            .hero p {
+                font-size: 1.125rem;
             }
         }
-        /* Preloader Styles */
+        /* Professional Preloader */
         .preloader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 100%);
+            background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 50%, var(--cpsu-green-dark) 100%);
+            background-size: 200% 200%;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .preloader.active {
             opacity: 1;
             visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            animation: gradientShift 8s ease infinite;
+        }
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        @keyframes gradientShift {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
         }
         .preloader-content {
             text-align: center;
             color: white;
+            position: relative;
+            z-index: 1;
+        }
+        .preloader-logo-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
         }
         .preloader-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
             animation: preloaderFloat 3s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        .preloader-logo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shine 3s ease-in-out infinite;
         }
         .preloader-logo svg {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             color: white;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
         }
         @keyframes preloaderFloat {
             0%, 100% {
-                transform: translateY(0px);
+                transform: translateY(0px) scale(1);
             }
             50% {
-                transform: translateY(-10px);
+                transform: translateY(-15px) scale(1.05);
+            }
+        }
+        @keyframes shine {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
             }
         }
         .preloader-spinner {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 1.5rem;
             position: relative;
         }
@@ -1364,18 +1944,35 @@
             width: 100%;
             height: 100%;
             border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: white;
+            border-top-color: var(--cpsu-gold);
+            border-right-color: var(--cpsu-gold);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 1.2s linear infinite;
         }
         .spinner-ring:nth-child(2) {
-            width: 80%;
-            height: 80%;
-            top: 10%;
-            left: 10%;
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
             border-width: 3px;
-            animation-duration: 1.5s;
+            border-top-color: white;
+            border-right-color: white;
+            border-bottom-color: rgba(255, 255, 255, 0.3);
+            border-left-color: rgba(255, 255, 255, 0.3);
+            animation-duration: 0.8s;
             animation-direction: reverse;
+        }
+        .spinner-ring:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
+            border-width: 2px;
+            border-top-color: var(--cpsu-gold);
+            border-right-color: var(--cpsu-gold);
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+            animation-duration: 0.6s;
         }
         @keyframes spin {
             0% {
@@ -1386,15 +1983,111 @@
             }
         }
         .preloader-text {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
             letter-spacing: 0.5px;
+            font-family: 'Playfair Display', serif;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: textPulse 2s ease-in-out infinite;
+        }
+        @keyframes textPulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
         }
         .preloader-subtext {
-            font-size: 0.875rem;
-            opacity: 0.8;
-            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9375rem;
+            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .preloader-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        .preloader-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cpsu-gold) 0%, white 50%, var(--cpsu-gold) 100%);
+            background-size: 200% 100%;
+            width: 0%;
+            animation: progressBar 2s ease-in-out infinite, progressFill 1.5s ease forwards;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+        }
+        @keyframes progressBar {
+            0% {
+                background-position: 0% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        @keyframes progressFill {
+            0% {
+                width: 0%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+        @media (max-width: 768px) {
+            .preloader-logo-container {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 1.5rem;
+            }
+            .preloader-logo svg {
+                width: 50px;
+                height: 50px;
+            }
+            .preloader-spinner {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 1.25rem;
+            }
+            .preloader-text {
+                font-size: 1.25rem;
+            }
+            .preloader-subtext {
+                font-size: 0.875rem;
+            }
+            .preloader-progress-bar {
+                height: 3px;
+            }
+        }
+        @media (max-width: 480px) {
+            .preloader-logo-container {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 1.25rem;
+            }
+            .preloader-logo {
+                border-radius: 16px;
+            }
+            .preloader-logo svg {
+                width: 40px;
+                height: 40px;
+            }
+            .preloader-spinner {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 1rem;
+            }
+            .preloader-text {
+                font-size: 1.125rem;
+            }
+            .preloader-subtext {
+                font-size: 0.8125rem;
+            }
         }
     </style>
 </head>
@@ -1780,32 +2473,84 @@
         </div>
     </footer>
 
-    <!-- Preloader -->
+    <!-- Professional Preloader -->
     <div class="preloader" id="preloader">
         <div class="preloader-content">
-            
             <div class="preloader-spinner">
                 <div class="spinner-ring"></div>
                 <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
             </div>
-            <div class="preloader-text">Loading...</div>
-            <div class="preloader-subtext">CPSU Voting System</div>
+            <div class="preloader-text">CPSU Voting System</div>
+            <div class="preloader-subtext">Welcome to our secure voting platform...</div>
+        </div>
+        <div class="preloader-progress-bar">
+            <div class="preloader-progress-fill" id="preloaderProgress"></div>
         </div>
     </div>
 
     <script>
-        // Preloader functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        // Professional Preloader
+        (function() {
             const preloader = document.getElementById('preloader');
+            const progressFill = document.getElementById('preloaderProgress');
             
-            // Function to show preloader and redirect
-            function showPreloaderAndRedirect(url) {
-                preloader.classList.add('active');
-                setTimeout(function() {
-                    window.location.href = url;
+            // Simulate loading progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 12;
+                if (progress >= 95) {
+                    progress = 95;
+                }
+                if (progressFill) {
+                    progressFill.style.width = progress + '%';
+                }
+            }, 150);
+            
+            // Complete on page load
+            window.addEventListener('load', function() {
+                clearInterval(progressInterval);
+                
+                // Complete progress bar
+                if (progressFill) {
+                    progressFill.style.width = '100%';
+                }
+                
+                // Hide preloader after a short delay
+                setTimeout(() => {
+                    if (preloader) {
+                        preloader.classList.add('hidden');
+                        // Remove from DOM after animation
+                        setTimeout(() => {
+                            if (preloader && preloader.parentNode) {
+                                preloader.style.display = 'none';
+                            }
+                        }, 500);
+                    }
                 }, 400);
-            }
+            });
             
+            // Fallback: Hide preloader after max 3 seconds
+            setTimeout(() => {
+                if (preloader && !preloader.classList.contains('hidden')) {
+                    clearInterval(progressInterval);
+                    if (progressFill) {
+                        progressFill.style.width = '100%';
+                    }
+                    setTimeout(() => {
+                        preloader.classList.add('hidden');
+                        setTimeout(() => {
+                            if (preloader && preloader.parentNode) {
+                                preloader.style.display = 'none';
+                            }
+                        }, 500);
+                    }, 200);
+                }
+            }, 3000);
+        })();
+
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
             // Find all login links
             const loginButtons = document.querySelectorAll('a[href*="login"]');
             
@@ -1814,8 +2559,7 @@
                     const href = this.getAttribute('href');
                     // Only intercept if it's a login route
                     if (href && (href.includes('login') || href.includes('/login'))) {
-                        e.preventDefault();
-                        showPreloaderAndRedirect(href);
+                        // Allow normal navigation - preloader will show on login page
                     }
                 });
             });
@@ -1838,7 +2582,7 @@
                     // Redirect to register page
                     @if (Route::has('register'))
                         const registerUrl = '{{ route("register") }}';
-                        showPreloaderAndRedirect(registerUrl);
+                        window.location.href = registerUrl;
                     @endif
                 }
             }
