@@ -88,9 +88,48 @@ class DashboardController extends Controller
             
             // Group candidates by position
             $election->candidatesByPosition = $candidates->groupBy('position_id');
+            
+            // Check if user has already voted for this election
+            $userVotes = Vote::where('election_id', $election->id)
+                ->where('voter_id', Auth::id())
+                ->count();
+            
+            $election->hasVoted = $userVotes > 0;
         }
         
         return view('student.dashboard', compact('elections'));
+    }
+    
+    /**
+     * Display the voting history page for the current user.
+     */
+    public function votesHistory()
+    {
+        // Get voting history for the current user
+        $votingHistory = Vote::where('voter_id', Auth::id())
+            ->with(['election.organization', 'candidate.position', 'candidate.partylist'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('election_id')
+            ->map(function ($votes) {
+                $election = $votes->first()->election;
+                return [
+                    'election' => $election,
+                    'voted_at' => $votes->first()->created_at,
+                    'candidates' => $votes->map(function ($vote) {
+                        return [
+                            'candidate' => $vote->candidate,
+                            'position' => $vote->candidate->position,
+                            'partylist' => $vote->candidate->partylist,
+                        ];
+                    })->groupBy(function ($item) {
+                        return $item['position']->id ?? 'no-position';
+                    }),
+                ];
+            })
+            ->values();
+        
+        return view('student.voteshistory', compact('votingHistory'));
     }
     
     /**
@@ -125,6 +164,12 @@ class DashboardController extends Controller
         
         // Check if user has already voted (has votes for this election)
         $hasVoted = count($userVotes) > 0;
+        
+        // If user has already voted, redirect to dashboard with message
+        if ($hasVoted) {
+            return redirect()->route('student.dashboard')
+                ->with('info', 'You have already submitted your votes for this election.');
+        }
         
         // Calculate end datetime for countdown
         $dateString = $election->election_date instanceof \Carbon\Carbon 

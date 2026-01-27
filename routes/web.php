@@ -28,9 +28,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Admin-only routes:
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     
     // Users Management
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
@@ -91,6 +89,7 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::get('/student/dashboard', [\App\Http\Controllers\Student\DashboardController::class, 'index'])->name('student.dashboard');
     Route::get('/student/vote/{electionId}', [\App\Http\Controllers\Student\DashboardController::class, 'vote'])->name('student.vote');
     Route::post('/student/vote/{electionId}', [\App\Http\Controllers\Student\DashboardController::class, 'submitVote'])->name('student.submit-vote');
+    Route::get('/student/votes-history', [\App\Http\Controllers\Student\DashboardController::class, 'votesHistory'])->name('student.votes-history');
     // Allow students to view candidate photos
     Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPhoto'])->where('path', '.*')->name('student.candidates.photo');
 });

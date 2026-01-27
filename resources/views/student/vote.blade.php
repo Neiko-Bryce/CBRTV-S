@@ -12,9 +12,82 @@
         :root {
             --cpsu-green: #006633;
             --cpsu-gold: #D4AF37;
+            --cpsu-green-light: #008844;
+            --cpsu-green-dark: #004422;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
         }
         .heading-font {
             font-family: 'Playfair Display', serif;
+        }
+        
+        /* Landing Page Style Header */
+        header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Enhanced Election Info Card */
+        .election-info-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 102, 51, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .election-info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 50%, var(--cpsu-gold) 100%);
+        }
+        
+        /* Enhanced Position Cards */
+        .position-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 102, 51, 0.1);
+            transition: all 0.3s ease;
+        }
+        .position-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 102, 51, 0.12);
+        }
+        
+        /* Enhanced Countdown */
+        .countdown-container {
+            background: linear-gradient(135deg, rgba(0, 102, 51, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border: 1px solid rgba(0, 102, 51, 0.1);
+            border-radius: 0.875rem;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Enhanced Alert Messages */
+        .alert-success {
+            background: linear-gradient(to right, #f0fdf4 0%, #dcfce7 100%);
+            border: 1px solid #86efac;
+            border-radius: 0.75rem;
+        }
+        .alert-error {
+            background: linear-gradient(to right, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fca5a5;
+            border-radius: 0.75rem;
         }
         
         /* Candidate Card Styles */
@@ -406,26 +479,26 @@
         }
     </style>
 </head>
-<body class="antialiased bg-gray-50">
+<body class="antialiased">
     <div class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3">
+        <!-- Landing Page Style Header -->
+        <header class="sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2 sm:space-x-3">
-                        <a href="{{ route('student.dashboard') }}" class="text-gray-600 hover:text-gray-900">
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <a href="{{ route('student.dashboard') }}" class="text-gray-600 hover:text-gray-900 transition-all p-2 hover:bg-gray-100 rounded-lg">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
                         </a>
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-700 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
-                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-700 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-sm sm:text-lg font-bold text-gray-900 heading-font">Voting</h1>
-                            <p class="text-xs text-gray-500 hidden sm:block">{{ $election->election_name }}</p>
+                            <h1 class="text-base sm:text-xl font-bold text-gray-900 heading-font">Voting</h1>
+                            <p class="text-xs sm:text-sm text-gray-600 hidden sm:block">{{ $election->election_name }}</p>
                         </div>
                     </div>
                 </div>
@@ -433,21 +506,31 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+        <main class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-5 sm:py-6 lg:py-8">
             @if(session('success'))
-                <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p class="text-sm text-green-800">{{ session('success') }}</p>
+                <div class="mb-5 sm:mb-6 p-4 alert-success">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-sm sm:text-base text-green-800 font-medium">{{ session('success') }}</p>
+                    </div>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-sm text-red-800">{{ session('error') }}</p>
+                <div class="mb-5 sm:mb-6 p-4 alert-error">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        <p class="text-sm sm:text-base text-red-800 font-medium">{{ session('error') }}</p>
+                    </div>
                 </div>
             @endif
 
-            <!-- Election Info Card -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+            <!-- Enhanced Election Info Card -->
+            <div class="election-info-card p-5 sm:p-6 lg:p-7 mb-5 sm:mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                     <div class="flex-1 min-w-0">
                         <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 break-words">{{ $election->election_name }}</h2>
@@ -478,8 +561,8 @@
                     
                     @if($endDateTime)
                     <div class="flex-shrink-0 w-full sm:w-auto">
-                        <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
-                            <p class="countdown-label mb-1 text-center sm:text-left">Time Remaining</p>
+                        <div class="countdown-container">
+                            <p class="countdown-label mb-2 text-center sm:text-left">Time Remaining</p>
                             <div class="countdown-timer text-center sm:text-left" id="countdown" data-end-time="{{ $endDateTime->timestamp }}">
                                 <span class="text-gray-500">Calculating...</span>
                             </div>
@@ -518,8 +601,8 @@
                         })->first();
                     @endphp
                     @if($position)
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
-                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 pb-2 border-b-2 border-gray-200">
+                    <div class="position-card p-5 sm:p-6 lg:p-7 mb-5 sm:mb-6">
+                        <h3 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-5 pb-3 border-b-2 border-gray-200 heading-font">
                             {{ $position->name }}
                             <span class="text-xs sm:text-sm font-normal text-gray-500 ml-2">(Select one candidate)</span>
                         </h3>
@@ -603,37 +686,37 @@
                 @endforelse
 
                 @if($candidatesByPosition->count() > 0)
-                <!-- Action Buttons -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 sticky bottom-0 z-40 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                <!-- Enhanced Action Buttons -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-5 sm:p-6 sticky bottom-0 z-40 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                             <button type="button" 
                                     onclick="resetAllVotes()"
                                     id="resetBtn"
-                                    class="flex-1 sm:flex-none px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="flex-1 sm:flex-none px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold text-sm shadow-sm hover:shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                 </svg>
                                 <span>Reset All</span>
                             </button>
-                            <div class="hidden sm:flex items-center gap-2">
-                                <span class="text-xs sm:text-sm text-gray-600">
-                                    <span id="voteCount" class="font-semibold text-green-600">0</span> / <span id="totalPositions">{{ $candidatesByPosition->count() }}</span> positions selected
+                            <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl">
+                                <span class="text-sm text-gray-600">
+                                    <span id="voteCount" class="font-bold text-green-600">0</span> / <span id="totalPositions" class="font-semibold">{{ $candidatesByPosition->count() }}</span> positions selected
                                 </span>
                             </div>
                         </div>
                         <button type="button" 
                                 onclick="showVoteSummary()"
                                 id="submitBtn"
-                                class="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-semibold text-sm sm:text-base shadow-md hover:shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <span>Submit Votes</span>
                         </button>
                     </div>
-                    <div class="text-xs text-gray-500 text-center sm:hidden mt-2 pt-2 border-t border-gray-200">
-                        <span id="voteCountMobile" class="font-semibold text-green-600">0</span> / <span id="totalPositionsMobile">{{ $candidatesByPosition->count() }}</span> positions selected
+                    <div class="text-xs text-gray-500 text-center sm:hidden mt-3 pt-3 border-t border-gray-200">
+                        <span id="voteCountMobile" class="font-bold text-green-600">0</span> / <span id="totalPositionsMobile" class="font-semibold">{{ $candidatesByPosition->count() }}</span> positions selected
                     </div>
                 </div>
                 @endif
