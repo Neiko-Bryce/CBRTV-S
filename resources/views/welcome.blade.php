@@ -22,6 +22,11 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800,900&display=swap" rel="stylesheet" />
     
+    <!-- Prevent caching issues during development -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/landing/main.jsx'])
     
@@ -83,5 +88,6 @@
             </p>
         </div>
     </noscript>
+    
 </body>
 </html>
