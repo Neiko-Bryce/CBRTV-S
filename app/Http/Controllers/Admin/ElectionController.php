@@ -15,65 +15,68 @@ class ElectionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Election::query();
-        
-        // Filter by status if provided
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-        
-        // Handle search functionality
-        if ($request->has('search') && !empty($request->search)) {
-            $searchTerm = trim($request->search);
-            $isPostgres = DB::connection()->getDriverName() === 'pgsql';
-            $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
-            
-            $query->where(function($q) use ($searchTerm, $likeOperator) {
-                $q->where('election_name', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('type_of_election', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('description', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('venue', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('election_id', $likeOperator, "%{$searchTerm}%");
-            });
-        }
-        
-        // Update statuses for ALL elections first (not just current page) - this ensures stats are accurate
+        // Update statuses for ALL elections first using direct DB queries for reliability
         try {
-            $allElections = Election::all();
-            foreach ($allElections as $election) {
+            // Fetch all elections directly from DB to avoid any caching
+            $allElectionData = DB::table('elections')->get();
+            
+            foreach ($allElectionData as $electionRow) {
+                $electionArray = (array) $electionRow;
+                
                 // Don't auto-update if status is manually set to cancelled
-                // BUT always allow update to completed (election ended)
-                if ($election->status === 'cancelled') {
-                    // Still check if election has ended - completed takes precedence
-                    $calculatedStatus = $this->calculateStatus($election->toArray());
+                if ($electionArray['status'] === 'cancelled') {
+                    $calculatedStatus = $this->calculateStatus($electionArray);
                     if ($calculatedStatus === 'completed') {
-                        // Election ended, update to completed even if cancelled
-                        $election->update(['status' => 'completed']);
+                        DB::table('elections')
+                            ->where('id', $electionArray['id'])
+                            ->update(['status' => 'completed', 'updated_at' => now()]);
                     }
-                    continue; // Skip further auto-update for manually set statuses
+                    continue;
                 }
                 
                 // Convert any old "rescheduled" status to "upcoming"
-                if ($election->status === 'rescheduled') {
-                    $election->update(['status' => 'upcoming']);
+                if ($electionArray['status'] === 'rescheduled') {
+                    DB::table('elections')
+                        ->where('id', $electionArray['id'])
+                        ->update(['status' => 'upcoming', 'updated_at' => now()]);
+                    $electionArray['status'] = 'upcoming';
                 }
                 
-                $calculatedStatus = $this->calculateStatus($election->toArray());
-                // Always update if status changed
-                if ($election->status !== $calculatedStatus) {
-                    $election->update(['status' => $calculatedStatus]);
-                } elseif (empty($election->status) || is_null($election->status)) {
-                    // Set status if it's null
-                    $election->update(['status' => $calculatedStatus]);
+                $calculatedStatus = $this->calculateStatus($electionArray);
+                
+                // Always update if status changed or is empty
+                if ($electionArray['status'] !== $calculatedStatus || empty($electionArray['status'])) {
+                    DB::table('elections')
+                        ->where('id', $electionArray['id'])
+                        ->update(['status' => $calculatedStatus, 'updated_at' => now()]);
+                    
+                    \Log::info("Election #{$electionArray['id']} status updated: {$electionArray['status']} -> {$calculatedStatus}");
                 }
             }
         } catch (\Exception $e) {
-            // Log error but don't break the page
             \Log::error('Error updating election statuses in index: ' . $e->getMessage());
         }
         
-        // Order by ID to keep elections in stable position even after updates
-        $elections = $query->orderBy('id', 'asc')->paginate(15)->withQueryString();
+        // Fetch elections FRESH after all status updates (use new query to avoid any caching)
+        $elections = Election::query()
+            ->when($request->has('status') && $request->status, function($q) use ($request) {
+                $q->where('status', $request->status);
+            })
+            ->when($request->has('search') && !empty($request->search), function($q) use ($request) {
+                $searchTerm = trim($request->search);
+                $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+                $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
+                $q->where(function($inner) use ($searchTerm, $likeOperator) {
+                    $inner->where('election_name', $likeOperator, "%{$searchTerm}%")
+                          ->orWhere('type_of_election', $likeOperator, "%{$searchTerm}%")
+                          ->orWhere('description', $likeOperator, "%{$searchTerm}%")
+                          ->orWhere('venue', $likeOperator, "%{$searchTerm}%")
+                          ->orWhere('election_id', $likeOperator, "%{$searchTerm}%");
+                });
+            })
+            ->orderBy('id', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         
         // Get statistics for ALL elections (after updating statuses)
         // Use DB::table for direct query to avoid any model caching issues
@@ -157,19 +160,8 @@ class ElectionController extends Controller
                 return back()->withErrors(['election_date' => 'The election date must be today or in the future (Philippine Time).'])->withInput();
             }
 
-            // Validate time_ended is after timestarted if both are provided
-            if ($validated['timestarted'] && $validated['time_ended']) {
-                if (strtotime($validated['time_ended']) <= strtotime($validated['timestarted'])) {
-                    if ($request->ajax()) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Time ended must be after time started.',
-                            'errors' => ['time_ended' => ['Time ended must be after time started.']]
-                        ], 422);
-                    }
-                    return back()->withErrors(['time_ended' => 'Time ended must be after time started.'])->withInput();
-                }
-            }
+            // Note: We allow overnight elections (e.g., 11:00 PM to 12:00 AM next day)
+            // The calculateStatus function handles this by adding a day to end time if needed
 
             // Auto-generate election_id if not provided
             if (empty($validated['election_id'])) {
@@ -284,19 +276,9 @@ class ElectionController extends Controller
             ]);
 
             // Allow editing of date/time freely when updating
-            // Only validate that time_ended is after timestarted if both are provided
             // No restriction on past dates when editing - admin can update to any date/time
-
-            // Validate time_ended is after timestarted if both are provided
-            if ($validated['timestarted'] && $validated['time_ended']) {
-                if (strtotime($validated['time_ended']) <= strtotime($validated['timestarted'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Time ended must be after time started.',
-                        'errors' => ['time_ended' => ['Time ended must be after time started.']]
-                    ], 422);
-                }
-            }
+            // Note: We allow overnight elections (e.g., 11:00 PM to 12:00 AM next day)
+            // The calculateStatus function handles this by adding a day to end time if needed
 
             // Don't update election_id - it's auto-generated and should not change
             // Remove election_id from validated data if present
@@ -395,100 +377,186 @@ class ElectionController extends Controller
 
     /**
      * Calculate election status based on date and time
+     * 
+     * Logic:
+     * - UPCOMING: Current time is BEFORE start time
+     * - ONGOING: Current time is >= start time AND < end time
+     * - COMPLETED: Current time is >= end time
+     * 
+     * For overnight elections (e.g., 11 PM to 2 AM):
+     * - Start: election_date at timestarted
+     * - End: election_date + 1 day at time_ended (if time_ended <= timestarted)
      */
     private function calculateStatus($electionData)
     {
         try {
+            // Get current time in Philippine timezone
             $now = Carbon::now('Asia/Manila');
             
+            // If no election date, default to upcoming
             if (empty($electionData['election_date'])) {
                 return 'upcoming';
             }
             
-            // Get date string - handle both Carbon instance and string
-            if ($electionData['election_date'] instanceof \Carbon\Carbon) {
-                $dateString = $electionData['election_date']->format('Y-m-d');
-            } else {
-                $dateString = is_string($electionData['election_date']) 
-                    ? $electionData['election_date'] 
-                    : (string)$electionData['election_date'];
+            // Extract date string properly - handle Carbon, ISO string, or simple Y-m-d string
+            $dateString = $this->extractDateString($electionData['election_date']);
+            if (!$dateString) {
+                \Log::error("calculateStatus: Could not extract date from: " . print_r($electionData['election_date'], true));
+                return 'upcoming';
             }
             
-            $electionDate = Carbon::parse($dateString, 'Asia/Manila');
+            // Parse start datetime - ALWAYS use the timestarted if available
+            $startDateTime = null;
+            $timeStr = null;
             
-            // If we have a start time, use it for more precise calculation
             if (!empty($electionData['timestarted'])) {
+                $timeStr = $this->normalizeTimeFormat($electionData['timestarted']);
+            }
+            
+            if ($timeStr) {
                 try {
-                    $timeStr = trim($electionData['timestarted']);
-                    // Normalize time format - timestarted might be H:i or H:i:s
-                    $timeParts = explode(':', $timeStr);
-                    if (count($timeParts) == 2) {
-                        // H:i format, add seconds
-                        $timeStr = $timeParts[0] . ':' . $timeParts[1] . ':00';
-                    } elseif (count($timeParts) == 3) {
-                        // Already H:i:s format, use as is
-                        $timeStr = $timeStr;
-                    } else {
-                        throw new \Exception('Invalid time format');
-                    }
-                    
-                    $electionDateTime = Carbon::createFromFormat(
+                    $startDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i:s',
                         $dateString . ' ' . $timeStr,
                         'Asia/Manila'
                     );
                 } catch (\Exception $e) {
-                    $electionDateTime = $electionDate->copy()->startOfDay();
+                    \Log::error("Failed to parse start time '{$timeStr}' with date '{$dateString}': " . $e->getMessage());
                 }
-            } else {
-                $electionDateTime = $electionDate->copy()->startOfDay();
             }
             
-            // Check if election has ended FIRST (this takes priority)
+            // If no valid start time was parsed, use start of election date
+            // But LOG this as it might indicate a problem
+            if (!$startDateTime) {
+                \Log::warning("calculateStatus: No valid start time, using startOfDay for date: {$dateString}");
+                $startDateTime = Carbon::createFromFormat('Y-m-d', $dateString, 'Asia/Manila')->startOfDay();
+            }
+            
+            // Parse end datetime
+            $endDateTime = null;
+            $endTimeStr = null;
+            
             if (!empty($electionData['time_ended'])) {
+                $endTimeStr = $this->normalizeTimeFormat($electionData['time_ended']);
+            }
+            
+            if ($endTimeStr) {
                 try {
-                    $endTimeStr = trim($electionData['time_ended']);
-                    // Normalize time format
-                    $endTimeParts = explode(':', $endTimeStr);
-                    if (count($endTimeParts) == 2) {
-                        // H:i format, add seconds
-                        $endTimeStr = $endTimeParts[0] . ':' . $endTimeParts[1] . ':00';
-                    } elseif (count($endTimeParts) == 3) {
-                        // Already H:i:s format, use as is
-                        $endTimeStr = $endTimeStr;
-                    } else {
-                        throw new \Exception('Invalid end time format');
-                    }
-                    
                     $endDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i:s',
                         $dateString . ' ' . $endTimeStr,
                         'Asia/Manila'
                     );
                     
-                    // If current time is past the end time, election is completed
-                    if ($now->greaterThanOrEqualTo($endDateTime)) {
-                        \Log::info("calculateStatus: Election ended - Now: {$now->toDateTimeString()}, End: {$endDateTime->toDateTimeString()}");
-                        return 'completed';
+                    // CRITICAL: Handle overnight elections
+                    // If end time is <= start time, the election ends the NEXT DAY
+                    if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
+                        $endDateTime->addDay();
                     }
                 } catch (\Exception $e) {
-                    \Log::error('Error parsing end time in calculateStatus: ' . $e->getMessage());
-                    // If end time parsing fails, continue with start time check
+                    \Log::error("Failed to parse end time '{$endTimeStr}' with date '{$dateString}': " . $e->getMessage());
                 }
             }
             
-            // Check if election has started (only if not ended)
-            if ($now->greaterThanOrEqualTo($electionDateTime)) {
-                \Log::info("calculateStatus: Election ongoing - Now: {$now->toDateTimeString()}, Start: {$electionDateTime->toDateTimeString()}");
+            // If no end time, use end of election date
+            if (!$endDateTime) {
+                $endDateTime = Carbon::createFromFormat('Y-m-d', $dateString, 'Asia/Manila')->endOfDay();
+            }
+            
+            // Log for debugging
+            $electionId = $electionData['id'] ?? 'unknown';
+            \Log::info("calculateStatus Election #{$electionId}: Now={$now->toDateTimeString()}, Start={$startDateTime->toDateTimeString()}, End={$endDateTime->toDateTimeString()}, TimeStarted={$electionData['timestarted']}, TimeEnded=" . ($electionData['time_ended'] ?? 'null'));
+            
+            // DECISION LOGIC (order matters!)
+            // 1. Check if COMPLETED first (current time >= end time)
+            if ($now->greaterThanOrEqualTo($endDateTime)) {
+                \Log::info("calculateStatus Election #{$electionId}: COMPLETED (now >= end)");
+                return 'completed';
+            }
+            
+            // 2. Check if ONGOING (current time >= start time AND < end time)
+            if ($now->greaterThanOrEqualTo($startDateTime)) {
+                \Log::info("calculateStatus Election #{$electionId}: ONGOING (now >= start AND now < end)");
                 return 'ongoing';
             }
             
-            // Election hasn't started yet
+            // 3. Otherwise UPCOMING (current time < start time)
+            \Log::info("calculateStatus Election #{$electionId}: UPCOMING (now < start)");
             return 'upcoming';
+            
         } catch (\Exception $e) {
-            \Log::error('Error calculating election status: ' . $e->getMessage());
+            \Log::error('Error calculating election status: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
             return 'upcoming'; // Default to upcoming on error
         }
+    }
+    
+    /**
+     * Extract date string in Y-m-d format from various input types
+     */
+    private function extractDateString($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+        
+        // If it's a Carbon instance, format it directly
+        if ($date instanceof \Carbon\Carbon) {
+            return $date->format('Y-m-d');
+        }
+        
+        // If it's a string, try to extract just the date part
+        if (is_string($date)) {
+            $dateStr = trim($date);
+            
+            // If it's already Y-m-d format (10 chars: YYYY-MM-DD)
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+                return $dateStr;
+            }
+            
+            // If it's an ISO 8601 format like "2026-01-29T00:00:00.000000+08:00" or "2026-01-29T00:00:00.000000Z"
+            // Extract just the date part (first 10 characters)
+            if (strlen($dateStr) >= 10 && preg_match('/^\d{4}-\d{2}-\d{2}/', $dateStr)) {
+                return substr($dateStr, 0, 10);
+            }
+            
+            // Try to parse with Carbon as a fallback
+            try {
+                return Carbon::parse($dateStr)->format('Y-m-d');
+            } catch (\Exception $e) {
+                \Log::error("extractDateString: Could not parse date string: {$dateStr}");
+                return null;
+            }
+        }
+        
+        // Last resort - try to convert to string and parse
+        try {
+            return Carbon::parse((string)$date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Normalize time format to H:i:s
+     */
+    private function normalizeTimeFormat($time)
+    {
+        if (empty($time)) {
+            return null;
+        }
+        
+        $timeStr = trim($time);
+        $parts = explode(':', $timeStr);
+        
+        if (count($parts) == 2) {
+            // H:i format, add seconds
+            return $parts[0] . ':' . $parts[1] . ':00';
+        } elseif (count($parts) == 3) {
+            // Already H:i:s format
+            return $timeStr;
+        }
+        
+        return null;
     }
 
     /**

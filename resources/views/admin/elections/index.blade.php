@@ -337,6 +337,12 @@
                                             if ($endTimeStr) {
                                                 $endDatetimeString = $dateString . ' ' . $endTimeStr;
                                                 $endDT = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $endDatetimeString, 'Asia/Manila');
+                                                
+                                                // Handle overnight elections: if end time <= start time, add a day
+                                                if (isset($electionDT) && $endDT->lessThanOrEqualTo($electionDT)) {
+                                                    $endDT->addDay();
+                                                }
+                                                
                                                 $endTimestamp = $endDT->timestamp * 1000;
                                             }
                                         }
@@ -349,13 +355,20 @@
                                     }
                                 }
                             @endphp
+                            @php
+                                // Debug: Log the calculated timestamps
+                                if ($election->time_ended && isset($electionDT) && isset($endDT)) {
+                                    \Log::info("Election {$election->id} timestamps - Start: " . ($electionDT ? $electionDT->toDateTimeString() : 'null') . ", End: " . ($endDT ? $endDT->toDateTimeString() : 'null') . ", Status: {$election->status}");
+                                }
+                            @endphp
                             <div class="countdown-container" 
                                  data-election-id="{{ $election->id }}"
                                  data-election-date="{{ $election->election_date instanceof \Carbon\Carbon ? $election->election_date->format('Y-m-d') : $election->election_date }}"
                                  data-election-time="{{ $election->timestarted ?? '' }}"
                                  data-election-ended="{{ $election->time_ended ?? '' }}"
                                  data-election-timestamp="{{ $electionTimestamp ?? '' }}"
-                                 data-end-timestamp="{{ $endTimestamp ?? '' }}">
+                                 data-end-timestamp="{{ $endTimestamp ?? '' }}"
+                                 data-db-status="{{ $election->status ?? 'upcoming' }}">
                                 @if($electionTimestamp && $electionTimestamp > 0)
                                     <div class="text-sm font-semibold" style="color: var(--cpsu-green);">
                                         <span class="countdown-text">Loading...</span>
@@ -606,7 +619,7 @@
                             <label for="time_ended" class="block text-sm font-medium text-primary mb-2">Time Ended</label>
                             <input type="time" id="time_ended" name="time_ended" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
                             <div id="time_ended-error" class="text-red-500 text-sm mt-1"></div>
-                            <p class="text-xs text-secondary mt-1">Must be after start time</p>
+                            <p class="text-xs text-secondary mt-1">Overnight elections supported (e.g., 11PM to 1AM)</p>
                         </div>
                     </div>
                 </div>
@@ -1205,31 +1218,28 @@
 
     function updateCountdownAndStatus(container, electionTimestamp, endTimestamp, electionId) {
         try {
-            // Get status container FIRST to check if election is cancelled or completed
+            // Get status container and database status
             const statusContainer = document.querySelector(`.status-container[data-election-id="${electionId}"]`);
+            const dbStatus = container.getAttribute('data-db-status') || 'upcoming';
             
-            // If election is cancelled or completed, stop countdown and show appropriate message
-            if (statusContainer) {
-                const currentStatus = statusContainer.getAttribute('data-status');
-                if (currentStatus === 'cancelled') {
-                    container.innerHTML = '<span class="text-sm font-semibold" style="color: #dc2626;">Cancelled</span>';
-                    // Stop countdown interval
-                    if (countdownIntervals[electionId]) {
-                        clearInterval(countdownIntervals[electionId]);
-                        delete countdownIntervals[electionId];
-                    }
-                    return;
+            // TRUST THE DATABASE STATUS - only use JS for countdown display
+            // If database says cancelled or completed, respect that
+            if (dbStatus === 'cancelled') {
+                container.innerHTML = '<span class="text-sm font-semibold" style="color: #dc2626;">Cancelled</span>';
+                if (countdownIntervals[electionId]) {
+                    clearInterval(countdownIntervals[electionId]);
+                    delete countdownIntervals[electionId];
                 }
-                // If already completed, stop countdown and don't process further
-                if (currentStatus === 'completed') {
-                    container.innerHTML = '<span class="text-sm text-secondary opacity-75">Election Ended</span>';
-                    // Stop countdown interval to prevent further checks
-                    if (countdownIntervals[electionId]) {
-                        clearInterval(countdownIntervals[electionId]);
-                        delete countdownIntervals[electionId];
-                    }
-                    return;
+                return;
+            }
+            
+            if (dbStatus === 'completed') {
+                container.innerHTML = '<span class="text-sm text-secondary opacity-75">Election Ended</span>';
+                if (countdownIntervals[electionId]) {
+                    clearInterval(countdownIntervals[electionId]);
+                    delete countdownIntervals[electionId];
                 }
+                return;
             }
             
             if (!electionTimestamp || electionTimestamp === '' || electionTimestamp === '0' || parseInt(electionTimestamp) <= 0) {
@@ -1241,8 +1251,8 @@
             const nowPHTimestamp = getCurrentPHTime();
             
             // Election timestamp from server is in UTC milliseconds (from Carbon timestamp)
-            // Carbon gives us the UTC timestamp representing the Philippine datetime
             const electionDateTime = parseInt(electionTimestamp);
+            const endDateTime = (endTimestamp && endTimestamp !== '' && endTimestamp !== '0') ? parseInt(endTimestamp) : null;
             
             if (isNaN(electionDateTime)) {
                 console.error('Invalid election timestamp:', electionTimestamp);
@@ -1250,137 +1260,96 @@
                 return;
             }
             
-            // Calculate difference (both timestamps are in UTC milliseconds)
-            const diff = electionDateTime - nowPHTimestamp;
-            
             // Debug logging (only log once per election to avoid spam)
             if (!container.hasAttribute('data-logged')) {
-                console.log(`Election ${electionId}: Election=${new Date(electionDateTime).toISOString()}, NowPH=${new Date(nowPHTimestamp).toISOString()}, Diff=${diff}ms (${Math.floor(diff / (1000 * 60 * 60))} hours)`);
+                console.log(`Election ${electionId}: DB Status=${dbStatus}, Start=${new Date(electionDateTime).toISOString()}, End=${endDateTime ? new Date(endDateTime).toISOString() : 'none'}, NowPH=${new Date(nowPHTimestamp).toISOString()}`);
                 container.setAttribute('data-logged', 'true');
             }
             
-            if (diff <= 0) {
-                // Election has started
-                if (endTimestamp && endTimestamp !== '' && endTimestamp !== '0') {
-                    const endDateTime = parseInt(endTimestamp);
-                    if (nowPHTimestamp >= endDateTime) {
-                        // Election has ended - update countdown and status
-                        container.innerHTML = '<span class="text-sm text-secondary opacity-75">Election Ended</span>';
-                        // Always update to completed when election ends
-                        if (statusContainer) {
-                            const currentStatus = statusContainer.getAttribute('data-status');
-                            if (currentStatus !== 'completed') {
-                                // Update status immediately - this will trigger stats update via AJAX
-                                updateStatus(statusContainer, 'completed', electionId);
-                                // Also trigger immediate stats fetch multiple times to ensure update
-                                setTimeout(function() {
-                                    fetchStats();
-                                }, 100);
-                                setTimeout(function() {
-                                    fetchStats();
-                                }, 500);
-                                setTimeout(function() {
-                                    fetchStats();
-                                }, 1000);
-                            }
-                            // If already completed, don't do anything - just stop the interval
-                            // This prevents blinking by not calling fetchStats() repeatedly
-                        }
-                        if (countdownIntervals[electionId]) {
-                            clearInterval(countdownIntervals[electionId]);
-                            delete countdownIntervals[electionId];
-                        }
-                        return;
-                    }
-                }
-                
-                // Election is in progress - show countdown to end time
-                if (endTimestamp && endTimestamp !== '' && endTimestamp !== '0') {
-                    const endDateTime = parseInt(endTimestamp);
-                    if (!isNaN(endDateTime)) {
-                        // Calculate time remaining until end
-                        const endDiff = endDateTime - nowPHTimestamp;
-                        
-                        if (endDiff > 0) {
-                            // Calculate time remaining until end
-                            const endDays = Math.floor(endDiff / (1000 * 60 * 60 * 24));
-                            const endHours = Math.floor((endDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const endMinutes = Math.floor((endDiff % (1000 * 60 * 60)) / (1000 * 60));
-                            const endSeconds = Math.floor((endDiff % (1000 * 60)) / 1000);
-                            
-                            let endCountdownString = '';
-                            if (endDays > 0) {
-                                endCountdownString = `${endDays}d ${endHours}h ${endMinutes}m`;
-                            } else if (endHours > 0) {
-                                endCountdownString = `${endHours}h ${endMinutes}m ${endSeconds}s`;
-                            } else if (endMinutes > 0) {
-                                endCountdownString = `${endMinutes}m ${endSeconds}s`;
-                            } else {
-                                endCountdownString = `${endSeconds}s`;
-                            }
-                            
-                            // Show "In Progress" with countdown to end
-                            container.innerHTML = `<div class="text-sm font-semibold" style="color: var(--cpsu-gold);">
-                                <div>In Progress</div>
-                                <div class="text-xs mt-1" style="color: var(--cpsu-gold-dark);">Ends in: ${endCountdownString}</div>
-                            </div>`;
-                        } else {
-                            // End time has passed but we're still here (shouldn't happen, but handle it)
-                            container.innerHTML = '<span class="text-sm font-semibold" style="color: var(--cpsu-gold);">In Progress</span>';
-                        }
+            // Calculate differences
+            const startDiff = electionDateTime - nowPHTimestamp;
+            const endDiff = endDateTime ? (endDateTime - nowPHTimestamp) : null;
+            
+            // If database says UPCOMING, show countdown to start
+            if (dbStatus === 'upcoming') {
+                if (startDiff > 0) {
+                    // Show countdown to start
+                    const days = Math.floor(startDiff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((startDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((startDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((startDiff % (1000 * 60)) / 1000);
+                    
+                    let countdownString = '';
+                    if (days > 0) {
+                        countdownString = `${days}d ${hours}h ${minutes}m`;
+                    } else if (hours > 0) {
+                        countdownString = `${hours}h ${minutes}m ${seconds}s`;
+                    } else if (minutes > 0) {
+                        countdownString = `${minutes}m ${seconds}s`;
                     } else {
-                        container.innerHTML = '<span class="text-sm font-semibold" style="color: var(--cpsu-gold);">In Progress</span>';
+                        countdownString = `${seconds}s`;
                     }
+                    
+                    container.innerHTML = `<div class="text-sm font-semibold" style="color: var(--cpsu-green);">
+                        <div>${countdownString}</div>
+                        <div class="text-xs mt-1 opacity-75">until start</div>
+                    </div>`;
                 } else {
-                    // No end time specified, just show "In Progress"
-                    container.innerHTML = '<span class="text-sm font-semibold" style="color: var(--cpsu-gold);">In Progress</span>';
-                }
-                
-                // Only update to ongoing if not cancelled, not completed, and not already ongoing
-                if (statusContainer) {
-                    const currentStatus = statusContainer.getAttribute('data-status');
-                    // Don't change status if it's cancelled, completed, or already ongoing
-                    if (currentStatus !== 'cancelled' && currentStatus !== 'ongoing' && currentStatus !== 'completed') {
+                    // Start time passed - election should transition to ongoing
+                    // Update status via AJAX to sync with backend
+                    if (statusContainer) {
                         updateStatus(statusContainer, 'ongoing', electionId);
+                        container.setAttribute('data-db-status', 'ongoing');
+                        setTimeout(() => fetchStats(), 500);
                     }
                 }
                 return;
             }
             
-            // Calculate time remaining
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
-            let countdownString = '';
-            if (days > 0) {
-                countdownString = `${days}d ${hours}h ${minutes}m`;
-            } else if (hours > 0) {
-                countdownString = `${hours}h ${minutes}m ${seconds}s`;
-            } else if (minutes > 0) {
-                countdownString = `${minutes}m ${seconds}s`;
-            } else {
-                countdownString = `${seconds}s`;
-            }
-            
-            // Update the countdown display
-            container.innerHTML = `<div class="text-sm font-semibold" style="color: var(--cpsu-green);"><span class="countdown-text">${countdownString}</span></div>`;
-            
-            // Update status to upcoming if not already set (but don't override cancelled, ongoing, or completed)
-            if (statusContainer) {
-                const currentStatus = statusContainer.getAttribute('data-status');
-                // Only update to upcoming if status is empty/null, don't override existing statuses
-                if (currentStatus !== 'cancelled' && currentStatus !== 'upcoming' && currentStatus !== 'ongoing' && currentStatus !== 'completed' && (!currentStatus || currentStatus === '')) {
-                    updateStatus(statusContainer, 'upcoming', electionId);
-                    // Note: updateStatus already triggers stats update via AJAX response
+            // If database says ONGOING, show countdown to end
+            if (dbStatus === 'ongoing') {
+                if (endDateTime && endDiff > 0) {
+                    // Show countdown to end
+                    const endDays = Math.floor(endDiff / (1000 * 60 * 60 * 24));
+                    const endHours = Math.floor((endDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const endMinutes = Math.floor((endDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const endSeconds = Math.floor((endDiff % (1000 * 60)) / 1000);
+                    
+                    let endCountdownString = '';
+                    if (endDays > 0) {
+                        endCountdownString = `${endDays}d ${endHours}h ${endMinutes}m`;
+                    } else if (endHours > 0) {
+                        endCountdownString = `${endHours}h ${endMinutes}m ${endSeconds}s`;
+                    } else if (endMinutes > 0) {
+                        endCountdownString = `${endMinutes}m ${endSeconds}s`;
+                    } else {
+                        endCountdownString = `${endSeconds}s`;
+                    }
+                    
+                    container.innerHTML = `<div class="text-sm font-semibold" style="color: var(--cpsu-gold);">
+                        <div>${endCountdownString}</div>
+                        <div class="text-xs mt-1" style="color: var(--cpsu-gold-dark);">until end</div>
+                    </div>`;
+                } else if (endDateTime && endDiff <= 0) {
+                    // End time passed - election should transition to completed
+                    container.innerHTML = '<span class="text-sm text-secondary opacity-75">Election Ended</span>';
+                    if (statusContainer) {
+                        updateStatus(statusContainer, 'completed', electionId);
+                        container.setAttribute('data-db-status', 'completed');
+                        setTimeout(() => fetchStats(), 500);
+                    }
+                    if (countdownIntervals[electionId]) {
+                        clearInterval(countdownIntervals[electionId]);
+                        delete countdownIntervals[electionId];
+                    }
+                } else {
+                    // No end time, just show "In Progress"
+                    container.innerHTML = '<span class="text-sm font-semibold" style="color: var(--cpsu-gold);">In Progress</span>';
                 }
+                return;
             }
-            
-            // Debug: log the countdown string
-            console.log(`Election ${electionId} countdown: ${countdownString}`);
         } catch (e) {
-            console.error('Error updating countdown:', e, 'Timestamp:', electionTimestamp);
+            console.error('Error updating countdown:', e, 'Election ID:', electionId);
             container.innerHTML = '<span class="text-sm text-secondary opacity-75">Error</span>';
         }
     }
@@ -1572,6 +1541,11 @@
                 countdownContainer.setAttribute('data-end-timestamp', election.end_timestamp);
             } else {
                 countdownContainer.setAttribute('data-end-timestamp', '');
+            }
+            
+            // CRITICAL: Update data-db-status to keep countdown in sync with server status
+            if (election.status) {
+                countdownContainer.setAttribute('data-db-status', election.status);
             }
         }
     }

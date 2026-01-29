@@ -134,6 +134,11 @@ class DashboardController extends Controller
 
     /**
      * Calculate election status (same logic as ElectionController::calculateStatus).
+     * 
+     * Logic:
+     * - UPCOMING: Current time is BEFORE start time
+     * - ONGOING: Current time is >= start time AND < end time
+     * - COMPLETED: Current time is >= end time
      */
     private function calculateStatus(array $electionData): string
     {
@@ -144,92 +149,140 @@ class DashboardController extends Controller
                 return 'upcoming';
             }
 
-            if ($electionData['election_date'] instanceof \Carbon\Carbon) {
-                $dateString = $electionData['election_date']->format('Y-m-d');
-            } else {
-                $dateString = is_string($electionData['election_date'])
-                    ? $electionData['election_date']
-                    : (string) $electionData['election_date'];
+            // Extract date string properly
+            $dateString = $this->extractDateString($electionData['election_date']);
+            if (!$dateString) {
+                return 'upcoming';
             }
 
-            $electionDate = Carbon::parse($dateString, 'Asia/Manila');
-
+            // Parse start datetime
+            $startDateTime = null;
+            $timeStr = null;
+            
             if (!empty($electionData['timestarted'])) {
+                $timeStr = $this->normalizeTimeFormat($electionData['timestarted']);
+            }
+            
+            if ($timeStr) {
                 try {
-                    $timeStr = trim($electionData['timestarted']);
-                    // Normalize time format - timestarted might be H:i or H:i:s
-                    $timeParts = explode(':', $timeStr);
-                    if (count($timeParts) == 2) {
-                        // H:i format, add seconds
-                        $timeStr = $timeParts[0] . ':' . $timeParts[1] . ':00';
-                    } elseif (count($timeParts) == 3) {
-                        // Already H:i:s format, use as is
-                        $timeStr = $timeStr;
-                    } else {
-                        throw new \Exception('Invalid time format');
-                    }
-                    
-                    $electionDateTime = Carbon::createFromFormat(
+                    $startDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i:s',
                         $dateString . ' ' . $timeStr,
                         'Asia/Manila'
                     );
                 } catch (\Exception $e) {
-                    $electionDateTime = $electionDate->copy()->startOfDay();
+                    Log::error("Failed to parse start time: {$electionData['timestarted']}");
                 }
-            } else {
-                $electionDateTime = $electionDate->copy()->startOfDay();
+            }
+            
+            if (!$startDateTime) {
+                $startDateTime = Carbon::createFromFormat('Y-m-d', $dateString, 'Asia/Manila')->startOfDay();
             }
 
-            // Check if election has ended FIRST (this takes priority)
+            // Parse end datetime
+            $endDateTime = null;
+            $endTimeStr = null;
+            
             if (!empty($electionData['time_ended'])) {
+                $endTimeStr = $this->normalizeTimeFormat($electionData['time_ended']);
+            }
+            
+            if ($endTimeStr) {
                 try {
-                    $endTimeStr = trim($electionData['time_ended']);
-                    // Normalize time format
-                    $endTimeParts = explode(':', $endTimeStr);
-                    if (count($endTimeParts) == 2) {
-                        // H:i format, add seconds
-                        $endTimeStr = $endTimeParts[0] . ':' . $endTimeParts[1] . ':00';
-                    } elseif (count($endTimeParts) == 3) {
-                        // Already H:i:s format, use as is
-                        $endTimeStr = $endTimeStr;
-                    } else {
-                        throw new \Exception('Invalid end time format');
-                    }
-                    
                     $endDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i:s',
                         $dateString . ' ' . $endTimeStr,
                         'Asia/Manila'
                     );
                     
-                    // Handle overnight elections: if end time is earlier than start time,
-                    // it means the election ends the next day
-                    if (isset($electionDateTime) && $endDateTime->lessThanOrEqualTo($electionDateTime)) {
+                    // Handle overnight elections
+                    if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
                         $endDateTime->addDay();
                     }
-                    
-                    // If current time is past the end time, election is completed
-                    if ($now->greaterThanOrEqualTo($endDateTime)) {
-                        return 'completed';
-                    }
                 } catch (\Exception $e) {
-                    Log::error('Error parsing end time in calculateStatus: ' . $e->getMessage());
-                    // If end time parsing fails, continue with start time check
+                    Log::error("Failed to parse end time: {$electionData['time_ended']}");
                 }
             }
+            
+            if (!$endDateTime) {
+                $endDateTime = Carbon::createFromFormat('Y-m-d', $dateString, 'Asia/Manila')->endOfDay();
+            }
 
-            // Check if election has started (only if not ended)
-            if ($now->greaterThanOrEqualTo($electionDateTime)) {
+            // Decision logic
+            if ($now->greaterThanOrEqualTo($endDateTime)) {
+                return 'completed';
+            }
+            
+            if ($now->greaterThanOrEqualTo($startDateTime)) {
                 return 'ongoing';
             }
             
-            // Election hasn't started yet
             return 'upcoming';
         } catch (\Exception $e) {
             Log::error('Error calculating election status: ' . $e->getMessage());
             return 'upcoming';
         }
+    }
+    
+    /**
+     * Extract date string in Y-m-d format from various input types
+     */
+    private function extractDateString($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+        
+        if ($date instanceof \Carbon\Carbon) {
+            return $date->format('Y-m-d');
+        }
+        
+        if (is_string($date)) {
+            $dateStr = trim($date);
+            
+            // If it's already Y-m-d format
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+                return $dateStr;
+            }
+            
+            // If it's an ISO 8601 format, extract just the date part
+            if (strlen($dateStr) >= 10 && preg_match('/^\d{4}-\d{2}-\d{2}/', $dateStr)) {
+                return substr($dateStr, 0, 10);
+            }
+            
+            try {
+                return Carbon::parse($dateStr)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        
+        try {
+            return Carbon::parse((string)$date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Normalize time format to H:i:s
+     */
+    private function normalizeTimeFormat($time)
+    {
+        if (empty($time)) {
+            return null;
+        }
+        
+        $timeStr = trim($time);
+        $parts = explode(':', $timeStr);
+        
+        if (count($parts) == 2) {
+            return $parts[0] . ':' . $parts[1] . ':00';
+        } elseif (count($parts) == 3) {
+            return $timeStr;
+        }
+        
+        return null;
     }
 
     /**
