@@ -89,27 +89,5 @@
         </div>
     </noscript>
     
-    <!-- Loading timeout fallback -->
-    <script>
-        (function() {
-            // Check if React mounted within 8 seconds
-            setTimeout(function() {
-                var root = document.getElementById('landing-root');
-                if (root && !root.hasChildNodes()) {
-                    root.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; text-align: center; color: white;">' +
-                        '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-                        '<circle cx="12" cy="12" r="10"></circle>' +
-                        '<line x1="12" y1="8" x2="12" y2="12"></line>' +
-                        '<line x1="12" y1="16" x2="12.01" y2="16"></line>' +
-                        '</svg>' +
-                        '<h1 style="margin-top: 1.5rem; font-size: 1.5rem; font-weight: 700;">Loading Issue Detected</h1>' +
-                        '<p style="margin-top: 0.75rem; opacity: 0.8; max-width: 400px;">The page is taking longer than expected to load. This usually happens when switching branches.</p>' +
-                        '<button onclick="location.reload(true)" style="margin-top: 1.5rem; padding: 0.75rem 2rem; background: #facc15; color: #166534; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">Reload Page</button>' +
-                        '<p style="margin-top: 1rem; font-size: 0.875rem; opacity: 0.6;">If this persists, try: Ctrl+Shift+R (hard refresh)</p>' +
-                        '</div>';
-                }
-            }, 8000);
-        })();
-    </script>
 </body>
 </html>

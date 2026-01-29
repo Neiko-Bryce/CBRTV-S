@@ -52,7 +52,7 @@
             "@php artisan view:clear --quiet", 
             "@php artisan cache:clear --quiet",
             "npm run build",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
+            "npx concurrently -c \"#93c5fd,#c4b5fd\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" --names='server,queue'"
         ],
         "test": [
             "@php artisan config:clear --ansi",
