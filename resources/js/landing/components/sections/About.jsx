@@ -33,7 +33,7 @@ const useCases = [
 
 export default function About() {
     return (
-        <section id="about" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-white">
+        <section id="about" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-white overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle
                     subtitle="About The System"
@@ -84,8 +84,8 @@ export default function About() {
                             </div>
 
                             {/* Decorative Elements - Hidden on mobile to prevent overflow */}
-                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-gov-gold-400/20 rounded-full blur-2xl hidden sm:block" />
-                            <div className="absolute -bottom-4 -left-4 w-20 h-20 sm:w-32 sm:h-32 bg-gov-green-400/20 rounded-full blur-2xl hidden sm:block" />
+                            <div className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4 w-12 h-12 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gov-gold-400/20 rounded-full blur-2xl hidden md:block" />
+                            <div className="absolute -bottom-2 -left-2 sm:-bottom-4 sm:-left-4 w-16 h-16 sm:w-24 sm:h-24 lg:w-32 lg:h-32 bg-gov-green-400/20 rounded-full blur-2xl hidden md:block" />
                         </div>
                     </motion.div>
 

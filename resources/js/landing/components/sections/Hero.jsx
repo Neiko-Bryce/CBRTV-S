@@ -11,7 +11,7 @@ export default function Hero() {
     ];
 
     return (
-        <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-gov-green-900 via-gov-green-800 to-gov-green-950">
+        <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-gov-green-900 via-gov-green-800 to-gov-green-950 w-full max-w-full">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
                 <div className="absolute inset-0" style={{
@@ -19,15 +19,15 @@ export default function Hero() {
                 }} />
             </div>
 
-            {/* Floating Background Shapes - Smaller on mobile */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Floating Background Shapes - Hidden on mobile to prevent overflow */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
                 <motion.div
                     animate={{ 
                         y: [0, -30, 0],
                         rotate: [0, 5, 0],
                     }}
                     transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute top-1/4 right-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-gov-gold-500/10 rounded-full blur-3xl"
+                    className="absolute top-1/4 right-1/4 w-64 h-64 lg:w-96 lg:h-96 bg-gov-gold-500/10 rounded-full blur-3xl"
                 />
                 <motion.div
                     animate={{ 
@@ -35,7 +35,7 @@ export default function Hero() {
                         rotate: [0, -5, 0],
                     }}
                     transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute bottom-1/4 left-1/4 w-40 h-40 sm:w-56 sm:h-56 lg:w-80 lg:h-80 bg-gov-green-400/10 rounded-full blur-3xl"
+                    className="absolute bottom-1/4 left-1/4 w-56 h-56 lg:w-80 lg:h-80 bg-gov-green-400/10 rounded-full blur-3xl"
                 />
             </div>
 

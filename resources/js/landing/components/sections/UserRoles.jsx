@@ -71,7 +71,7 @@ const roles = [
 
 export default function UserRoles() {
     return (
-        <section id="roles" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gray-50">
+        <section id="roles" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gray-50 overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle
                     subtitle="User Roles"
