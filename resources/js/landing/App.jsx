@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Navbar from './components/sections/Navbar';
 import Hero from './components/sections/Hero';
+import LiveResults from './components/sections/LiveResults';
 import About from './components/sections/About';
 import Features from './components/sections/Features';
 import HowItWorks from './components/sections/HowItWorks';
@@ -41,6 +42,7 @@ export default function App() {
             <Navbar />
             <main className="overflow-x-hidden">
                 <Hero />
+                <LiveResults />
                 <About />
                 <Features />
                 <HowItWorks />
