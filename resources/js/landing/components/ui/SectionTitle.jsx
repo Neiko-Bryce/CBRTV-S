@@ -8,7 +8,7 @@ export default function SectionTitle({
     light = false,
 }) {
     return (
-        <div className={`max-w-3xl ${centered ? 'mx-auto text-center' : ''} mb-16`}>
+        <div className={`max-w-3xl ${centered ? 'mx-auto text-center' : ''} mb-8 sm:mb-12 lg:mb-16 px-2 sm:px-0`}>
             {subtitle && (
                 <motion.span
                     initial={{ opacity: 0, y: 20 }}
@@ -16,7 +16,7 @@ export default function SectionTitle({
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                     className={`
-                        inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4
+                        inline-block px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4
                         ${light 
                             ? 'bg-white/10 text-white' 
                             : 'bg-gov-green-100 text-gov-green-800'
@@ -32,7 +32,7 @@ export default function SectionTitle({
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className={`
-                    text-3xl md:text-4xl lg:text-5xl font-bold mb-6
+                    text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 lg:mb-6
                     ${light ? 'text-white' : 'text-gray-900'}
                 `}
             >
@@ -45,7 +45,7 @@ export default function SectionTitle({
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className={`
-                        text-lg md:text-xl leading-relaxed
+                        text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed
                         ${light ? 'text-gray-300' : 'text-gray-600'}
                     `}
                 >
