@@ -71,7 +71,7 @@ const itemVariants = {
 
 export default function Features() {
     return (
-        <section id="features" className="py-24 lg:py-32 bg-gray-50">
+        <section id="features" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle
                     subtitle="Core Features"
@@ -84,7 +84,7 @@ export default function Features() {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
-                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
                 >
                     {features.map((feature, index) => (
                         <motion.div key={index} variants={itemVariants}>
@@ -112,7 +112,7 @@ export default function Features() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="mt-20 bg-gradient-to-r from-gov-green-800 to-gov-green-900 rounded-3xl p-8 lg:p-12 overflow-hidden relative"
+                    className="mt-12 sm:mt-16 lg:mt-20 bg-gradient-to-r from-gov-green-800 to-gov-green-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12 overflow-hidden relative"
                 >
                     {/* Background Pattern */}
                     <div className="absolute inset-0 opacity-10">
@@ -122,54 +122,54 @@ export default function Features() {
                         }} />
                     </div>
 
-                    <div className="relative grid lg:grid-cols-2 gap-8 items-center">
+                    <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
                         <div>
-                            <span className="inline-block bg-gov-gold-500 text-gov-green-900 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                            <span className="inline-block bg-gov-gold-500 text-gov-green-900 text-xs sm:text-sm font-semibold px-3 py-1 sm:px-4 sm:py-1.5 rounded-full mb-3 sm:mb-4">
                                 Premium Feature
                             </span>
-                            <h3 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+                            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
                                 Real-Time Analytics Dashboard
                             </h3>
-                            <p className="text-white/80 text-lg mb-6 leading-relaxed">
+                            <p className="text-white/80 text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 leading-relaxed">
                                 Monitor election progress with our powerful analytics dashboard. 
                                 Track voter turnout, geographic distribution, and voting patterns 
                                 in real-time.
                             </p>
-                            <ul className="space-y-3">
+                            <ul className="space-y-2 sm:space-y-3">
                                 {[
                                     'Live participation metrics',
                                     'Demographic breakdowns',
                                     'Exportable reports in multiple formats',
                                     'Custom dashboard widgets',
                                 ].map((item, idx) => (
-                                    <li key={idx} className="flex items-center gap-3 text-white/90">
-                                        <span className="w-2 h-2 bg-gov-gold-400 rounded-full" />
+                                    <li key={idx} className="flex items-center gap-2 sm:gap-3 text-white/90 text-sm sm:text-base">
+                                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gov-gold-400 rounded-full flex-shrink-0" />
                                         {item}
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
-                        <div className="relative">
+                        <div className="relative mt-4 lg:mt-0">
                             <motion.div
                                 animate={{ y: [0, -10, 0] }}
                                 transition={{ duration: 4, repeat: Infinity }}
-                                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
+                                className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20"
                             >
                                 {/* Mini Dashboard Preview */}
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-white/10 rounded-xl p-4">
-                                        <p className="text-white/60 text-sm">Total Votes</p>
-                                        <p className="text-2xl font-bold text-white">12,847</p>
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                    <div className="bg-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                                        <p className="text-white/60 text-xs sm:text-sm">Total Votes</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-white">12,847</p>
                                     </div>
-                                    <div className="bg-white/10 rounded-xl p-4">
-                                        <p className="text-white/60 text-sm">Turnout</p>
-                                        <p className="text-2xl font-bold text-gov-gold-400">78.4%</p>
+                                    <div className="bg-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                                        <p className="text-white/60 text-xs sm:text-sm">Turnout</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-gov-gold-400">78.4%</p>
                                     </div>
                                 </div>
-                                <div className="bg-white/10 rounded-xl p-4">
-                                    <p className="text-white/60 text-sm mb-3">Hourly Activity</p>
-                                    <div className="flex items-end gap-1 h-16">
+                                <div className="bg-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                                    <p className="text-white/60 text-xs sm:text-sm mb-2 sm:mb-3">Hourly Activity</p>
+                                    <div className="flex items-end gap-1 h-12 sm:h-16">
                                         {[30, 45, 60, 80, 65, 90, 75, 85].map((height, idx) => (
                                             <motion.div
                                                 key={idx}

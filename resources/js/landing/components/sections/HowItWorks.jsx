@@ -60,7 +60,7 @@ const steps = [
 
 export default function HowItWorks() {
     return (
-        <section id="how-it-works" className="py-24 lg:py-32 bg-white overflow-hidden">
+        <section id="how-it-works" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-white overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle
                     subtitle="How It Works"
@@ -69,10 +69,10 @@ export default function HowItWorks() {
                 />
 
                 <div className="relative">
-                    {/* Connection Line - Desktop */}
+                    {/* Connection Line - Desktop only */}
                     <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-gov-green-200 via-gov-green-400 to-gov-green-200 -translate-y-1/2 z-0" />
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6 relative z-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-6 relative z-10">
                         {steps.map((step, index) => (
                             <motion.div
                                 key={index}
@@ -83,30 +83,30 @@ export default function HowItWorks() {
                                 className="relative"
                             >
                                 {/* Step Card */}
-                                <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-100 hover:border-gov-green-200 transition-all duration-300 hover:shadow-xl group">
+                                <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 shadow-lg border border-gray-100 hover:border-gov-green-200 transition-all duration-300 hover:shadow-xl group h-full">
                                     {/* Step Number Badge */}
-                                    <div className="absolute -top-4 left-6 lg:left-1/2 lg:-translate-x-1/2 bg-gov-green-800 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-lg">
+                                    <div className="absolute -top-3 sm:-top-4 left-4 sm:left-6 lg:left-1/2 lg:-translate-x-1/2 bg-gov-green-800 text-white text-xs sm:text-sm font-bold px-3 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-lg">
                                         Step {step.number}
                                     </div>
 
                                     {/* Icon */}
                                     <motion.div
                                         whileHover={{ scale: 1.1, rotate: 5 }}
-                                        className="w-16 h-16 bg-gradient-to-br from-gov-green-100 to-gov-green-200 rounded-2xl flex items-center justify-center mx-auto mt-4 mb-6 group-hover:from-gov-green-700 group-hover:to-gov-green-900 transition-all duration-300"
+                                        className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-gov-green-100 to-gov-green-200 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mt-3 sm:mt-4 mb-4 sm:mb-6 group-hover:from-gov-green-700 group-hover:to-gov-green-900 transition-all duration-300"
                                     >
-                                        <step.icon className="w-8 h-8 text-gov-green-800 group-hover:text-white transition-colors duration-300" />
+                                        <step.icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-gov-green-800 group-hover:text-white transition-colors duration-300" />
                                     </motion.div>
 
                                     {/* Content */}
-                                    <h3 className="text-xl font-bold text-gray-900 text-center mb-3">
+                                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 text-center mb-2 sm:mb-3">
                                         {step.title}
                                     </h3>
-                                    <p className="text-gray-600 text-center mb-6 leading-relaxed">
+                                    <p className="text-gray-600 text-center mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
                                         {step.description}
                                     </p>
 
                                     {/* Details */}
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-1.5 sm:space-y-2">
                                         {step.details.map((detail, idx) => (
                                             <motion.li
                                                 key={idx}
@@ -114,9 +114,9 @@ export default function HowItWorks() {
                                                 whileInView={{ opacity: 1, x: 0 }}
                                                 viewport={{ once: true }}
                                                 transition={{ delay: 0.3 + idx * 0.1 }}
-                                                className="flex items-center gap-2 text-sm text-gray-600"
+                                                className="flex items-center gap-2 text-xs sm:text-sm text-gray-600"
                                             >
-                                                <span className="w-1.5 h-1.5 bg-gov-gold-500 rounded-full flex-shrink-0" />
+                                                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-gov-gold-500 rounded-full flex-shrink-0" />
                                                 {detail}
                                             </motion.li>
                                         ))}
@@ -148,18 +148,18 @@ export default function HowItWorks() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.5 }}
-                    className="mt-16 text-center"
+                    className="mt-10 sm:mt-12 lg:mt-16 text-center px-4"
                 >
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                         Ready to experience seamless voting?
                     </p>
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="inline-flex items-center gap-2 bg-gov-green-800 hover:bg-gov-green-900 text-white font-semibold px-8 py-4 rounded-xl shadow-lg shadow-gov-green-800/25 transition-colors"
+                        className="inline-flex items-center justify-center gap-2 bg-gov-green-800 hover:bg-gov-green-900 text-white font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-xl shadow-lg shadow-gov-green-800/25 transition-colors text-sm sm:text-base w-full sm:w-auto"
                     >
                         Try Demo Election
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                     </motion.button>
