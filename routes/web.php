@@ -7,6 +7,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Public API for live election results (no auth required)
+Route::prefix('api')->group(function () {
+    Route::get('/live-results', [\App\Http\Controllers\Api\LiveResultsController::class, 'getCompletedElections'])->name('api.live-results');
+    Route::get('/live-results/{electionId}', [\App\Http\Controllers\Api\LiveResultsController::class, 'getElectionResults'])->name('api.live-results.election');
+});
+
 // Protected Routes - Redirect to appropriate dashboard based on user type
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
