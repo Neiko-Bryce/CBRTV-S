@@ -51,7 +51,7 @@ const certifications = [
 
 export default function Security() {
     return (
-        <section id="security" className="py-24 lg:py-32 bg-gradient-to-br from-gov-green-900 via-gov-green-800 to-gov-green-950 relative overflow-hidden">
+        <section id="security" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-gov-green-900 via-gov-green-800 to-gov-green-950 relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5">
                 <div className="absolute inset-0" style={{
@@ -68,7 +68,7 @@ export default function Security() {
                 />
 
                 {/* Security Features Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-10 sm:mb-12 lg:mb-16">
                     {securityFeatures.map((feature, index) => (
                         <motion.div
                             key={index}
@@ -77,13 +77,13 @@ export default function Security() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             whileHover={{ y: -5, scale: 1.02 }}
-                            className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-gov-gold-500/30 transition-all duration-300"
+                            className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-gov-gold-500/30 transition-all duration-300"
                         >
-                            <div className="w-12 h-12 bg-gov-gold-500/20 rounded-xl flex items-center justify-center mb-4">
-                                <feature.icon className="w-6 h-6 text-gov-gold-400" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gov-gold-500/20 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+                                <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-gov-gold-400" />
                             </div>
-                            <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                            <p className="text-white/70 text-sm leading-relaxed">{feature.description}</p>
+                            <h3 className="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">{feature.title}</h3>
+                            <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{feature.description}</p>
                         </motion.div>
                     ))}
                 </div>
@@ -94,14 +94,14 @@ export default function Security() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 lg:p-12 border border-white/10"
+                    className="bg-white/5 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12 border border-white/10"
                 >
-                    <div className="text-center mb-8">
-                        <h3 className="text-2xl font-bold text-white mb-2">Security Certifications & Compliance</h3>
-                        <p className="text-white/60">Independently verified security and compliance standards</p>
+                    <div className="text-center mb-6 sm:mb-8">
+                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-1.5 sm:mb-2">Security Certifications & Compliance</h3>
+                        <p className="text-white/60 text-sm sm:text-base">Independently verified security and compliance standards</p>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                         {certifications.map((cert, index) => (
                             <motion.div
                                 key={index}
@@ -110,13 +110,13 @@ export default function Security() {
                                 viewport={{ once: true }}
                                 transition={{ delay: 0.2 + index * 0.1 }}
                                 whileHover={{ scale: 1.05 }}
-                                className="bg-white/10 rounded-2xl p-6 text-center border border-white/10 hover:border-gov-gold-500/50 transition-all"
+                                className="bg-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center border border-white/10 hover:border-gov-gold-500/50 transition-all"
                             >
-                                <div className="w-16 h-16 bg-gov-gold-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <HiShieldCheck className="w-8 h-8 text-gov-gold-400" />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gov-gold-500/20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4">
+                                    <HiShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-gov-gold-400" />
                                 </div>
-                                <p className="text-xl font-bold text-white">{cert.name}</p>
-                                <p className="text-white/60 text-sm">{cert.description}</p>
+                                <p className="text-sm sm:text-base lg:text-xl font-bold text-white">{cert.name}</p>
+                                <p className="text-white/60 text-[10px] sm:text-xs lg:text-sm">{cert.description}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -128,7 +128,7 @@ export default function Security() {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.3 }}
-                    className="mt-12 flex flex-wrap justify-center gap-8 lg:gap-16"
+                    className="mt-8 sm:mt-10 lg:mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 lg:gap-16"
                 >
                     {[
                         { value: '256-bit', label: 'Encryption' },
@@ -137,8 +137,8 @@ export default function Security() {
                         { value: '99.99%', label: 'Uptime SLA' },
                     ].map((stat, index) => (
                         <div key={index} className="text-center">
-                            <p className="text-3xl lg:text-4xl font-bold text-gov-gold-400">{stat.value}</p>
-                            <p className="text-white/60 text-sm mt-1">{stat.label}</p>
+                            <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gov-gold-400">{stat.value}</p>
+                            <p className="text-white/60 text-xs sm:text-sm mt-0.5 sm:mt-1">{stat.label}</p>
                         </div>
                     ))}
                 </motion.div>

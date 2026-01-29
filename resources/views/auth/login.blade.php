@@ -920,8 +920,9 @@
         <div class="left-section">
             <div class="left-content">
                 <div class="logo-badge">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <!-- Voting Ballot Box Icon - Same as Landing Page -->
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 13h-.68l-2 2h1.91L19 17H5l1.78-2h2.05l-2-2H6l-3 3v4c0 1.1.89 2 1.99 2H19c1.1 0 2-.89 2-2v-4l-3-3zm-1-5.05l-4.95 4.95-3.54-3.54 4.95-4.95 3.54 3.54zm-4.24-5.66L6.39 8.66a.996.996 0 000 1.41l4.95 4.95c.39.39 1.02.39 1.41 0l6.36-6.36a.996.996 0 000-1.41l-4.95-4.95a.996.996 0 00-1.41 0z"/>
                     </svg>
                 </div>
                 <h1>Cloud Based<br>Real-Time Voting<br>System</h1>
@@ -1064,6 +1065,8 @@
         (function() {
             const preloader = document.getElementById('preloader');
             const progressFill = document.getElementById('preloaderProgress');
+            const preloaderText = document.querySelector('.preloader-text');
+            const preloaderSubtext = document.querySelector('.preloader-subtext');
             
             // Simulate loading progress
             let progress = 0;
@@ -1117,6 +1120,27 @@
                     }, 200);
                 }
             }, 3000);
+            
+            // Show preloader on login form submission
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    // Update preloader text for login
+                    if (preloaderText) preloaderText.textContent = 'Signing In...';
+                    if (preloaderSubtext) preloaderSubtext.textContent = 'Verifying your credentials';
+                    
+                    // Reset and show preloader
+                    if (preloader) {
+                        preloader.style.display = 'flex';
+                        preloader.classList.remove('hidden');
+                    }
+                    if (progressFill) {
+                        progressFill.style.animation = 'none';
+                        progressFill.offsetHeight; // Trigger reflow
+                        progressFill.style.animation = 'progressBar 2s ease-in-out infinite, progressFill 3s ease forwards';
+                    }
+                });
+            }
         })();
 
         // Password toggle functionality
