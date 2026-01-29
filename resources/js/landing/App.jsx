@@ -37,9 +37,9 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-white font-sans antialiased">
+        <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden">
             <Navbar />
-            <main>
+            <main className="overflow-x-hidden">
                 <Hero />
                 <About />
                 <Features />
