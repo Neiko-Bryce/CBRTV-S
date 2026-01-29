@@ -203,6 +203,12 @@ class DashboardController extends Controller
                         'Asia/Manila'
                     );
                     
+                    // Handle overnight elections: if end time is earlier than start time,
+                    // it means the election ends the next day
+                    if (isset($electionDateTime) && $endDateTime->lessThanOrEqualTo($electionDateTime)) {
+                        $endDateTime->addDay();
+                    }
+                    
                     // If current time is past the end time, election is completed
                     if ($now->greaterThanOrEqualTo($endDateTime)) {
                         return 'completed';
