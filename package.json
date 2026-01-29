@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "fix": "node -e \"try{require('fs').unlinkSync('public/hot')}catch(e){}\" && npm run build"
+        "fix": "node -e \"const fs=require('fs');const path=require('path');try{fs.unlinkSync('public/hot')}catch(e){}try{const viteDir='node_modules/.vite';if(fs.existsSync(viteDir)){fs.readdirSync(viteDir).forEach(f=>fs.unlinkSync(path.join(viteDir,f)));fs.rmdirSync(viteDir)}}catch(e){}console.log('Cleanup complete')\" && npm run build",
+        "clean": "node -e \"const fs=require('fs');try{fs.unlinkSync('public/hot');console.log('Removed public/hot')}catch(e){console.log('public/hot not found')}\""
     },
     "dependencies": {
         "framer-motion": "^11.15.0",
