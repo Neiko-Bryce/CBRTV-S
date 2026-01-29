@@ -9,10 +9,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
-            --cpsu-green: #006633;
-            --cpsu-gold: #D4AF37;
-            --cpsu-green-light: #008844;
-            --cpsu-green-dark: #004422;
+            --cpsu-green: #166534;
+            --cpsu-gold: #facc15;
+            --cpsu-green-light: #22c55e;
+            --cpsu-green-dark: #14532d;
         }
         * {
             margin: 0;
@@ -131,8 +131,8 @@
             width: 100%;
             height: 100%;
             border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--cpsu-gold);
-            border-right-color: var(--cpsu-gold);
+            border-top-color: #facc15;
+            border-right-color: #facc15;
             border-radius: 50%;
             animation: spin 1.2s linear infinite;
         }
@@ -155,8 +155,8 @@
             top: 30%;
             left: 30%;
             border-width: 2px;
-            border-top-color: var(--cpsu-gold);
-            border-right-color: var(--cpsu-gold);
+            border-top-color: #facc15;
+            border-right-color: #facc15;
             border-bottom-color: transparent;
             border-left-color: transparent;
             animation-duration: 0.6s;
@@ -204,11 +204,11 @@
         }
         .preloader-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--cpsu-gold) 0%, white 50%, var(--cpsu-gold) 100%);
+            background: linear-gradient(90deg, #facc15 0%, white 50%, #facc15 100%);
             background-size: 200% 100%;
             width: 0%;
             animation: progressBar 2s ease-in-out infinite, progressFill 1.5s ease forwards;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
         }
         @keyframes progressBar {
             0% {
@@ -292,7 +292,7 @@
             right: -20%;
             width: 800px;
             height: 800px;
-            background: linear-gradient(135deg, rgba(0, 102, 51, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.08) 0%, rgba(250, 204, 21, 0.05) 100%);
             border-radius: 50%;
             filter: blur(80px);
         }
@@ -303,7 +303,7 @@
             left: -10%;
             width: 600px;
             height: 600px;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(0, 102, 51, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.05) 0%, rgba(22, 101, 52, 0.08) 100%);
             border-radius: 50%;
             filter: blur(80px);
         }
@@ -337,7 +337,7 @@
             right: 0;
             width: 200px;
             height: 200px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.2) 0%, transparent 70%);
             border-radius: 50%;
             transform: translate(30%, -30%);
         }
@@ -348,7 +348,7 @@
             left: 0;
             width: 150px;
             height: 150px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.15) 0%, transparent 70%);
             border-radius: 50%;
             transform: translate(-30%, 30%);
         }
@@ -361,12 +361,13 @@
             height: 56px;
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            border-radius: 12px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         .logo-badge svg {
             width: 32px;
@@ -470,7 +471,7 @@
             padding: 0.75rem 1rem 0.75rem 2.75rem;
             font-size: 0.9375rem;
             border: 1.5px solid #e2e8f0;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             background: #fff;
             color: #1e293b;
             transition: all 0.2s;
@@ -478,7 +479,7 @@
         }
         .form-input:focus {
             border-color: var(--cpsu-green);
-            box-shadow: 0 0 0 3px rgba(0, 102, 51, 0.1);
+            box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.15);
         }
         .form-input:focus + .input-icon,
         .input-container:focus-within .input-icon {
@@ -538,20 +539,21 @@
             font-size: 0.9375rem;
             font-weight: 600;
             color: white;
-            background: var(--cpsu-green);
+            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-dark) 100%);
             border: none;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(22, 101, 52, 0.25);
         }
         .submit-btn:hover {
             background: var(--cpsu-green-dark);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 102, 51, 0.2);
+            box-shadow: 0 4px 12px rgba(22, 101, 52, 0.3);
         }
         .submit-btn:active {
             transform: translateY(0);
@@ -1046,7 +1048,7 @@
             </form>
 
             <div class="form-footer">
-                <p>Don't have an account? <a href="{{ route('register') }}">Register here</a></p>
+                
                 <a href="{{ url('/') }}" class="back-link">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
