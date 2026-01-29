@@ -47,11 +47,10 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php -r \"@unlink('public/hot'); @array_map('unlink', glob('node_modules/.vite/*') ?: []); @rmdir('node_modules/.vite'); echo 'Cleaned up hot file and Vite cache.\\n';\"",
+            "node scripts/dev-cleanup.cjs",
             "@php artisan config:clear --quiet",
             "@php artisan view:clear --quiet", 
             "@php artisan cache:clear --quiet",
-            "@php artisan route:clear --quiet",
             "npm run build",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
         ],
