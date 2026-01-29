@@ -14,4 +14,14 @@ export default defineConfig({
         }),
         react(),
     ],
+    server: {
+        strictPort: false,
+        hmr: {
+            overlay: true,
+        },
+    },
+    optimizeDeps: {
+        force: true,
+    },
+    cacheDir: 'node_modules/.vite',
 });
