@@ -81,7 +81,7 @@ export default function Footer() {
                                 <MdHowToVote className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                             </div>
                             <div>
-                                <span className="text-lg sm:text-xl font-bold">CPSU Voting</span>
+                                <span className="text-lg sm:text-xl font-bold">Votewisely.cpsu</span>
                                 <span className="block text-[10px] sm:text-xs text-gray-400">Cloud Based Real-Time Voting System</span>
                             </div>
                         </motion.a>
@@ -142,7 +142,7 @@ export default function Footer() {
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         {/* Copyright */}
                         <div className="text-gray-400 text-xs sm:text-sm text-center sm:text-left">
-                            <p>&copy; {new Date().getFullYear()} CPSU Voting. All rights reserved.</p>
+                            <p>&copy; {new Date().getFullYear()} Votewisely.cpsu. All rights reserved.</p>
                             <p className="mt-0.5 sm:mt-1">Empowering transparent democracy through technology.</p>
                         </div>
 

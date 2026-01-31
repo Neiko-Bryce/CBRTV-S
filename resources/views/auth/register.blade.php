@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Register - CPSU Voting System</title>
+    <title>Register - Votewisely.cpsu</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&family=playfair-display:400,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -559,7 +559,7 @@
                 <div class="spinner-ring"></div>
                 <div class="spinner-ring"></div>
             </div>
-            <div class="preloader-text">CPSU Voting System</div>
+            <div class="preloader-text">Votewisely.cpsu</div>
             <div class="preloader-subtext">Creating your account...</div>
         </div>
         <div class="preloader-progress-bar">
@@ -609,7 +609,7 @@
         <div class="right-section">
             <div class="form-header">
                 <h2>Create Account</h2>
-                <p>Join CPSU Voting System</p>
+                <p>Join Votewisely.cpsu</p>
             </div>
 
             <div class="form-divider"></div>
