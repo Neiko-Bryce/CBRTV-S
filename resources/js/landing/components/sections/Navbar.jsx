@@ -50,7 +50,7 @@ export default function Navbar() {
                         </div>
                         <div className="hidden sm:block">
                             <span className={`text-xl font-bold ${isScrolled ? 'text-gov-green-900' : 'text-white'}`}>
-                                CPSU Voting
+                                Votewisely.cpsu
                             </span>
                             <span className={`block text-xs font-medium ${isScrolled ? 'text-gov-green-600' : 'text-white/70'}`}>
                                 Cloud Based Real-Time Voting System
