@@ -16,7 +16,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin Dashboard') - CPSU Voting System</title>
+    <title>@yield('title', 'Admin Dashboard') - Votewisely.cpsu</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -115,7 +115,7 @@
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-lg font-bold text-gray-900 dark:text-white heading-font">CPSU Admin</h1>
+                            <h1 class="text-lg font-bold text-gray-900 dark:text-white heading-font">Votewisely Admin</h1>
                             <p class="text-xs text-gray-500 dark:text-gray-400">Voting System</p>
                         </div>
                     </div>

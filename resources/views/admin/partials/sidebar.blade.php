@@ -25,7 +25,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold heading-font transition-colors" style="color: var(--cpsu-green);">CPSU Admin</h1>
+                        <h1 class="text-lg font-bold heading-font transition-colors" style="color: var(--cpsu-green);">Votewisely Admin</h1>
                         <p class="text-xs text-secondary transition-colors">Voting System</p>
                     </div>
                 </div>
