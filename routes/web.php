@@ -60,7 +60,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Organizations Management
     Route::resource('organizations', \App\Http\Controllers\Admin\OrganizationController::class);
-    Route::get('organizations/{id}', [\App\Http\Controllers\Admin\OrganizationController::class, 'show'])->name('organizations.show');
     
     // Positions Management
     Route::get('positions', [\App\Http\Controllers\Admin\PositionController::class, 'index'])->name('positions.index');
