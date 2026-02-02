@@ -12,22 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // For PostgreSQL, we need to use ALTER TABLE to move the column
-        if (DB::getDriverName() === 'pgsql') {
-            // Drop and recreate the column in the correct position
-            DB::statement('ALTER TABLE students DROP COLUMN IF EXISTS fname');
-            DB::statement('ALTER TABLE students ADD COLUMN fname VARCHAR(255) NULL');
-            // Note: PostgreSQL doesn't support AFTER clause, so we'll just ensure it exists
-            // The position doesn't affect functionality
-        } else {
-            // For MySQL/MariaDB
+        // This migration is for column reordering which PostgreSQL doesn't support
+        // and isn't necessary for functionality. Skip for fresh installs.
+        if (!Schema::hasColumn('students', 'fname')) {
+            // Column doesn't exist, add it
             Schema::table('students', function (Blueprint $table) {
-                $table->dropColumn('fname');
-            });
-            Schema::table('students', function (Blueprint $table) {
-                $table->string('fname')->nullable()->after('lname');
+                $table->string('fname')->nullable();
             });
         }
+        // Column position doesn't affect functionality, so we skip reordering
     }
 
     /**
@@ -35,9 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Just drop the column if rolling back
-        Schema::table('students', function (Blueprint $table) {
-            $table->dropColumn('fname');
-        });
+        // Nothing to reverse
     }
 };

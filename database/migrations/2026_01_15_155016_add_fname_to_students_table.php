@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if fname column already exists
+        if (Schema::hasColumn('students', 'fname')) {
+            return;
+        }
+
         Schema::table('students', function (Blueprint $table) {
-            $table->string('fname')->nullable()->after('lname'); // First name
+            $table->string('fname')->nullable();
         });
     }
 
@@ -21,8 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('students', function (Blueprint $table) {
-            $table->dropColumn('fname');
-        });
+        if (Schema::hasColumn('students', 'fname')) {
+            Schema::table('students', function (Blueprint $table) {
+                $table->dropColumn('fname');
+            });
+        }
     }
 };
