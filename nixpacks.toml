@@ -1,22 +1,19 @@
 # Railway/Nixpacks configuration for Laravel + PostgreSQL + Vite
 
-# Define providers
 [phases.setup]
 nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql", "nodejs_20", "php83Packages.composer"]
 
-# Install dependencies
 [phases.install]
 cmds = [
     "composer install --no-dev --optimize-autoloader --no-interaction",
     "npm ci"
 ]
 
-# Build assets only - NO database commands here
 [phases.build]
 cmds = [
     "npm run build"
 ]
 
-# Start command - just serve (migrations run manually via Railway shell)
+# This runs at RUNTIME (container start), not build time
 [start]
-cmd = "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
