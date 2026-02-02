@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Election;
 use App\Models\Candidate;
+use App\Models\Election;
 use App\Models\Vote;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LiveResultsController extends Controller
@@ -19,7 +18,7 @@ class LiveResultsController extends Controller
     {
         $now = Carbon::now('Asia/Manila');
         $twentyFourHoursAgo = $now->copy()->subHours(24);
-        
+
         // Get elections that are ONGOING or recently COMPLETED (within 24 hours)
         $elections = Election::whereIn('status', ['ongoing', 'completed'])
             ->with(['organization'])
@@ -29,16 +28,18 @@ class LiveResultsController extends Controller
                 if ($election->status === 'ongoing') {
                     return true;
                 }
-                
+
                 // If completed, check if within 24-hour window
                 $endDateTime = $this->parseElectionEndTime($election);
-                if (!$endDateTime) return false;
-                
+                if (! $endDateTime) {
+                    return false;
+                }
+
                 return $endDateTime->gte($twentyFourHoursAgo) && $endDateTime->lte($now);
             });
-        
+
         $results = [];
-        
+
         foreach ($elections as $election) {
             // Get candidates grouped by position with vote counts
             $candidatesByPosition = Candidate::where('election_id', $election->id)
@@ -46,26 +47,28 @@ class LiveResultsController extends Controller
                 ->withCount('votes')
                 ->get()
                 ->groupBy('position_id');
-            
+
             $positionsData = [];
-            
+
             foreach ($candidatesByPosition as $positionId => $candidates) {
                 $position = $candidates->first()->position;
-                if (!$position) continue;
-                
+                if (! $position) {
+                    continue;
+                }
+
                 $candidatesData = [];
-                
+
                 if ($election->status === 'ongoing') {
                     // ONGOING: Use anonymized data (question marks, Candidate A/B/C)
                     $candidatesArray = $candidates->toArray();
-                    $seed = crc32($election->id . '-' . $positionId);
+                    $seed = crc32($election->id.'-'.$positionId);
                     $shuffledCandidates = $this->seededShuffle($candidatesArray, $seed);
-                    
+
                     $letterIndex = 0;
                     foreach ($shuffledCandidates as $candidate) {
                         $anonymousLabel = $this->getAnonymousLabel($letterIndex);
                         $currentVotes = Vote::where('candidate_id', $candidate['id'])->count();
-                        
+
                         $candidatesData[] = [
                             'id' => $candidate['id'],
                             'name' => "Candidate {$anonymousLabel}",
@@ -79,13 +82,13 @@ class LiveResultsController extends Controller
                     // COMPLETED: Reveal real candidate info!
                     foreach ($candidates as $candidate) {
                         $currentVotes = Vote::where('candidate_id', $candidate->id)->count();
-                        
+
                         // Build photo URL
                         $photoUrl = null;
                         if ($candidate->photo) {
                             $photoUrl = route('student.candidates.photo', ['path' => $candidate->photo]);
                         }
-                        
+
                         $candidatesData[] = [
                             'id' => $candidate->id,
                             'name' => $candidate->candidate_name,
@@ -95,12 +98,12 @@ class LiveResultsController extends Controller
                         ];
                     }
                 }
-                
+
                 // Sort by votes (highest first)
-                usort($candidatesData, function($a, $b) {
+                usort($candidatesData, function ($a, $b) {
                     return $b['votes_count'] - $a['votes_count'];
                 });
-                
+
                 $positionsData[] = [
                     'position_id' => $positionId,
                     'position_name' => $position->name,
@@ -108,11 +111,11 @@ class LiveResultsController extends Controller
                     'total_votes' => array_sum(array_column($candidatesData, 'votes_count')),
                 ];
             }
-            
+
             // Calculate time remaining based on election status
             $endDateTime = $this->parseElectionEndTime($election);
             $startDateTime = $this->parseElectionStartTime($election);
-            
+
             $resultData = [
                 'id' => $election->id,
                 'election_name' => $election->election_name,
@@ -122,7 +125,7 @@ class LiveResultsController extends Controller
                 'positions' => $positionsData,
                 'total_voters' => Vote::where('election_id', $election->id)->distinct('voter_id')->count(),
             ];
-            
+
             if ($election->status === 'ongoing') {
                 // For ongoing elections, show time until election ends
                 if ($endDateTime) {
@@ -153,17 +156,17 @@ class LiveResultsController extends Controller
                     ];
                 }
             }
-            
+
             $results[] = $resultData;
         }
-        
+
         return response()->json([
             'success' => true,
             'elections' => $results,
             'timestamp' => $now->toIso8601String(),
         ]);
     }
-    
+
     /**
      * Parse the election end datetime from date and time fields.
      */
@@ -172,22 +175,22 @@ class LiveResultsController extends Controller
         if (empty($election->time_ended) || empty($election->election_date)) {
             return null;
         }
-        
+
         try {
             $dateStr = $election->election_date->format('Y-m-d');
             $timeStr = $election->time_ended;
-            
+
             // Handle different time formats (HH:MM or HH:MM:SS)
             if (strlen($timeStr) === 5) {
                 $timeStr .= ':00';
             }
-            
-            return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $timeStr, 'Asia/Manila');
+
+            return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$timeStr, 'Asia/Manila');
         } catch (\Exception $e) {
             return null;
         }
     }
-    
+
     /**
      * Parse the election start datetime from date and time fields.
      */
@@ -196,22 +199,22 @@ class LiveResultsController extends Controller
         if (empty($election->timestarted) || empty($election->election_date)) {
             return null;
         }
-        
+
         try {
             $dateStr = $election->election_date->format('Y-m-d');
             $timeStr = $election->timestarted;
-            
+
             // Handle different time formats (HH:MM or HH:MM:SS)
             if (strlen($timeStr) === 5) {
                 $timeStr .= ':00';
             }
-            
-            return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $timeStr, 'Asia/Manila');
+
+            return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$timeStr, 'Asia/Manila');
         } catch (\Exception $e) {
             return null;
         }
     }
-    
+
     /**
      * Get real-time vote counts for a specific election.
      */
@@ -219,34 +222,34 @@ class LiveResultsController extends Controller
     {
         $now = Carbon::now('Asia/Manila');
         $twentyFourHoursAgo = $now->copy()->subHours(24);
-        
+
         $election = Election::where('id', $electionId)
             ->where('status', 'completed')
             ->first();
-        
-        if (!$election) {
+
+        if (! $election) {
             return response()->json([
                 'success' => false,
                 'message' => 'Election not found or not completed',
             ], 404);
         }
-        
+
         // Check if within 24-hour window
         $endDateTime = $this->parseElectionEndTime($election);
-        if (!$endDateTime || $endDateTime->lt($twentyFourHoursAgo)) {
+        if (! $endDateTime || $endDateTime->lt($twentyFourHoursAgo)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Results are no longer available (24-hour window expired)',
             ], 410);
         }
-        
+
         // Get vote counts
         $voteCounts = Vote::where('election_id', $electionId)
             ->select('candidate_id', DB::raw('count(*) as votes'))
             ->groupBy('candidate_id')
             ->pluck('votes', 'candidate_id')
             ->toArray();
-        
+
         return response()->json([
             'success' => true,
             'vote_counts' => $voteCounts,
@@ -254,7 +257,7 @@ class LiveResultsController extends Controller
             'timestamp' => $now->toIso8601String(),
         ]);
     }
-    
+
     /**
      * Shuffle array with a seed for consistent results.
      */
@@ -262,25 +265,25 @@ class LiveResultsController extends Controller
     {
         mt_srand($seed);
         $keys = array_keys($array);
-        
+
         for ($i = count($keys) - 1; $i > 0; $i--) {
             $j = mt_rand(0, $i);
             $temp = $keys[$i];
             $keys[$i] = $keys[$j];
             $keys[$j] = $temp;
         }
-        
+
         $shuffled = [];
         foreach ($keys as $key) {
             $shuffled[] = $array[$key];
         }
-        
+
         // Reset the random seed
         mt_srand();
-        
+
         return $shuffled;
     }
-    
+
     /**
      * Generate anonymous label (A, B, C, ... Z, AA, AB, etc.)
      */
@@ -288,13 +291,13 @@ class LiveResultsController extends Controller
     {
         $letters = '';
         $index++;
-        
+
         while ($index > 0) {
             $index--;
-            $letters = chr(65 + ($index % 26)) . $letters;
+            $letters = chr(65 + ($index % 26)).$letters;
             $index = intdiv($index, 26);
         }
-        
+
         return $letters;
     }
 }

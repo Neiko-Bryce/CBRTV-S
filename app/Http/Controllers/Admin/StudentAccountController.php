@@ -8,8 +8,8 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class StudentAccountController extends Controller
 {
@@ -22,7 +22,7 @@ class StudentAccountController extends Controller
         $studentAccounts = User::where('usertype', 'student')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
-        
+
         // Load student data for each account
         foreach ($studentAccounts as $account) {
             $student = Student::where('student_id_number', $account->email)->first();
@@ -36,7 +36,7 @@ class StudentAccountController extends Controller
                 $account->ext = $student->ext;
             }
         }
-        
+
         return view('admin.student-management.index', compact('studentAccounts'));
     }
 
@@ -54,16 +54,16 @@ class StudentAccountController extends Controller
         $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
 
         // Search by student ID or name (first name, middle name, last name, or full name)
-        $student = Student::where(function($query) use ($searchTerm, $likeOperator, $isPostgres) {
+        $student = Student::where(function ($query) use ($searchTerm, $likeOperator, $isPostgres) {
             // Search by Student ID (case-insensitive)
             $query->where('student_id_number', $likeOperator, "%{$searchTerm}%")
                   // Search by First Name
-                  ->orWhere('fname', $likeOperator, "%{$searchTerm}%")
+                ->orWhere('fname', $likeOperator, "%{$searchTerm}%")
                   // Search by Middle Name
-                  ->orWhere('mname', $likeOperator, "%{$searchTerm}%")
+                ->orWhere('mname', $likeOperator, "%{$searchTerm}%")
                   // Search by Last Name
-                  ->orWhere('lname', $likeOperator, "%{$searchTerm}%");
-            
+                ->orWhere('lname', $likeOperator, "%{$searchTerm}%");
+
             // Search by Full Name (concatenated) - database-specific
             if ($isPostgres) {
                 // PostgreSQL: Use || for concatenation and ILIKE for case-insensitive
@@ -74,7 +74,7 @@ class StudentAccountController extends Controller
             }
         })->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json([
                 'success' => false,
                 'message' => 'Student not found. Please check the Student ID or Name and try again.',
@@ -104,7 +104,7 @@ class StudentAccountController extends Controller
 
         $student = Student::where('student_id_number', $request->student_id)->first();
 
-        if (!$student) {
+        if (! $student) {
             return response()->json([
                 'success' => false,
                 'message' => 'Student not found.',
@@ -122,7 +122,7 @@ class StudentAccountController extends Controller
 
         // Create user account
         $user = User::create([
-            'name' => trim(($student->fname ?? '') . ' ' . ($student->mname ?? '') . ' ' . $student->lname . ' ' . ($student->ext ?? '')),
+            'name' => trim(($student->fname ?? '').' '.($student->mname ?? '').' '.$student->lname.' '.($student->ext ?? '')),
             'email' => $student->student_id_number,
             'password' => Hash::make($request->password),
             'usertype' => 'student',
@@ -142,7 +142,7 @@ class StudentAccountController extends Controller
     {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $password = '';
-        
+
         for ($i = 0; $i < 8; $i++) {
             $password .= $characters[rand(0, strlen($characters) - 1)];
         }
@@ -162,7 +162,7 @@ class StudentAccountController extends Controller
             ->where('usertype', 'student')
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Student account not found.',
@@ -172,7 +172,7 @@ class StudentAccountController extends Controller
         // Generate new password
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $password = '';
-        
+
         for ($i = 0; $i < 8; $i++) {
             $password .= $characters[rand(0, strlen($characters) - 1)];
         }
@@ -208,7 +208,7 @@ class StudentAccountController extends Controller
             ->where('usertype', 'student')
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Student account not found.',
@@ -234,7 +234,7 @@ class StudentAccountController extends Controller
             ->where('usertype', 'student')
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Student account not found.',

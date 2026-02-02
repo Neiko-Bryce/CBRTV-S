@@ -14,7 +14,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::latest()->paginate(15);
-        
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -47,7 +47,7 @@ class UserController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'User created successfully.',
-                    'user' => $user
+                    'user' => $user,
                 ]);
             }
 
@@ -58,7 +58,7 @@ class UserController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $e->errors()
+                    'errors' => $e->errors(),
                 ], 422);
             }
             throw $e;
@@ -73,7 +73,7 @@ class UserController extends Controller
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'user' => $user
+                'user' => $user,
             ]);
         }
 
@@ -88,7 +88,7 @@ class UserController extends Controller
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'user' => $user
+                'user' => $user,
             ]);
         }
 
@@ -103,7 +103,7 @@ class UserController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+                'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
                 'password' => 'nullable|string|min:8|confirmed',
                 'usertype' => 'required|in:admin,student',
             ]);
@@ -120,7 +120,7 @@ class UserController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'User updated successfully.',
-                    'user' => $user->fresh()
+                    'user' => $user->fresh(),
                 ]);
             }
 
@@ -131,7 +131,7 @@ class UserController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $e->errors()
+                    'errors' => $e->errors(),
                 ], 422);
             }
             throw $e;
@@ -148,9 +148,10 @@ class UserController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You cannot delete your own account.'
+                    'message' => 'You cannot delete your own account.',
                 ], 403);
             }
+
             return redirect()->route('admin.users.index')
                 ->with('error', 'You cannot delete your own account.');
         }
@@ -160,7 +161,7 @@ class UserController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'User deleted successfully.'
+                'message' => 'User deleted successfully.',
             ]);
         }
 

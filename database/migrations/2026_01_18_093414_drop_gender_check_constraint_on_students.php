@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -14,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         $driver = DB::getDriverName();
-        
+
         if ($driver === 'pgsql') {
             // Drop the check constraint if it exists (PostgreSQL creates this for enum columns)
             try {

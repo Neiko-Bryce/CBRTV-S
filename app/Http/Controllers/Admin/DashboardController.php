@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Election;
+use App\Models\User;
 use App\Models\Vote;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -49,7 +48,7 @@ class DashboardController extends Controller
         $lastWeekVotes = Vote::where('created_at', '>=', Carbon::now()->subWeek())->count();
         $previousWeekVotes = Vote::whereBetween('created_at', [
             Carbon::now()->subWeeks(2)->startOfWeek(),
-            Carbon::now()->subWeek()->startOfWeek()
+            Carbon::now()->subWeek()->startOfWeek(),
         ])->count();
 
         $voteGrowth = $previousWeekVotes > 0
@@ -110,6 +109,7 @@ class DashboardController extends Controller
                         // Election ended, update to completed even if cancelled
                         $election->update(['status' => 'completed']);
                     }
+
                     continue; // Skip further auto-update for manually set statuses
                 }
 
@@ -128,13 +128,13 @@ class DashboardController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error updating election statuses in dashboard: ' . $e->getMessage());
+            Log::error('Error updating election statuses in dashboard: '.$e->getMessage());
         }
     }
 
     /**
      * Calculate election status (same logic as ElectionController::calculateStatus).
-     * 
+     *
      * Logic:
      * - UPCOMING: Current time is BEFORE start time
      * - ONGOING: Current time is >= start time AND < end time
@@ -151,50 +151,50 @@ class DashboardController extends Controller
 
             // Extract date string properly
             $dateString = $this->extractDateString($electionData['election_date']);
-            if (!$dateString) {
+            if (! $dateString) {
                 return 'upcoming';
             }
 
             // Parse start datetime
             $startDateTime = null;
             $timeStr = null;
-            
-            if (!empty($electionData['timestarted'])) {
+
+            if (! empty($electionData['timestarted'])) {
                 $timeStr = $this->normalizeTimeFormat($electionData['timestarted']);
             }
-            
+
             if ($timeStr) {
                 try {
                     $startDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i:s',
-                        $dateString . ' ' . $timeStr,
+                        $dateString.' '.$timeStr,
                         'Asia/Manila'
                     );
                 } catch (\Exception $e) {
                     Log::error("Failed to parse start time: {$electionData['timestarted']}");
                 }
             }
-            
-            if (!$startDateTime) {
+
+            if (! $startDateTime) {
                 $startDateTime = Carbon::createFromFormat('Y-m-d', $dateString, 'Asia/Manila')->startOfDay();
             }
 
             // Parse end datetime
             $endDateTime = null;
             $endTimeStr = null;
-            
-            if (!empty($electionData['time_ended'])) {
+
+            if (! empty($electionData['time_ended'])) {
                 $endTimeStr = $this->normalizeTimeFormat($electionData['time_ended']);
             }
-            
+
             if ($endTimeStr) {
                 try {
                     $endDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i:s',
-                        $dateString . ' ' . $endTimeStr,
+                        $dateString.' '.$endTimeStr,
                         'Asia/Manila'
                     );
-                    
+
                     // Handle overnight elections
                     if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
                         $endDateTime->addDay();
@@ -203,8 +203,8 @@ class DashboardController extends Controller
                     Log::error("Failed to parse end time: {$electionData['time_ended']}");
                 }
             }
-            
-            if (!$endDateTime) {
+
+            if (! $endDateTime) {
                 $endDateTime = Carbon::createFromFormat('Y-m-d', $dateString, 'Asia/Manila')->endOfDay();
             }
 
@@ -212,18 +212,19 @@ class DashboardController extends Controller
             if ($now->greaterThanOrEqualTo($endDateTime)) {
                 return 'completed';
             }
-            
+
             if ($now->greaterThanOrEqualTo($startDateTime)) {
                 return 'ongoing';
             }
-            
+
             return 'upcoming';
         } catch (\Exception $e) {
-            Log::error('Error calculating election status: ' . $e->getMessage());
+            Log::error('Error calculating election status: '.$e->getMessage());
+
             return 'upcoming';
         }
     }
-    
+
     /**
      * Extract date string in Y-m-d format from various input types
      */
@@ -232,38 +233,38 @@ class DashboardController extends Controller
         if (empty($date)) {
             return null;
         }
-        
+
         if ($date instanceof \Carbon\Carbon) {
             return $date->format('Y-m-d');
         }
-        
+
         if (is_string($date)) {
             $dateStr = trim($date);
-            
+
             // If it's already Y-m-d format
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
                 return $dateStr;
             }
-            
+
             // If it's an ISO 8601 format, extract just the date part
             if (strlen($dateStr) >= 10 && preg_match('/^\d{4}-\d{2}-\d{2}/', $dateStr)) {
                 return substr($dateStr, 0, 10);
             }
-            
+
             try {
                 return Carbon::parse($dateStr)->format('Y-m-d');
             } catch (\Exception $e) {
                 return null;
             }
         }
-        
+
         try {
-            return Carbon::parse((string)$date)->format('Y-m-d');
+            return Carbon::parse((string) $date)->format('Y-m-d');
         } catch (\Exception $e) {
             return null;
         }
     }
-    
+
     /**
      * Normalize time format to H:i:s
      */
@@ -272,16 +273,16 @@ class DashboardController extends Controller
         if (empty($time)) {
             return null;
         }
-        
+
         $timeStr = trim($time);
         $parts = explode(':', $timeStr);
-        
+
         if (count($parts) == 2) {
-            return $parts[0] . ':' . $parts[1] . ':00';
+            return $parts[0].':'.$parts[1].':00';
         } elseif (count($parts) == 3) {
             return $timeStr;
         }
-        
+
         return null;
     }
 
@@ -309,7 +310,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        foreach ($recentVotes->groupBy(fn ($v) => $v->voter_id . '_' . $v->election_id . '_' . $v->created_at->format('Y-m-d H:i:s'))->take(3) as $group) {
+        foreach ($recentVotes->groupBy(fn ($v) => $v->voter_id.'_'.$v->election_id.'_'.$v->created_at->format('Y-m-d H:i:s'))->take(3) as $group) {
             $first = $group->first();
             $voterName = $first->voter->name ?? 'Unknown User';
             $electionName = $first->election->election_name ?? 'Unknown Election';
@@ -318,7 +319,7 @@ class DashboardController extends Controller
                 'icon' => 'chart',
                 'icon_color' => 'gold',
                 'title' => 'Vote cast',
-                'description' => $voterName . ' voted in ' . $electionName . ($group->count() > 1 ? ' (' . $group->count() . ' positions)' : ''),
+                'description' => $voterName.' voted in '.$electionName.($group->count() > 1 ? ' ('.$group->count().' positions)' : ''),
                 'time' => $first->created_at->diffForHumans(),
                 'created_at' => $first->created_at,
             ];
@@ -330,7 +331,7 @@ class DashboardController extends Controller
                 'icon' => 'user',
                 'icon_color' => 'green',
                 'title' => 'New user registered',
-                'description' => $user->name . ' registered as student',
+                'description' => $user->name.' registered as student',
                 'time' => $user->created_at->diffForHumans(),
                 'created_at' => $user->created_at,
             ];

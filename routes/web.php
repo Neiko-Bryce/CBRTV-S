@@ -18,14 +18,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $userType = $user->usertype ?? 'student';
-        
+
         if ($userType === 'admin') {
             return redirect()->route('admin.dashboard');
         }
-        
+
         return redirect()->route('student.dashboard');
     })->name('dashboard');
-    
+
     // Profile routes (from Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -35,20 +35,20 @@ Route::middleware(['auth'])->group(function () {
 // Admin-only routes:
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Users Management
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
-    
+
     // Elections Management
     Route::resource('elections', \App\Http\Controllers\Admin\ElectionController::class);
     Route::post('elections/{id}/update-status', [\App\Http\Controllers\Admin\ElectionController::class, 'updateStatus'])->name('elections.update-status');
     Route::get('elections/stats/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getStats'])->name('elections.stats.get');
     Route::get('elections/data/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getElectionsData'])->name('elections.data.get');
-    
+
     // Students Management
     Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
     Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
-    
+
     // Student Account Management
     Route::get('student-management', [\App\Http\Controllers\Admin\StudentAccountController::class, 'index'])->name('student-management.index');
     Route::post('student-management/search', [\App\Http\Controllers\Admin\StudentAccountController::class, 'search'])->name('student-management.search');
@@ -57,24 +57,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('student-management/{userId}/regenerate-password', [\App\Http\Controllers\Admin\StudentAccountController::class, 'regeneratePassword'])->name('student-management.regenerate-password');
     Route::get('student-management/{userId}/password-history', [\App\Http\Controllers\Admin\StudentAccountController::class, 'getPasswordHistory'])->name('student-management.password-history');
     Route::delete('student-management/{userId}/delete', [\App\Http\Controllers\Admin\StudentAccountController::class, 'deleteAccount'])->name('student-management.delete');
-    
+
     // Organizations Management
     Route::resource('organizations', \App\Http\Controllers\Admin\OrganizationController::class);
-    
+
     // Positions Management
     Route::get('positions', [\App\Http\Controllers\Admin\PositionController::class, 'index'])->name('positions.index');
     Route::get('positions/{id}', [\App\Http\Controllers\Admin\PositionController::class, 'show'])->name('positions.show');
     Route::post('positions', [\App\Http\Controllers\Admin\PositionController::class, 'store'])->name('positions.store');
     Route::put('positions/{id}', [\App\Http\Controllers\Admin\PositionController::class, 'update'])->name('positions.update');
     Route::delete('positions/{id}', [\App\Http\Controllers\Admin\PositionController::class, 'destroy'])->name('positions.destroy');
-    
+
     // Partylists Management
     Route::get('partylists', [\App\Http\Controllers\Admin\PartylistController::class, 'index'])->name('partylists.index');
     Route::get('partylists/{id}', [\App\Http\Controllers\Admin\PartylistController::class, 'show'])->name('partylists.show');
     Route::post('partylists', [\App\Http\Controllers\Admin\PartylistController::class, 'store'])->name('partylists.store');
     Route::put('partylists/{id}', [\App\Http\Controllers\Admin\PartylistController::class, 'update'])->name('partylists.update');
     Route::delete('partylists/{id}', [\App\Http\Controllers\Admin\PartylistController::class, 'destroy'])->name('partylists.destroy');
-    
+
     // Candidates Management
     Route::get('candidates', [\App\Http\Controllers\Admin\CandidateController::class, 'index'])->name('candidates.index');
     Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPhoto'])->where('path', '.*')->name('candidates.photo');

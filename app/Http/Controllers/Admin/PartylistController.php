@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Partylist;
 use App\Models\Election;
+use App\Models\Partylist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,29 +16,29 @@ class PartylistController extends Controller
     public function index(Request $request, $electionId = null)
     {
         $query = Partylist::query()->with('election');
-        
+
         if ($request->has('election') && $request->election) {
             $query->where('election_id', $request->election);
         } elseif ($electionId) {
             $query->where('election_id', $electionId);
         }
-        
+
         // Handle search functionality
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = trim($request->search);
             $isPostgres = DB::connection()->getDriverName() === 'pgsql';
             $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
-            
-            $query->where(function($q) use ($searchTerm, $likeOperator) {
+
+            $query->where(function ($q) use ($searchTerm, $likeOperator) {
                 $q->where('name', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('code', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('description', $likeOperator, "%{$searchTerm}%");
+                    ->orWhere('code', $likeOperator, "%{$searchTerm}%")
+                    ->orWhere('description', $likeOperator, "%{$searchTerm}%");
             });
         }
-        
+
         $partylists = $query->orderBy('name', 'asc')->paginate(15)->withQueryString();
         $elections = Election::orderBy('election_name', 'asc')->get();
-        
+
         return view('admin.partylists.index', compact('partylists', 'elections', 'electionId'));
     }
 
@@ -69,6 +69,7 @@ class PartylistController extends Controller
     public function show($id)
     {
         $partylist = Partylist::with('election')->findOrFail($id);
+
         return response()->json($partylist);
     }
 
@@ -78,7 +79,7 @@ class PartylistController extends Controller
     public function update(Request $request, $id)
     {
         $partylist = Partylist::findOrFail($id);
-        
+
         $validated = $request->validate([
             'election_id' => 'required|exists:elections,id',
             'name' => 'required|string|max:255',
@@ -101,13 +102,13 @@ class PartylistController extends Controller
     public function destroy($id)
     {
         $partylist = Partylist::findOrFail($id);
-        
+
         // Check if partylist has candidates
         if ($partylist->candidates()->count() > 0) {
             return redirect()->route('admin.partylists.index')
                 ->with('error', 'Cannot delete partylist with existing candidates.');
         }
-        
+
         $partylist->delete();
 
         return redirect()->route('admin.partylists.index')

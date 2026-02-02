@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Position;
 use App\Models\Organization;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,28 +16,28 @@ class PositionController extends Controller
     public function index(Request $request, $organizationId = null)
     {
         $query = Position::query()->with('organization');
-        
+
         if ($request->has('organization') && $request->organization) {
             $query->where('organization_id', $request->organization);
         } elseif ($organizationId) {
             $query->where('organization_id', $organizationId);
         }
-        
+
         // Handle search functionality
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = trim($request->search);
             $isPostgres = DB::connection()->getDriverName() === 'pgsql';
             $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
-            
-            $query->where(function($q) use ($searchTerm, $likeOperator) {
+
+            $query->where(function ($q) use ($searchTerm, $likeOperator) {
                 $q->where('name', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('description', $likeOperator, "%{$searchTerm}%");
+                    ->orWhere('description', $likeOperator, "%{$searchTerm}%");
             });
         }
-        
+
         $positions = $query->orderBy('order', 'asc')->orderBy('name', 'asc')->paginate(15)->withQueryString();
         $organizations = Organization::where('is_active', true)->orderBy('name', 'asc')->get();
-        
+
         return view('admin.positions.index', compact('positions', 'organizations', 'organizationId'));
     }
 
@@ -66,6 +66,7 @@ class PositionController extends Controller
     public function show($id)
     {
         $position = Position::with('organization')->findOrFail($id);
+
         return response()->json($position);
     }
 
@@ -75,7 +76,7 @@ class PositionController extends Controller
     public function update(Request $request, $id)
     {
         $position = Position::findOrFail($id);
-        
+
         $validated = $request->validate([
             'organization_id' => 'required|exists:organizations,id',
             'name' => 'required|string|max:255',
@@ -96,13 +97,13 @@ class PositionController extends Controller
     public function destroy($id)
     {
         $position = Position::findOrFail($id);
-        
+
         // Check if position has candidates
         if ($position->candidates()->count() > 0) {
             return redirect()->route('admin.positions.index')
                 ->with('error', 'Cannot delete position with existing candidates.');
         }
-        
+
         $position->delete();
 
         return redirect()->route('admin.positions.index')

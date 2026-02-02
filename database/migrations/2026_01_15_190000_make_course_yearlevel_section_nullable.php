@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         $driver = DB::getDriverName();
-        
+
         // Make course, yearlevel, and section nullable to allow empty imports
         if ($driver === 'pgsql') {
             DB::statement('ALTER TABLE students ALTER COLUMN course DROP NOT NULL');
@@ -40,7 +40,7 @@ return new class extends Migration
     public function down(): void
     {
         $driver = DB::getDriverName();
-        
+
         if ($driver === 'pgsql') {
             // Set default empty string for existing nulls before making NOT NULL
             DB::statement("UPDATE students SET course = '' WHERE course IS NULL");

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('candidate_id')->constrained('candidates')->onDelete('cascade');
             $table->foreignId('voter_id')->constrained('users')->onDelete('cascade'); // User who voted
             $table->timestamps();
-            
+
             // Ensure one vote per voter per position in an election
             $table->unique(['election_id', 'voter_id', 'candidate_id'], 'unique_vote');
         });

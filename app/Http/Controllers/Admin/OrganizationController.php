@@ -15,22 +15,22 @@ class OrganizationController extends Controller
     public function index(Request $request)
     {
         $query = Organization::query();
-        
+
         // Handle search functionality
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = trim($request->search);
             $isPostgres = DB::connection()->getDriverName() === 'pgsql';
             $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
-            
-            $query->where(function($q) use ($searchTerm, $likeOperator) {
+
+            $query->where(function ($q) use ($searchTerm, $likeOperator) {
                 $q->where('name', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('code', $likeOperator, "%{$searchTerm}%")
-                  ->orWhere('description', $likeOperator, "%{$searchTerm}%");
+                    ->orWhere('code', $likeOperator, "%{$searchTerm}%")
+                    ->orWhere('description', $likeOperator, "%{$searchTerm}%");
             });
         }
-        
+
         $organizations = $query->withCount('positions')->orderBy('name', 'asc')->paginate(15)->withQueryString();
-        
+
         return view('admin.organizations.index', compact('organizations'));
     }
 
@@ -58,6 +58,7 @@ class OrganizationController extends Controller
     public function show($id)
     {
         $organization = Organization::findOrFail($id);
+
         return response()->json($organization);
     }
 
@@ -67,10 +68,10 @@ class OrganizationController extends Controller
     public function update(Request $request, $id)
     {
         $organization = Organization::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:organizations,code,' . $id,
+            'code' => 'nullable|string|max:50|unique:organizations,code,'.$id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -87,13 +88,13 @@ class OrganizationController extends Controller
     public function destroy($id)
     {
         $organization = Organization::findOrFail($id);
-        
+
         // Check if organization has elections
         if ($organization->elections()->count() > 0) {
             return redirect()->route('admin.organizations.index')
                 ->with('error', 'Cannot delete organization with existing elections.');
         }
-        
+
         $organization->delete();
 
         return redirect()->route('admin.organizations.index')

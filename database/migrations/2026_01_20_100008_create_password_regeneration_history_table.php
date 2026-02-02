@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('regenerated_at');
             $table->string('regenerated_by')->nullable(); // Admin who regenerated it
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('student_id');
         });
