@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voting History - Votewisely.cpsu</title>
+    <title>Voting History - CpsuVotewisely.com</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&family=playfair-display:400,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -525,7 +525,7 @@
         <footer class="border-t border-gray-200 mt-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p class="text-sm text-gray-500">&copy; {{ date('Y') }} Votewisely.cpsu. All rights reserved.</p>
+                    <p class="text-sm text-gray-500">&copy; {{ date('Y') }} CpsuVotewisely.com. All rights reserved.</p>
                     <div class="flex items-center gap-2">
                         <div class="w-2 h-2 bg-gov-green-500 rounded-full animate-pulse"></div>
                         <span class="text-sm text-gray-500">Cloud Based Real-Time Voting</span>

@@ -38,7 +38,7 @@ export default function About() {
                 <SectionTitle
                     subtitle="About The System"
                     title="Redefining Digital Democracy"
-                    description="Votewisely.cpsu is a comprehensive cloud-based voting platform that brings transparency, security, and real-time capabilities to student council elections."
+                    description="CpsuVotewisely.com is a comprehensive cloud-based voting platform that brings transparency, security, and real-time capabilities to student council elections."
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center mt-10 sm:mt-12 lg:mt-16">
@@ -103,7 +103,7 @@ export default function About() {
                         <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
                             Our platform empowers organizations to conduct fair, transparent, and 
                             efficient elections. With real-time vote counting, comprehensive audit 
-                            logs, and bank-grade security, Votewisely.cpsu ensures every voice is heard 
+                            logs, and bank-grade security, CpsuVotewisely.com ensures every voice is heard 
                             and every vote counts.
                         </p>
 
