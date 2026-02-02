@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // If column already has the correct name (student_id_number), skip
+        if (Schema::hasColumn('students', 'student_id_number')) {
+            return;
+        }
+
         // Check for Student_ID_num first (the actual column name in database)
         if (Schema::hasColumn('students', 'Student_ID_num')) {
             if (DB::getDriverName() === 'mysql' || DB::getDriverName() === 'mariadb') {
@@ -35,7 +40,6 @@ return new class extends Migration
                 });
             }
         }
-        // If column already has the correct name (student_id_number), do nothing
     }
 
     /**
