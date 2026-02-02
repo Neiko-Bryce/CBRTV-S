@@ -12,7 +12,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Force HTTPS early for Railway/production
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+            $this->app['request']->server->set('HTTPS', 'on');
+        }
     }
 
     /**
@@ -20,8 +24,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS in production (Railway, etc.)
-        if (config('app.env') === 'production' || request()->header('X-Forwarded-Proto') === 'https') {
+        // Force HTTPS in production or when behind proxy
+        if ($this->app->environment('production') || 
+            request()->header('X-Forwarded-Proto') === 'https' ||
+            str_starts_with(config('app.url', ''), 'https://')) {
             URL::forceScheme('https');
         }
     }
