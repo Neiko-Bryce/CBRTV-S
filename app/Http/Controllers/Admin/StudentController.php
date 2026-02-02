@@ -204,51 +204,6 @@ class StudentController extends Controller
     }
 
     /**
-     * Delete all students from storage.
-     */
-    public function deleteAll(Request $request)
-    {
-        try {
-            $count = Student::count();
-            
-            if ($count === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No students to delete.',
-                ]);
-            }
-
-            // Delete all students
-            Student::truncate();
-
-            Log::info("Deleted all students: {$count} records removed");
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "Successfully deleted {$count} student(s).",
-                    'deleted_count' => $count,
-                ]);
-            }
-
-            return redirect()->route('admin.students.index')
-                ->with('success', "Successfully deleted {$count} student(s).");
-        } catch (\Exception $e) {
-            Log::error('Error deleting all students: ' . $e->getMessage());
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to delete students: ' . $e->getMessage(),
-                ], 500);
-            }
-
-            return redirect()->route('admin.students.index')
-                ->with('error', 'Failed to delete students.');
-        }
-    }
-
-    /**
      * Import students from Excel file.
      */
     public function import(Request $request)

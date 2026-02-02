@@ -48,7 +48,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Students Management
     Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
     Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
-    Route::delete('students/delete-all', [\App\Http\Controllers\Admin\StudentController::class, 'deleteAll'])->name('students.delete-all');
 
     // Student Account Management
     Route::get('student-management', [\App\Http\Controllers\Admin\StudentAccountController::class, 'index'])->name('student-management.index');
