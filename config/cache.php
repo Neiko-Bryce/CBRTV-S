@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'file'),
+    // Force file cache for Railway deployment (no database dependency)
+    'default' => 'file',
 
     /*
     |--------------------------------------------------------------------------

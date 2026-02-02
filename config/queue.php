@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'sync'),
+    // Force sync queue for Railway deployment (no database dependency)
+    'default' => 'sync',
 
     /*
     |--------------------------------------------------------------------------

@@ -18,7 +18,8 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'cookie'),
+    // Force cookie session for Railway deployment (no database dependency)
+    'driver' => 'cookie',
 
     /*
     |--------------------------------------------------------------------------
