@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin Dashboard') - Votewisely.cpsu</title>
+    <title>@yield('title', 'Admin Dashboard') - CpsuVotewisely.com</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -689,7 +689,7 @@
                         </div>
                         
                         <div class="flex items-center space-x-4 text-xs text-secondary">
-                            <span>&copy; {{ date('Y') }} Votewisely.cpsu. All rights reserved.</span>
+                            <span>&copy; {{ date('Y') }} CpsuVotewisely.com. All rights reserved.</span>
                             <span class="hidden sm:inline">|</span>
                             <span class="hidden sm:inline">NBFNTLG</span>
                         </div>
