@@ -115,14 +115,14 @@
             <p class="text-sm text-secondary mt-1">Manage student records and information</p>
         </div>
         <div class="flex items-center space-x-3">
-            @if($stats['total'] > 0)
-            <button onclick="openDeleteAllModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm bg-red-600 hover:bg-red-700">
+            <button onclick="openDeleteAllModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm" style="background: #dc2626;" 
+                    onmouseover="this.style.background='#b91c1c'"
+                    onmouseout="this.style.background='#dc2626'">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
                 Delete All
             </button>
-            @endif
             <button onclick="openImportModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-secondary">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
@@ -575,42 +575,6 @@
     </div>
 </div>
 
-<!-- Delete All Confirmation Modal -->
-<div id="deleteAllModal" class="modal">
-    <div class="modal-content" style="max-width: 450px;">
-        <div class="modal-header">
-            <h3 class="text-lg font-semibold text-primary">Delete All Students</h3>
-            <span class="close" onclick="closeModal('deleteAllModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(220, 38, 38, 0.1);">
-                    <svg class="w-6 h-6" style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-primary">Are you sure you want to delete ALL students?</p>
-                    <p class="text-sm text-secondary mt-1">This will permanently remove <strong id="deleteAllCount">{{ $stats['total'] }}</strong> student(s) from the database.</p>
-                    <p class="text-xs mt-2" style="color: #dc2626;">This action cannot be undone!</p>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button onclick="closeModal('deleteAllModal')" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style="background-color: var(--bg-tertiary); color: var(--text-primary);" 
-                    onmouseover="this.style.backgroundColor='var(--hover-bg)'"
-                    onmouseout="this.style.backgroundColor='var(--bg-tertiary)'">
-                Cancel
-            </button>
-            <button onclick="confirmDeleteAll()" id="deleteAllBtn" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style="background: #dc2626;" 
-                    onmouseover="this.style.background='#b91c1c'"
-                    onmouseout="this.style.background='#dc2626'">
-                <span id="deleteAllBtnText">Delete All Students</span>
-            </button>
-        </div>
-    </div>
-</div>
-
 <!-- Import Excel Modal -->
 <div id="importModal" class="modal">
     <div class="modal-content">
@@ -661,6 +625,48 @@
     </div>
 </div>
 
+<!-- Delete All Confirmation Modal -->
+<div id="deleteAllModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-primary">Delete All Students</h3>
+            <span class="close" onclick="closeModal('deleteAllModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(220, 38, 38, 0.1);">
+                    <svg class="w-6 h-6" style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-primary">Are you sure you want to delete ALL students?</p>
+                    <p class="text-sm text-secondary mt-1">Total students: <strong id="totalStudentsCount">{{ $students->total() }}</strong></p>
+                    <p class="text-xs mt-2" style="color: #dc2626;">This action cannot be undone. All student records will be permanently deleted.</p>
+                </div>
+            </div>
+            <div class="mt-4 p-3 rounded-lg" style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3);">
+                <p class="text-xs" style="color: #dc2626;">
+                    <strong>Warning:</strong> This will also delete all related student accounts. Type <strong>DELETE ALL</strong> below to confirm.
+                </p>
+                <input type="text" id="deleteAllConfirmInput" class="w-full mt-2 px-3 py-2 rounded-lg text-sm" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" placeholder="Type DELETE ALL to confirm">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('deleteAllModal')" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style="background-color: var(--bg-tertiary); color: var(--text-primary);" 
+                    onmouseover="this.style.backgroundColor='var(--hover-bg)'"
+                    onmouseout="this.style.backgroundColor='var(--bg-tertiary)'">
+                Cancel
+            </button>
+            <button onclick="confirmDeleteAll()" id="deleteAllBtn" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style="background: #dc2626;" 
+                    onmouseover="this.style.background='#b91c1c'"
+                    onmouseout="this.style.background='#dc2626'">
+                Delete All Students
+            </button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     let currentStudentId = null;
@@ -682,12 +688,60 @@
 
     // Close modal when clicking outside
     window.onclick = function(event) {
-        const modals = ['studentModal', 'viewModal', 'deleteModal', 'deleteAllModal', 'importModal'];
+        const modals = ['studentModal', 'viewModal', 'deleteModal', 'importModal', 'deleteAllModal'];
         modals.forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (event.target === modal) {
                 closeModal(modalId);
             }
+        });
+    }
+
+    // Delete All Modal
+    function openDeleteAllModal() {
+        document.getElementById('deleteAllConfirmInput').value = '';
+        openModal('deleteAllModal');
+    }
+
+    // Confirm Delete All
+    function confirmDeleteAll() {
+        const confirmInput = document.getElementById('deleteAllConfirmInput').value;
+        
+        if (confirmInput !== 'DELETE ALL') {
+            showNotification('Please type "DELETE ALL" to confirm deletion', 'error');
+            return;
+        }
+
+        const deleteBtn = document.getElementById('deleteAllBtn');
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = 'Deleting...';
+
+        fetch('/admin/students/delete-all', {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('deleteAllModal');
+                showNotification(data.message, 'success');
+                // Reload page to refresh table and stats
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.message || 'Failed to delete students', 'error');
+                deleteBtn.disabled = false;
+                deleteBtn.textContent = 'Delete All Students';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to delete students. Please try again.', 'error');
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = 'Delete All Students';
         });
     }
 
@@ -989,48 +1043,6 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Failed to delete student');
-        });
-    }
-
-    // Delete All Students
-    function openDeleteAllModal() {
-        openModal('deleteAllModal');
-    }
-
-    function confirmDeleteAll() {
-        const btn = document.getElementById('deleteAllBtn');
-        const btnText = document.getElementById('deleteAllBtnText');
-        
-        // Disable button and show loading
-        btn.disabled = true;
-        btnText.textContent = 'Deleting...';
-
-        fetch('{{ route("admin.students.deleteAll") }}', {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeModal('deleteAllModal');
-                showNotification(data.message, 'success');
-                // Reload page to refresh stats and table
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.message || 'Failed to delete students', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Failed to delete students', 'error');
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btnText.textContent = 'Delete All Students';
         });
     }
 

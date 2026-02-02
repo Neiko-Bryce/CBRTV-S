@@ -212,31 +212,27 @@ class StudentController extends Controller
             $count = Student::count();
             
             if ($count === 0) {
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No students to delete.',
-                    ]);
-                }
-                return redirect()->route('admin.students.index')
-                    ->with('warning', 'No students to delete.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No students to delete.',
+                ]);
             }
 
             // Delete all students
             Student::truncate();
 
-            Log::info("Deleted all {$count} students from the database.");
+            Log::info("Deleted all students: {$count} records removed");
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Successfully deleted all {$count} student(s).",
+                    'message' => "Successfully deleted {$count} student(s).",
                     'deleted_count' => $count,
                 ]);
             }
 
             return redirect()->route('admin.students.index')
-                ->with('success', "Successfully deleted all {$count} student(s).");
+                ->with('success', "Successfully deleted {$count} student(s).");
         } catch (\Exception $e) {
             Log::error('Error deleting all students: ' . $e->getMessage());
 
@@ -248,7 +244,7 @@ class StudentController extends Controller
             }
 
             return redirect()->route('admin.students.index')
-                ->with('error', 'Failed to delete students: ' . $e->getMessage());
+                ->with('error', 'Failed to delete students.');
         }
     }
 
