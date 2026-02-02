@@ -45,10 +45,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('elections/stats/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getStats'])->name('elections.stats.get');
     Route::get('elections/data/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getElectionsData'])->name('elections.data.get');
 
-    // Students Management
-    Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
+    // Students Management - custom routes MUST come before resource route
     Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
     Route::delete('students/delete-all', [\App\Http\Controllers\Admin\StudentController::class, 'deleteAll'])->name('students.delete-all');
+    Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
 
     // Student Account Management
     Route::get('student-management', [\App\Http\Controllers\Admin\StudentAccountController::class, 'index'])->name('student-management.index');
