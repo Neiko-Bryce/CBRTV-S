@@ -36,7 +36,23 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        return redirect()->intended(route('student.dashboard', absolute: false));
+        // For students: never redirect to candidate photo or other asset URLs after login.
+        // Only allow intended redirect to actual student pages (dashboard, vote, votes-history).
+        $intended = session('url.intended');
+        $studentDashboard = route('student.dashboard', absolute: false);
+        if ($intended) {
+            $path = parse_url($intended, PHP_URL_PATH);
+            $isCandidatePhoto = $path && str_contains($path, 'candidates/photo');
+            $isStudentPage = $path && (str_starts_with($path, '/student/dashboard')
+                || str_starts_with($path, '/student/vote')
+                || str_starts_with($path, '/student/votes-history'));
+            if ($isCandidatePhoto || !$isStudentPage) {
+                session()->forget('url.intended');
+                return redirect($studentDashboard);
+            }
+        }
+
+        return redirect()->intended($studentDashboard);
     }
 
     /**
