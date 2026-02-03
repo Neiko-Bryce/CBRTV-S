@@ -648,7 +648,7 @@
                                 <!-- Candidate Photo -->
                                 <div class="relative">
                                     @if($candidate->photo)
-                                    <img src="{{ route('student.candidates.photo', ['path' => $candidate->photo]) }}" 
+                                    <img src="{{ route('candidates.photo.public', ['path' => $candidate->photo]) }}" 
                                          alt="{{ $candidate->candidate_name }}" 
                                          class="candidate-photo"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -990,7 +990,7 @@
                         @foreach($candidates as $candidate)
                         {{ $candidate->id }}: {
                             name: '{{ $candidate->candidate_name }}',
-                            photo: '{{ $candidate->photo ? route("student.candidates.photo", ["path" => $candidate->photo]) : "" }}',
+                            photo: '{{ $candidate->photo ? route("candidates.photo.public", ["path" => $candidate->photo]) : "" }}',
                             partylist: '{{ $candidate->partylist ? $candidate->partylist->name : "Independent" }}',
                             partylistColor: '{{ $candidate->partylist && $candidate->partylist->color ? $candidate->partylist->color : "" }}'
                         },

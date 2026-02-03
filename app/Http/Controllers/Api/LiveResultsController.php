@@ -86,7 +86,7 @@ class LiveResultsController extends Controller
                         // Build photo URL
                         $photoUrl = null;
                         if ($candidate->photo) {
-                            $photoUrl = route('student.candidates.photo', ['path' => $candidate->photo]);
+                            $photoUrl = route('candidates.photo.public', ['path' => $candidate->photo]);
                         }
 
                         $candidatesData[] = [

@@ -13,6 +13,9 @@ Route::prefix('api')->group(function () {
     Route::get('/live-results/{electionId}', [\App\Http\Controllers\Api\LiveResultsController::class, 'getElectionResults'])->name('api.live-results.election');
 });
 
+// Public candidate photo URL (no auth) so student-side images load even when DB/session is flaky
+Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPhoto'])->where('path', '.*')->name('candidates.photo.public');
+
 // Protected Routes - Redirect to appropriate dashboard based on user type
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
@@ -95,8 +98,6 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::get('/student/vote/{electionId}', [\App\Http\Controllers\Student\DashboardController::class, 'vote'])->name('student.vote');
     Route::post('/student/vote/{electionId}', [\App\Http\Controllers\Student\DashboardController::class, 'submitVote'])->name('student.submit-vote');
     Route::get('/student/votes-history', [\App\Http\Controllers\Student\DashboardController::class, 'votesHistory'])->name('student.votes-history');
-    // Allow students to view candidate photos
-    Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPhoto'])->where('path', '.*')->name('student.candidates.photo');
 });
 
 // Breeze authentication routes (login, register, password reset, email verification)

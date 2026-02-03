@@ -325,25 +325,28 @@ class CandidateController extends Controller
     }
 
     /**
-     * Serve candidate photo. Returns a placeholder SVG when file is missing (e.g. on deployed ephemeral storage).
+     * Serve candidate photo. Returns a placeholder SVG when file is missing or on any error (e.g. ephemeral storage, DB hiccups).
      */
     public function getPhoto($path)
     {
-        $disk = $this->photoDisk();
-        // Handle path - it might already include 'candidates/' or just be the filename
-        $fullPath = str_starts_with($path, 'candidates/') ? $path : 'candidates/'.$path;
+        try {
+            $disk = $this->photoDisk();
+            $fullPath = str_starts_with($path, 'candidates/') ? $path : 'candidates/'.$path;
 
-        if (! Storage::disk($disk)->exists($fullPath)) {
+            if (! Storage::disk($disk)->exists($fullPath)) {
+                return $this->placeholderPhotoResponse();
+            }
+
+            $file = Storage::disk($disk)->get($fullPath);
+            $mimeType = Storage::disk($disk)->mimeType($fullPath);
+
+            return response($file, 200)
+                ->header('Content-Type', $mimeType)
+                ->header('Content-Disposition', 'inline')
+                ->header('Cache-Control', 'public, max-age=31536000');
+        } catch (\Throwable $e) {
             return $this->placeholderPhotoResponse();
         }
-
-        $file = Storage::disk($disk)->get($fullPath);
-        $mimeType = Storage::disk($disk)->mimeType($fullPath);
-
-        return response($file, 200)
-            ->header('Content-Type', $mimeType)
-            ->header('Content-Disposition', 'inline')
-            ->header('Cache-Control', 'public, max-age=31536000');
     }
 
     /**

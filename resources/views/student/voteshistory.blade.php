@@ -435,7 +435,7 @@
                                                         <!-- Candidate Photo -->
                                                         @if($candidate->photo)
                                                         <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden flex-shrink-0 border-2 border-gov-green-200 shadow-md">
-                                                            <img src="{{ route('student.candidates.photo', ['path' => $candidate->photo]) }}" 
+                                                            <img src="{{ route('candidates.photo.public', ['path' => $candidate->photo]) }}" 
                                                                  alt="{{ $candidate->candidate_name }}" 
                                                                  class="w-full h-full object-cover"
                                                                  onerror="this.parentElement.innerHTML='<div class=\'w-full h-full bg-gradient-to-br from-gov-green-100 to-gov-green-200 flex items-center justify-center\'><svg class=\'w-6 h-6 text-gov-green-700\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\'></path></svg></div>';">
