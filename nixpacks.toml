@@ -1,4 +1,5 @@
 # Railway/Nixpacks configuration for Laravel + PostgreSQL + Vite
+# PHP 8.3 - symfony/filesystem ^7.2 in composer.lock for compatibility
 
 [phases.setup]
 nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql", "nodejs_20", "php83Packages.composer"]
