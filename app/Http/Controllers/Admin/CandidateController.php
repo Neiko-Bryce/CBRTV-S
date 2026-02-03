@@ -184,7 +184,7 @@ class CandidateController extends Controller
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('candidates', 'public');
+            $photoPath = $request->file('photo')->store('candidates', $this->photoDisk());
             $validated['photo'] = $photoPath;
         }
 
@@ -225,7 +225,7 @@ class CandidateController extends Controller
             if ($request->hasFile("candidates.{$index}.photo")) {
                 $photo = $request->file("candidates.{$index}.photo");
                 if ($photo->isValid()) {
-                    $photoPath = $photo->store('candidates', 'public');
+                    $photoPath = $photo->store('candidates', $this->photoDisk());
                     $candidateData['photo'] = $photoPath;
                 } else {
                     unset($candidateData['photo']);
@@ -279,9 +279,9 @@ class CandidateController extends Controller
         if ($request->hasFile('photo')) {
             // Delete old photo
             if ($candidate->photo) {
-                Storage::disk('public')->delete($candidate->photo);
+                Storage::disk($this->photoDisk())->delete($candidate->photo);
             }
-            $photoPath = $request->file('photo')->store('candidates', 'public');
+            $photoPath = $request->file('photo')->store('candidates', $this->photoDisk());
             $validated['photo'] = $photoPath;
         }
 
@@ -300,7 +300,7 @@ class CandidateController extends Controller
 
         // Delete photo if exists
         if ($candidate->photo) {
-            Storage::disk('public')->delete($candidate->photo);
+            Storage::disk($this->photoDisk())->delete($candidate->photo);
         }
 
         $candidate->delete();
@@ -317,19 +317,28 @@ class CandidateController extends Controller
     }
 
     /**
+     * Disk used for candidate photos (public = local, s3 = cloud). Use s3 when deployed without a volume.
+     */
+    private function photoDisk(): string
+    {
+        return config('filesystems.candidate_photos_disk', 'public');
+    }
+
+    /**
      * Serve candidate photo. Returns a placeholder SVG when file is missing (e.g. on deployed ephemeral storage).
      */
     public function getPhoto($path)
     {
+        $disk = $this->photoDisk();
         // Handle path - it might already include 'candidates/' or just be the filename
         $fullPath = str_starts_with($path, 'candidates/') ? $path : 'candidates/'.$path;
 
-        if (! Storage::disk('public')->exists($fullPath)) {
+        if (! Storage::disk($disk)->exists($fullPath)) {
             return $this->placeholderPhotoResponse();
         }
 
-        $file = Storage::disk('public')->get($fullPath);
-        $mimeType = Storage::disk('public')->mimeType($fullPath);
+        $file = Storage::disk($disk)->get($fullPath);
+        $mimeType = Storage::disk($disk)->mimeType($fullPath);
 
         return response($file, 200)
             ->header('Content-Type', $mimeType)

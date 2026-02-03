@@ -77,4 +77,14 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Candidate Photos Disk
+    |--------------------------------------------------------------------------
+    | Use 'public' (local storage) or 's3' (cloud). When deployed without a
+    | volume, set CANDIDATE_PHOTOS_DISK=s3 and AWS_* so photos persist and display.
+    */
+
+    'candidate_photos_disk' => env('CANDIDATE_PHOTOS_DISK', 'public'),
+
 ];
