@@ -9,6 +9,9 @@ sleep 5
 echo "Running database migrations..."
 php artisan migrate --force --verbose
 
+echo "Linking storage (public/storage -> storage/app/public)..."
+php artisan storage:link 2>/dev/null || true
+
 echo "Migrations completed!"
 echo "Starting web server..."
 

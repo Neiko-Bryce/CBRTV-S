@@ -317,7 +317,7 @@ class CandidateController extends Controller
     }
 
     /**
-     * Serve candidate photo.
+     * Serve candidate photo. Returns a placeholder SVG when file is missing (e.g. on deployed ephemeral storage).
      */
     public function getPhoto($path)
     {
@@ -325,7 +325,7 @@ class CandidateController extends Controller
         $fullPath = str_starts_with($path, 'candidates/') ? $path : 'candidates/'.$path;
 
         if (! Storage::disk('public')->exists($fullPath)) {
-            abort(404);
+            return $this->placeholderPhotoResponse();
         }
 
         $file = Storage::disk('public')->get($fullPath);
@@ -335,5 +335,17 @@ class CandidateController extends Controller
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'inline')
             ->header('Cache-Control', 'public, max-age=31536000');
+    }
+
+    /**
+     * Return a placeholder image (SVG) when the candidate photo is missing (e.g. ephemeral storage on deploy).
+     */
+    private function placeholderPhotoResponse()
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
+        return response($svg, 200)
+            ->header('Content-Type', 'image/svg+xml')
+            ->header('Content-Disposition', 'inline')
+            ->header('Cache-Control', 'public, max-age=3600');
     }
 }
