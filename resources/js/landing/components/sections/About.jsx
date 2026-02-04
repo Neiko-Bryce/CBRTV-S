@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { HiCheckCircle } from 'react-icons/hi';
 import { MdSchool, MdGroups, MdAccountBalance } from 'react-icons/md';

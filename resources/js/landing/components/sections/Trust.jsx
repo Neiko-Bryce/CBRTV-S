@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { HiCheckCircle, HiStar, HiTrendingUp } from 'react-icons/hi';
 import { MdVerified, MdThumbUp, MdAutoGraph } from 'react-icons/md';

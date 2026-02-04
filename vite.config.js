@@ -12,7 +12,10 @@ export default defineConfig({
             ],
             refresh: true,
         }),
-        react(),
+        react({
+            include: '**/*.{jsx,tsx}',
+            jsxRuntime: 'classic',
+        }),
     ],
     server: {
         strictPort: false,

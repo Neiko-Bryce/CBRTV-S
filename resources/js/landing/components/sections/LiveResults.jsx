@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdHowToVote, MdPerson, MdLeaderboard } from 'react-icons/md';
 import { HiQuestionMarkCircle, HiTrendingUp, HiStatusOnline } from 'react-icons/hi';

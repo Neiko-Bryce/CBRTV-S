@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { HiArrowRight, HiPlay } from 'react-icons/hi';
 import { MdHowToVote, MdVerified, MdSpeed } from 'react-icons/md';
