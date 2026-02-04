@@ -8,6 +8,7 @@ use App\Models\Election;
 use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class LiveResultsController extends Controller
 {
@@ -19,11 +20,28 @@ class LiveResultsController extends Controller
     {
         $now = Carbon::now('Asia/Manila');
 
-        // Only elections that admin has turned on for landing page display
-        $elections = Election::where('show_live_results', true)
-            ->whereIn('status', ['ongoing', 'completed'])
-            ->with(['organization'])
-            ->get();
+        // If migration not run yet (e.g. on Railway), return empty JSON so frontend never gets HTML error page
+        if (! Schema::hasColumn('elections', 'show_live_results')) {
+            return response()->json([
+                'success' => true,
+                'elections' => [],
+                'timestamp' => $now->toIso8601String(),
+            ]);
+        }
+
+        try {
+            // Only elections that admin has turned on for landing page display
+            $elections = Election::where('show_live_results', true)
+                ->whereIn('status', ['ongoing', 'completed'])
+                ->with(['organization'])
+                ->get();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => true,
+                'elections' => [],
+                'timestamp' => $now->toIso8601String(),
+            ]);
+        }
 
         $results = [];
 
@@ -208,6 +226,13 @@ class LiveResultsController extends Controller
     public function getElectionResults($electionId)
     {
         $now = Carbon::now('Asia/Manila');
+
+        if (! Schema::hasColumn('elections', 'show_live_results')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Election not found or results are not displayed.',
+            ], 404);
+        }
 
         $election = Election::where('id', $electionId)
             ->where('show_live_results', true)

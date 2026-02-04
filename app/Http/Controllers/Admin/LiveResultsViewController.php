@@ -7,6 +7,7 @@ use App\Models\Candidate;
 use App\Models\Election;
 use App\Models\Vote;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 
 class LiveResultsViewController extends Controller
 {
@@ -31,7 +32,17 @@ class LiveResultsViewController extends Controller
     public function display(Request $request, $electionId)
     {
         $election = Election::findOrFail($electionId);
-        $election->update(['show_live_results' => true]);
+
+        try {
+            $election->update(['show_live_results' => true]);
+        } catch (QueryException $e) {
+            $message = 'The database is missing the "show_live_results" column. Please run migrations on your server (e.g. Railway): php artisan migrate --force';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 503);
+            }
+            return redirect()->route('admin.live-results-viewing.index')
+                ->with('error', $message);
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Results are now displayed on the landing page.']);
@@ -47,7 +58,17 @@ class LiveResultsViewController extends Controller
     public function hide(Request $request, $electionId)
     {
         $election = Election::findOrFail($electionId);
-        $election->update(['show_live_results' => false]);
+
+        try {
+            $election->update(['show_live_results' => false]);
+        } catch (QueryException $e) {
+            $message = 'The database is missing the "show_live_results" column. Please run migrations on your server (e.g. Railway): php artisan migrate --force';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 503);
+            }
+            return redirect()->route('admin.live-results-viewing.index')
+                ->with('error', $message);
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Results are no longer displayed on the landing page.']);

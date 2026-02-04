@@ -16,7 +16,7 @@ return new class extends Migration
             return;
         }
         Schema::table('elections', function (Blueprint $table) {
-            $table->boolean('show_live_results')->default(false)->after('status');
+            $table->boolean('show_live_results')->default(false);
         });
     }
 

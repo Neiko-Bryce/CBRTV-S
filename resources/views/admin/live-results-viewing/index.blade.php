@@ -52,6 +52,11 @@
         {{ session('success') }}
     </div>
     @endif
+    @if(session('error'))
+    <div class="rounded-xl p-4 text-sm font-medium border border-red-300 bg-red-50 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-200">
+        {{ session('error') }}
+    </div>
+    @endif
 
     {{-- Live results section: candidates + bar graph show here when an election is selected --}}
     <div class="live-results-card card shadow-sm live-results-panel" id="live-results-section">
