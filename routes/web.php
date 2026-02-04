@@ -50,6 +50,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Live Results Viewing (control which elections appear on the landing page)
     Route::get('live-results-viewing', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'index'])->name('live-results-viewing.index');
+    Route::get('live-results-viewing/{electionId}/results', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'getElectionResults'])->name('live-results-viewing.results');
     Route::post('live-results-viewing/{electionId}/display', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'display'])->name('live-results-viewing.display');
     Route::post('live-results-viewing/{electionId}/hide', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'hide'])->name('live-results-viewing.hide');
 
