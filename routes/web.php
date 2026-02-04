@@ -59,6 +59,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Student Account Management
     Route::get('student-management', [\App\Http\Controllers\Admin\StudentAccountController::class, 'index'])->name('student-management.index');
+    Route::get('student-management/suggest', [\App\Http\Controllers\Admin\StudentAccountController::class, 'suggest'])->name('student-management.suggest');
     Route::post('student-management/search', [\App\Http\Controllers\Admin\StudentAccountController::class, 'search'])->name('student-management.search');
     Route::get('student-management/generate-password', [\App\Http\Controllers\Admin\StudentAccountController::class, 'generatePassword'])->name('student-management.generate-password');
     Route::post('student-management/create-account', [\App\Http\Controllers\Admin\StudentAccountController::class, 'createAccount'])->name('student-management.create-account');

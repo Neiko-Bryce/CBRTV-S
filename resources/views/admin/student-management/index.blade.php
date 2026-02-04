@@ -71,6 +71,46 @@
     .close:hover {
         color: var(--text-primary);
     }
+    /* Typeahead dropdown */
+    #student_suggestions {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        margin-top: 2px;
+        max-height: 280px;
+        overflow-y: auto;
+        z-index: 50;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--card-bg);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    #student_suggestions:empty {
+        display: none;
+    }
+    .suggestion-item {
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+    .suggestion-item:hover,
+    .suggestion-item.suggestion-active {
+        background-color: var(--hover-bg);
+    }
+    .suggestion-item .suggestion-id {
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .suggestion-item .suggestion-name {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
 </style>
 @endpush
 
@@ -83,12 +123,15 @@
             <div class="flex-1">
                 <label for="student_id_search" class="block text-sm font-medium text-primary mb-2">Student ID or Name *</label>
                 <div class="flex items-center gap-3">
-                    <input type="text" id="student_id_search" placeholder="Enter Student ID or Name..." class="flex-1 px-4 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                    <div class="flex-1 relative">
+                        <input type="text" id="student_id_search" autocomplete="off" placeholder="Type Student ID or Name for suggestions..." class="w-full px-4 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                        <div id="student_suggestions" class="absolute left-0 right-0 top-full mt-0.5"></div>
+                    </div>
                     <button onclick="searchStudent()" class="px-6 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90 whitespace-nowrap" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                         Search
                     </button>
                 </div>
-                <p class="text-xs text-secondary mt-1">You can search by Student ID or by Name (First Name, Last Name, or Full Name)</p>
+                <p class="text-xs text-secondary mt-1">Type to see matching Student ID or Name suggestions; then select or click Search.</p>
                 <div id="student_id_error" class="text-red-500 text-sm mt-1"></div>
             </div>
         </div>
@@ -118,7 +161,7 @@
                             Generate Password
                         </button>
                     </div>
-                    <p class="text-xs text-secondary mt-1">8 characters (letters and numbers only)</p>
+                    <p class="text-xs text-secondary mt-1">6 characters (uppercase letters and numbers only)</p>
                     <div id="password_error" class="text-red-500 text-sm mt-1"></div>
                 </div>
                 
@@ -549,8 +592,12 @@
         const password = document.getElementById('password').value;
         const passwordError = document.getElementById('password_error');
         
-        if (!password || password.length !== 8) {
-            passwordError.textContent = 'Password must be exactly 8 characters.';
+        if (!password || password.length !== 6) {
+            passwordError.textContent = 'Password must be exactly 6 characters.';
+            return;
+        }
+        if (!/^[A-Z0-9]+$/.test(password)) {
+            passwordError.textContent = 'Password may only contain uppercase letters and numbers.';
             return;
         }
         
@@ -824,9 +871,131 @@
         });
     }
 
-    // Allow Enter key to search
-    document.getElementById('student_id_search').addEventListener('keypress', function(e) {
+    // Real-time typeahead: suggest on typing (Student ID or Name)
+    let suggestDebounce = null;
+    let currentSuggestions = [];
+    let highlightedIndex = -1;
+    const suggestionsEl = document.getElementById('student_suggestions');
+    const searchInput = document.getElementById('student_id_search');
+
+    function fetchSuggestions(q) {
+        if (!q || q.length < 2) {
+            suggestionsEl.innerHTML = '';
+            currentSuggestions = [];
+            return;
+        }
+        const url = '{{ route("admin.student-management.suggest") }}?q=' + encodeURIComponent(q);
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            currentSuggestions = data.suggestions || [];
+            highlightedIndex = -1;
+            renderSuggestions();
+        })
+        .catch(() => {
+            currentSuggestions = [];
+            suggestionsEl.innerHTML = '';
+        });
+    }
+
+    function renderSuggestions() {
+        if (currentSuggestions.length === 0) {
+            suggestionsEl.innerHTML = '';
+            return;
+        }
+        suggestionsEl.innerHTML = currentSuggestions.map((s, i) => `
+            <div class="suggestion-item ${i === highlightedIndex ? 'suggestion-active' : ''}" data-index="${i}" data-value="${escapeHtml(s.student_id_number)}">
+                <div class="suggestion-id">${escapeHtml(s.student_id_number)}</div>
+                <div class="suggestion-name">${escapeHtml(s.full_name)}</div>
+            </div>
+        `).join('');
+        suggestionsEl.querySelectorAll('.suggestion-item').forEach(el => {
+            el.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                const idx = parseInt(this.getAttribute('data-index'), 10);
+                selectSuggestion(idx);
+            });
+        });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function selectSuggestion(index) {
+        if (index < 0 || index >= currentSuggestions.length) return;
+        const s = currentSuggestions[index];
+        searchInput.value = s.student_id_number;
+        suggestionsEl.innerHTML = '';
+        currentSuggestions = [];
+        highlightedIndex = -1;
+        searchStudent();
+    }
+
+    function hideSuggestions() {
+        suggestionsEl.innerHTML = '';
+        currentSuggestions = [];
+        highlightedIndex = -1;
+    }
+
+    searchInput.addEventListener('input', function() {
+        document.getElementById('student_id_error').textContent = '';
+        clearTimeout(suggestDebounce);
+        const q = this.value.trim();
+        if (q.length < 2) {
+            hideSuggestions();
+            return;
+        }
+        suggestDebounce = setTimeout(function() {
+            fetchSuggestions(q);
+        }, 280);
+    });
+
+    searchInput.addEventListener('focus', function() {
+        const q = this.value.trim();
+        if (q.length >= 2 && currentSuggestions.length > 0) renderSuggestions();
+    });
+
+    searchInput.addEventListener('blur', function() {
+        setTimeout(hideSuggestions, 200);
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+        if (currentSuggestions.length === 0) {
+            if (e.key === 'Enter') { e.preventDefault(); searchStudent(); }
+            return;
+        }
+        if (e.key === 'Escape') {
+            hideSuggestions();
+            return;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightedIndex = Math.min(highlightedIndex + 1, currentSuggestions.length - 1);
+            renderSuggestions();
+            return;
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightedIndex = Math.max(highlightedIndex - 1, -1);
+            renderSuggestions();
+            return;
+        }
         if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex >= 0) selectSuggestion(highlightedIndex);
+            else searchStudent();
+        }
+    });
+
+    // Allow Enter key to search (when no dropdown)
+    document.getElementById('student_id_search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && currentSuggestions.length === 0) {
             e.preventDefault();
             searchStudent();
         }

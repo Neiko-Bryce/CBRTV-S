@@ -41,6 +41,46 @@ class StudentAccountController extends Controller
     }
 
     /**
+     * Return suggestions for student ID or name (for real-time typeahead).
+     */
+    public function suggest(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+        if ($q === '') {
+            return response()->json(['suggestions' => []]);
+        }
+
+        $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+        $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
+        $term = '%' . $q . '%';
+
+        $students = Student::where(function ($query) use ($term, $likeOperator, $isPostgres) {
+            $query->where('student_id_number', $likeOperator, $term)
+                ->orWhere('fname', $likeOperator, $term)
+                ->orWhere('mname', $likeOperator, $term)
+                ->orWhere('lname', $likeOperator, $term);
+            if ($isPostgres) {
+                $query->orWhereRaw("(COALESCE(fname, '') || ' ' || COALESCE(mname, '') || ' ' || COALESCE(lname, '') || ' ' || COALESCE(ext, '')) ILIKE ?", [$term]);
+            } else {
+                $query->orWhereRaw("CONCAT(COALESCE(fname, ''), ' ', COALESCE(mname, ''), ' ', COALESCE(lname, ''), ' ', COALESCE(ext, '')) LIKE ?", [$term]);
+            }
+        })
+            ->orderBy('student_id_number')
+            ->take(10)
+            ->get(['student_id_number', 'fname', 'mname', 'lname', 'ext']);
+
+        $suggestions = $students->map(function ($s) {
+            $fullName = trim(($s->fname ?? '') . ' ' . ($s->mname ?? '') . ' ' . ($s->lname ?? '') . ' ' . ($s->ext ?? ''));
+            return [
+                'student_id_number' => $s->student_id_number,
+                'full_name' => $fullName ?: 'N/A',
+            ];
+        });
+
+        return response()->json(['suggestions' => $suggestions->values()->all()]);
+    }
+
+    /**
      * Search for a student by student ID or name.
      */
     public function search(Request $request)
@@ -99,7 +139,9 @@ class StudentAccountController extends Controller
     {
         $request->validate([
             'student_id' => 'required|string|exists:students,student_id_number',
-            'password' => 'required|string|min:8|max:8',
+            'password' => 'required|string|min:6|max:6|regex:/^[A-Z0-9]+$/',
+        ], [
+            'password.regex' => 'Password must be exactly 6 characters: uppercase letters and numbers only.',
         ]);
 
         $student = Student::where('student_id_number', $request->student_id)->first();
@@ -136,14 +178,14 @@ class StudentAccountController extends Controller
     }
 
     /**
-     * Generate a random 8-character alphanumeric password.
+     * Generate a random 6-character password (uppercase letters and numbers only).
      */
     public function generatePassword()
     {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $password = '';
 
-        for ($i = 0; $i < 8; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             $password .= $characters[rand(0, strlen($characters) - 1)];
         }
 
@@ -169,11 +211,11 @@ class StudentAccountController extends Controller
             ], 404);
         }
 
-        // Generate new password
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        // Generate new password (6 chars: uppercase letters and numbers only)
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $password = '';
 
-        for ($i = 0; $i < 8; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             $password .= $characters[rand(0, strlen($characters) - 1)];
         }
 
