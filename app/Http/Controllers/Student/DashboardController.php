@@ -15,63 +15,56 @@ class DashboardController extends Controller
 {
     /**
      * Display the student dashboard with upcoming/ongoing elections and candidates.
+     * List is built from calculated status (current time) so it never depends on stale DB status.
      */
     public function index()
     {
-        // Get current Philippine time
-        $now = Carbon::now('Asia/Manila');
+        $allElections = Election::with('organization')->orderBy('election_date', 'asc')->orderBy('timestarted', 'asc')->get();
 
-        // Get all elections and update their statuses
-        $allElections = Election::all();
+        // Build list from calculated status only (upcoming/ongoing). Persist status to DB for admin consistency.
+        $elections = collect();
         foreach ($allElections as $election) {
-            $calculatedStatus = $this->calculateStatus($election);
-            if ($election->status !== $calculatedStatus && $election->status !== 'cancelled') {
+            if (strtolower((string) ($election->status ?? '')) === 'cancelled') {
+                continue;
+            }
+            try {
+                $calculatedStatus = strtolower($this->calculateStatus($election));
+                $election->setAttribute('status', $calculatedStatus);
                 $election->update(['status' => $calculatedStatus]);
-            } elseif (empty($election->status) || is_null($election->status)) {
-                $election->update(['status' => $calculatedStatus]);
+                if (in_array($calculatedStatus, ['upcoming', 'ongoing'], true)) {
+                    $elections->push($election);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Student dashboard: skip election id='.($election->id ?? '?').': '.$e->getMessage());
             }
         }
 
-        // Get upcoming and ongoing elections
-        $elections = Election::whereIn('status', ['upcoming', 'ongoing'])
-            ->with(['organization'])
-            ->orderByRaw("CASE WHEN status = 'ongoing' THEN 0 ELSE 1 END")
-            ->orderBy('election_date', 'asc')
-            ->orderBy('timestarted', 'asc')
-            ->get();
+        // Sort: ongoing first, then upcoming; then by date/time
+        $elections = $elections->sortBy([
+            fn ($e) => ($e->status ?? '') === 'ongoing' ? 0 : 1,
+            fn ($e) => $this->electionDateToString($e->election_date) ?? '',
+            fn ($e) => $e->timestarted ?? '',
+        ])->values();
 
-        // For each election, calculate datetime info and load candidates
+        // For each election, set datetime info and load candidates
         foreach ($elections as $election) {
-            // Calculate start and end datetime for countdown
-            $dateString = $election->election_date instanceof \Carbon\Carbon
-                ? $election->election_date->format('Y-m-d')
-                : (string) $election->election_date;
+            $dateString = $this->electionDateToString($election->election_date) ?? Carbon::now('Asia/Manila')->format('Y-m-d');
+            $electionDate = Carbon::parse($dateString, 'Asia/Manila');
+            $election->start_datetime = $this->parseStartDateTime($dateString, $election->timestarted, $electionDate);
 
-            // Start datetime
-            if (! empty($election->timestarted)) {
-                $timeStr = trim($election->timestarted);
-                $timeParts = explode(':', $timeStr);
-                if (count($timeParts) == 2) {
-                    $timeStr = $timeParts[0].':'.$timeParts[1].':00';
-                }
-                try {
-                    $election->start_datetime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$timeStr, 'Asia/Manila');
-                } catch (\Exception $e) {
-                    $election->start_datetime = Carbon::parse($dateString, 'Asia/Manila')->startOfDay();
-                }
-            } else {
-                $election->start_datetime = Carbon::parse($dateString, 'Asia/Manila')->startOfDay();
-            }
-
-            // End datetime
+            // End datetime (midnight 00:00 = next calendar day, same as calculateStatus)
             if (! empty($election->time_ended)) {
-                $endTimeStr = trim($election->time_ended);
+                $endTimeStr = trim((string) $election->time_ended);
                 $endTimeParts = explode(':', $endTimeStr);
-                if (count($endTimeParts) == 2) {
-                    $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':00';
+                if (count($endTimeParts) >= 2) {
+                    $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':'.(isset($endTimeParts[2]) ? $endTimeParts[2] : '00');
                 }
                 try {
-                    $election->end_datetime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
+                    $endDt = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
+                    if ($election->start_datetime && $endDt->lessThanOrEqualTo($election->start_datetime)) {
+                        $endDt->addDay();
+                    }
+                    $election->end_datetime = $endDt;
                 } catch (\Exception $e) {
                     $election->end_datetime = null;
                 }
@@ -172,20 +165,22 @@ class DashboardController extends Controller
                 ->with('info', 'You have already submitted your votes for this election.');
         }
 
-        // Calculate end datetime for countdown
-        $dateString = $election->election_date instanceof \Carbon\Carbon
-            ? $election->election_date->format('Y-m-d')
-            : (string) $election->election_date;
-
+        // End datetime for countdown (same midnight rule: 00:00 = next calendar day)
+        $dateString = $this->electionDateToString($election->election_date) ?? Carbon::now('Asia/Manila')->format('Y-m-d');
+        $electionDate = Carbon::parse($dateString, 'Asia/Manila');
+        $startDateTime = $this->parseStartDateTime($dateString, $election->timestarted, $electionDate);
         $endDateTime = null;
         if (! empty($election->time_ended)) {
-            $endTimeStr = trim($election->time_ended);
+            $endTimeStr = trim((string) $election->time_ended);
             $endTimeParts = explode(':', $endTimeStr);
-            if (count($endTimeParts) == 2) {
-                $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':00';
+            if (count($endTimeParts) >= 2) {
+                $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':'.(isset($endTimeParts[2]) ? $endTimeParts[2] : '00');
             }
             try {
                 $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
+                if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
+                    $endDateTime->addDay();
+                }
             } catch (\Exception $e) {
                 $endDateTime = null;
             }
@@ -284,85 +279,83 @@ class DashboardController extends Controller
                 return 'upcoming';
             }
 
-            // Get date string
-            $dateString = $election->election_date instanceof \Carbon\Carbon
-                ? $election->election_date->format('Y-m-d')
-                : (string) $election->election_date;
+            $dateString = $this->electionDateToString($election->election_date);
+            if (! $dateString) {
+                return 'upcoming';
+            }
 
             $electionDate = Carbon::parse($dateString, 'Asia/Manila');
 
-            // If we have a start time, use it for more precise calculation
-            if (! empty($election->timestarted)) {
-                try {
-                    $timeStr = trim($election->timestarted);
-                    // Normalize time format - timestarted might be H:i or H:i:s
-                    $timeParts = explode(':', $timeStr);
-                    if (count($timeParts) == 2) {
-                        // H:i format, add seconds
-                        $timeStr = $timeParts[0].':'.$timeParts[1].':00';
-                    } elseif (count($timeParts) == 3) {
-                        // Already H:i:s format, use as is
-                        $timeStr = $timeStr;
-                    } else {
-                        throw new \Exception('Invalid time format');
-                    }
+            // Start datetime
+            $electionDateTime = $this->parseStartDateTime($dateString, $election->timestarted, $electionDate);
 
-                    $electionDateTime = Carbon::createFromFormat(
-                        'Y-m-d H:i:s',
-                        $dateString.' '.$timeStr,
-                        'Asia/Manila'
-                    );
-                } catch (\Exception $e) {
-                    $electionDateTime = $electionDate->copy()->startOfDay();
-                }
-            } else {
-                $electionDateTime = $electionDate->copy()->startOfDay();
-            }
-
-            // Check if election has ended FIRST (this takes priority)
+            // End datetime: if time_ended is 00:00 (midnight) or <= start, treat as next calendar day
             if (! empty($election->time_ended)) {
-                try {
-                    $endTimeStr = trim($election->time_ended);
-                    // Normalize time format
-                    $endTimeParts = explode(':', $endTimeStr);
-                    if (count($endTimeParts) == 2) {
-                        // H:i format, add seconds
-                        $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':00';
-                    } elseif (count($endTimeParts) == 3) {
-                        // Already H:i:s format, use as is
-                        $endTimeStr = $endTimeStr;
-                    } else {
-                        throw new \Exception('Invalid end time format');
+                $endTimeStr = trim((string) $election->time_ended);
+                $parts = explode(':', $endTimeStr);
+                if (count($parts) >= 2) {
+                    $endTimeStr = $parts[0].':'.$parts[1].':'.(isset($parts[2]) ? $parts[2] : '00');
+                }
+                if (strlen($endTimeStr) >= 5) {
+                    try {
+                        $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
+                        if ($endDateTime->lessThanOrEqualTo($electionDateTime)) {
+                            $endDateTime->addDay();
+                        }
+                        if ($now->greaterThanOrEqualTo($endDateTime)) {
+                            return 'completed';
+                        }
+                    } catch (\Exception $e) {
+                        Log::debug('calculateStatus end time: '.$e->getMessage());
                     }
-
-                    // Use the same election date for end time
-                    $endDateTime = Carbon::createFromFormat(
-                        'Y-m-d H:i:s',
-                        $dateString.' '.$endTimeStr,
-                        'Asia/Manila'
-                    );
-
-                    // If current time is past the end time, election is completed
-                    if ($now->greaterThanOrEqualTo($endDateTime)) {
-                        return 'completed';
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Error parsing end time in calculateStatus: '.$e->getMessage());
-                    // If end time parsing fails, continue with start time check
                 }
             }
 
-            // Check if election has started (only if not ended)
             if ($now->greaterThanOrEqualTo($electionDateTime)) {
                 return 'ongoing';
             }
 
-            // Election hasn't started yet
             return 'upcoming';
         } catch (\Exception $e) {
             Log::error('Error calculating election status: '.$e->getMessage());
 
-            return 'upcoming'; // Default to upcoming on error
+            return 'upcoming';
+        }
+    }
+
+    private function electionDateToString($electionDate): ?string
+    {
+        if ($electionDate === null) {
+            return null;
+        }
+        if ($electionDate instanceof \Carbon\Carbon || $electionDate instanceof \DateTimeInterface) {
+            return $electionDate->format('Y-m-d');
+        }
+        $s = trim((string) $electionDate);
+        if ($s === '') {
+            return null;
+        }
+        try {
+            return Carbon::parse($s)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    private function parseStartDateTime(string $dateString, $timestarted, Carbon $electionDate): Carbon
+    {
+        if (empty($timestarted)) {
+            return $electionDate->copy()->startOfDay();
+        }
+        $timeStr = trim((string) $timestarted);
+        $parts = explode(':', $timeStr);
+        if (count($parts) >= 2) {
+            $timeStr = $parts[0].':'.$parts[1].':'.(isset($parts[2]) ? $parts[2] : '00');
+        }
+        try {
+            return Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$timeStr, 'Asia/Manila');
+        } catch (\Exception $e) {
+            return $electionDate->copy()->startOfDay();
         }
     }
 }
