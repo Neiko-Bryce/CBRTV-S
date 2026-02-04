@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdHowToVote, MdTimer, MdPerson, MdLeaderboard, MdPlayCircle } from 'react-icons/md';
-import { HiQuestionMarkCircle, HiTrendingUp, HiClock, HiStatusOnline } from 'react-icons/hi';
+import { MdHowToVote, MdPerson, MdLeaderboard } from 'react-icons/md';
+import { HiQuestionMarkCircle, HiTrendingUp, HiStatusOnline } from 'react-icons/hi';
 
 export default function LiveResults() {
     const [elections, setElections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [lastUpdate, setLastUpdate] = useState(null);
 
-    // Fetch live results
     const fetchResults = async () => {
         try {
             const response = await fetch('/api/live-results');
             const data = await response.json();
-            
             if (data.success) {
                 setElections(data.elections);
-                setLastUpdate(new Date());
                 setError(null);
             } else {
                 setError('Failed to load results');
@@ -30,121 +26,109 @@ export default function LiveResults() {
         }
     };
 
-    // Initial fetch and polling every 5 seconds for real-time updates (faster for ongoing elections)
+    // Initial fetch and polling every 5 seconds for real-time updates
     useEffect(() => {
         fetchResults();
         const interval = setInterval(fetchResults, 5000);
         return () => clearInterval(interval);
     }, []);
 
-    // Don't render if no elections
-    if (!loading && elections.length === 0) {
-        return null;
-    }
-
-    // Separate ongoing and completed elections
     const ongoingElections = elections.filter(e => e.status === 'ongoing');
     const completedElections = elections.filter(e => e.status === 'completed');
+    const hasElections = elections.length > 0;
+
+    // Placeholder bar heights for "Hourly Activity" when empty (like reference dashboard)
+    const placeholderBars = [28, 42, 38, 55, 48, 65, 72, 88];
 
     return (
-        <section id="live-results" className="py-16 sm:py-20 lg:py-24 relative overflow-hidden" style={{
-            background: 'linear-gradient(180deg, #0c1220 0%, #1a2332 40%, #243447 100%)'
-        }}>
-            {/* Diagonal Lines Pattern */}
-            <div className="absolute inset-0 opacity-[0.03]" style={{
-                backgroundImage: `repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 10px,
-                    rgba(255,255,255,0.1) 10px,
-                    rgba(255,255,255,0.1) 11px
-                )`,
-            }} />
-            
-            {/* Top Gold Accent Line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-gov-gold-500 to-transparent" />
-            
-            {/* Ambient Glow Effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* Top right warm glow */}
-                <div className="absolute -top-32 -right-32 w-96 h-96 bg-gov-gold-500/15 rounded-full blur-[120px]" />
-                
-                {/* Bottom left cool glow */}
-                <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-slate-400/10 rounded-full blur-[150px]" />
-                
-                {/* Center accent */}
+        <section id="live-results" className="py-16 sm:py-20 lg:py-24 relative overflow-hidden bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* ONE permanent card – dark green like Real-Time Analytics Dashboard reference */}
                 <motion.div
-                    animate={{ 
-                        opacity: [0.05, 0.15, 0.05],
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="relative rounded-3xl overflow-hidden shadow-xl"
+                    style={{
+                        background: 'linear-gradient(135deg, #166534 0%, #14532d 50%, #052e16 100%)',
                     }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gov-gold-400/5 rounded-full blur-[100px]"
-                />
-            </div>
-            
-            {/* Bottom border accent */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                >
+                    {/* Subtle dot texture */}
+                    <div className="absolute inset-0 opacity-30" style={{
+                        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)`,
+                        backgroundSize: '16px 16px',
+                    }} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                {/* Section Header */}
-                <div className="text-center mb-10 sm:mb-12 lg:mb-16">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-4"
-                    >
-                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <span className="text-white/90 text-sm font-medium">
-                            {ongoingElections.length > 0 ? 'Live Voting in Progress' : 'Recent Election Results'}
-                        </span>
-                    </motion.div>
-                    
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4"
-                    >
-                        {ongoingElections.length > 0 ? 'Live Election Results' : 'Recent Election Results'}
-                    </motion.h2>
-                    
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="text-sm sm:text-base lg:text-lg text-white/70 max-w-2xl mx-auto"
-                    >
-                        {ongoingElections.length > 0 
-                            ? 'Watch real-time vote counts as they come in! Candidate identities are hidden to ensure fair voting.'
-                            : 'Transparent voting results displayed anonymously. Results are available for 24 hours after election ends.'}
-                    </motion.p>
-                </div>
-
-                {/* Loading State */}
-                {loading && (
-                    <div className="flex flex-col items-center justify-center py-12">
-                        <div className="w-16 h-16 border-4 border-white/20 border-t-gov-gold-400 rounded-full animate-spin mb-4" />
-                        <p className="text-white/70">Loading live results...</p>
-                    </div>
-                )}
-
-                {/* Error State */}
-                {error && !loading && (
-                    <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <HiQuestionMarkCircle className="w-8 h-8 text-red-400" />
+                    {loading && (
+                        <div className="relative flex flex-col items-center justify-center py-24">
+                            <div className="w-12 h-12 border-2 border-white/20 border-t-gov-gold-400 rounded-full animate-spin mb-4" />
+                            <p className="text-white/80 text-sm">Loading election results...</p>
                         </div>
-                        <p className="text-white/70">{error}</p>
-                    </div>
-                )}
+                    )}
 
-                {/* Elections Grid */}
-                {!loading && !error && elections.length > 0 && (
-                    <div className="space-y-8">
+                    {error && !loading && (
+                        <div className="relative text-center py-16 px-6">
+                            <HiQuestionMarkCircle className="w-12 h-12 text-red-300 mx-auto mb-3" />
+                            <p className="text-white/90">{error}</p>
+                        </div>
+                    )}
+
+                    {/* Empty state – two-column layout like reference (dark green card, white text, yellow accents) */}
+                    {!loading && !error && !hasElections && (
+                        <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-10 p-6 sm:p-8 lg:p-10 xl:p-12">
+                            {/* Left: Premium-style badge, title, paragraph, bullet list */}
+                            <div className="flex flex-col justify-center">
+                                <span className="inline-flex w-fit items-center rounded-full bg-gov-gold-400 px-3 py-1 text-xs font-semibold text-gov-green-900 mb-4">
+                                    Election Results
+                                </span>
+                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-4">
+                                    Recent Election
+                                    <br />
+                                    <span className="pl-0 lg:pl-2">Results</span>
+                                </h2>
+                                <p className="text-white/90 text-sm sm:text-base leading-relaxed mb-6 max-w-lg">
+                                    Monitor election progress with our live results dashboard. When the admin publishes an election—ongoing or completed—results will appear here. Until then, this space is reserved for transparency.
+                                </p>
+                                <ul className="space-y-2 text-white/90 text-sm sm:text-base">
+                                    {['Live participation metrics', 'Position-by-position breakdowns', 'Transparent vote counts', 'Admin-controlled visibility'].map((item, i) => (
+                                        <li key={i} className="flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gov-gold-400 flex-shrink-0" />
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            {/* Right: nested lighter-green panels (glass effect) – Total Votes, Turnout, Hourly Activity */}
+                            <div className="grid grid-cols-2 gap-4 lg:gap-5 content-start">
+                                <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 p-4 sm:p-5">
+                                    <p className="text-white/80 text-xs sm:text-sm mb-1">Total Votes</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-white">—</p>
+                                </div>
+                                <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 p-4 sm:p-5">
+                                    <p className="text-white/80 text-xs sm:text-sm mb-1">Turnout</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gov-gold-400">—</p>
+                                </div>
+                                <div className="col-span-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 p-4 sm:p-5">
+                                    <p className="text-white/80 text-xs sm:text-sm mb-3">Hourly Activity</p>
+                                    <div className="flex items-end gap-1 sm:gap-2 h-24">
+                                        {placeholderBars.map((h, i) => (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${h}%` }}
+                                                transition={{ duration: 0.5, delay: i * 0.05 }}
+                                                className="flex-1 rounded-t bg-gov-gold-400 min-h-[8px]"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Elections content – when admin displays elections; same dark green card, inner panels like reference */}
+                    {!loading && !error && hasElections && (
+                    <div className="relative p-6 sm:p-8 lg:p-10 xl:p-12 space-y-8">
                         {/* Ongoing Elections First */}
                         {ongoingElections.map((election, electionIndex) => (
                             <motion.div
@@ -153,13 +137,13 @@ export default function LiveResults() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: electionIndex * 0.1 }}
-                                className="bg-white/10 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:p-8 border-2 border-gov-gold-400/50 shadow-lg shadow-gov-gold-500/20"
+                                className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
                             >
                                 {/* Election Header */}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                            <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/30 text-green-300 text-xs font-semibold px-2.5 py-1 rounded-full">
                                                 <HiStatusOnline className="w-3 h-3 animate-pulse" />
                                                 LIVE NOW
                                             </span>
@@ -168,34 +152,32 @@ export default function LiveResults() {
                                             {election.election_name}
                                         </h3>
                                         {election.organization && (
-                                            <p className="text-white/60 text-sm">{election.organization}</p>
+                                            <p className="text-white/70 text-sm">{election.organization}</p>
                                         )}
                                         {election.started_at && (
-                                            <p className="text-white/50 text-xs mt-1">
+                                            <p className="text-white/60 text-xs mt-1">
                                                 Started: {election.started_at}
                                             </p>
                                         )}
                                     </div>
-                                    
-                                    {/* Time Until End */}
-                                    <ElectionCountdown 
-                                        type="ongoing"
-                                        timeRemaining={election.time_remaining}
-                                        endsAt={election.ends_at}
-                                    />
+                                    <div className="flex-shrink-0">
+                                        <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white text-xs font-medium px-3 py-2 rounded-lg">
+                                            Results will be revealed soon
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Stats Bar */}
                                 <div className="flex flex-wrap gap-4 mb-6">
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
+                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                                         <MdPerson className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/80 text-sm">
+                                        <span className="text-white/90 text-sm">
                                             <span className="font-semibold text-white">{election.total_voters}</span> votes cast
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
+                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                                         <MdLeaderboard className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/80 text-sm">
+                                        <span className="text-white/90 text-sm">
                                             <span className="font-semibold text-white">{election.positions.length}</span> positions
                                         </span>
                                     </div>
@@ -205,7 +187,7 @@ export default function LiveResults() {
                                 <div className="space-y-6">
                                     {election.positions.length > 0 ? (
                                         election.positions.map((position, posIndex) => (
-                                            <div key={position.position_id} className="bg-white/5 rounded-xl p-4 sm:p-5">
+                                            <div key={position.position_id} className="bg-white/5 rounded-xl p-4 sm:p-5 border border-white/10">
                                                 <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
                                                     <MdHowToVote className="w-5 h-5 text-gov-gold-400" />
                                                     {position.position_name}
@@ -227,7 +209,7 @@ export default function LiveResults() {
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-center py-8 text-white/50">
+                                        <div className="text-center py-8 text-white/60">
                                             <MdHowToVote className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                             <p>No candidates registered yet</p>
                                         </div>
@@ -240,7 +222,7 @@ export default function LiveResults() {
                         {completedElections.length > 0 && ongoingElections.length > 0 && (
                             <div className="flex items-center gap-4 mt-8">
                                 <div className="flex-1 h-px bg-white/20"></div>
-                                <span className="text-white/50 text-sm font-medium">Recently Completed</span>
+                                <span className="text-white/70 text-sm font-medium">Recently Completed</span>
                                 <div className="flex-1 h-px bg-white/20"></div>
                             </div>
                         )}
@@ -252,13 +234,13 @@ export default function LiveResults() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: electionIndex * 0.1 }}
-                                className="bg-white/10 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:p-8 border border-gov-gold-500/30 shadow-lg shadow-gov-gold-500/10"
+                                className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
                             >
                                 {/* Election Header */}
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-500/40 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full animate-pulse">
+                                            <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-400/30 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full">
                                                 <span className="text-sm">🏆</span>
                                                 RESULTS REVEALED
                                             </span>
@@ -267,32 +249,25 @@ export default function LiveResults() {
                                             {election.election_name}
                                         </h3>
                                         {election.organization && (
-                                            <p className="text-white/60 text-sm">{election.organization}</p>
+                                            <p className="text-white/70 text-sm">{election.organization}</p>
                                         )}
-                                        <p className="text-white/50 text-xs mt-1">
+                                        <p className="text-white/60 text-xs mt-1">
                                             Election ended: {election.ended_at}
                                         </p>
                                     </div>
-                                    
-                                    {/* Expiry Countdown */}
-                                    <ElectionCountdown 
-                                        type="completed"
-                                        timeRemaining={election.time_remaining}
-                                        expiresAt={election.expires_at}
-                                    />
                                 </div>
 
                                 {/* Stats Bar */}
                                 <div className="flex flex-wrap gap-4 mb-6">
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
+                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                                         <MdPerson className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/80 text-sm">
+                                        <span className="text-white/90 text-sm">
                                             <span className="font-semibold text-white">{election.total_voters}</span> total voters
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
+                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                                         <MdLeaderboard className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/80 text-sm">
+                                        <span className="text-white/90 text-sm">
                                             <span className="font-semibold text-white">{election.positions.length}</span> positions
                                         </span>
                                     </div>
@@ -302,7 +277,7 @@ export default function LiveResults() {
                                 <div className="space-y-6">
                                     {election.positions.length > 0 ? (
                                         election.positions.map((position, posIndex) => (
-                                            <div key={position.position_id} className="bg-white/5 rounded-xl p-4 sm:p-5">
+                                            <div key={position.position_id} className="bg-white/5 rounded-xl p-4 sm:p-5 border border-white/10">
                                                 <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
                                                     <MdHowToVote className="w-5 h-5 text-gov-gold-400" />
                                                     {position.position_name}
@@ -324,7 +299,7 @@ export default function LiveResults() {
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-center py-8 text-white/50">
+                                        <div className="text-center py-8 text-white/60">
                                             <MdHowToVote className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                             <p>No candidates were registered</p>
                                         </div>
@@ -333,22 +308,22 @@ export default function LiveResults() {
                             </motion.div>
                         ))}
 
-                        {/* Last Update Indicator */}
-                        {lastUpdate && (
-                            <div className="text-center">
-                                <p className="text-white/40 text-xs">
-                                    Last updated: {lastUpdate.toLocaleTimeString()} • Auto-refreshes every 5 seconds
-                                </p>
-                            </div>
-                        )}
+                        {/* Subtle refresh indicator */}
+                        <div className="text-center pt-4">
+                            <span className="inline-flex items-center gap-1.5 text-white/50 text-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-gov-gold-400 animate-pulse" />
+                                Updates automatically
+                            </span>
+                        </div>
                     </div>
-                )}
+                    )}
+                </motion.div>
             </div>
         </section>
     );
 }
 
-// Candidate Card Component - Shows anonymous or revealed based on election status
+// Candidate Card Component - Dark green card theme (white text, translucent panels, gold accents)
 function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
     const percentage = totalVotes > 0 ? ((candidate.votes_count / totalVotes) * 100).toFixed(1) : 0;
     const isAnonymous = candidate.is_anonymous;
@@ -359,7 +334,7 @@ function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
             animate={{ opacity: 1, scale: 1 }}
             layout
             className={`
-                relative bg-white/10 rounded-xl p-3 sm:p-4 text-center
+                relative bg-white/10 rounded-xl p-3 sm:p-4 text-center border border-white/10
                 ${isLeader ? 'ring-2 ring-gov-gold-400 bg-gov-gold-500/10' : ''}
                 transition-all duration-300 hover:bg-white/15
             `}
@@ -392,7 +367,7 @@ function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
                         initial={{ opacity: 0, rotateY: 90 }}
                         animate={{ opacity: 1, rotateY: 0 }}
                         exit={{ opacity: 0, rotateY: -90 }}
-                        className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden"
+                        className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 bg-gray-600 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden"
                     >
                         <HiQuestionMarkCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white/70" />
                         {isLive && (
@@ -449,11 +424,11 @@ function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
                     key={candidate.votes_count}
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
-                    className={`text-xl sm:text-2xl font-bold ${isLeader && !isAnonymous ? 'text-gov-gold-300' : 'text-gov-gold-400'}`}
+                    className={`text-xl sm:text-2xl font-bold ${isLeader && !isAnonymous ? 'text-gov-gold-400' : 'text-gov-gold-400'}`}
                 >
                     {candidate.votes_count.toLocaleString()}
                 </motion.p>
-                <p className="text-white/50 text-xs">{isAnonymous ? 'votes' : 'final votes'}</p>
+                <p className="text-white/60 text-xs">{isAnonymous ? 'votes' : 'final votes'}</p>
             </div>
             
             {/* Progress Bar */}
@@ -465,7 +440,7 @@ function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
                     className={`h-full rounded-full ${isLeader ? 'bg-gradient-to-r from-gov-gold-400 to-gov-gold-500' : 'bg-white/40'}`}
                 />
             </div>
-            <p className="text-white/60 text-xs mt-1">{percentage}%</p>
+            <p className="text-white/70 text-xs mt-1">{percentage}%</p>
             
             {/* Rank Badge for revealed candidates */}
             {!isAnonymous && rank <= 3 && (
@@ -486,63 +461,3 @@ function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
     );
 }
 
-// Election Countdown Component (for both ongoing and completed)
-function ElectionCountdown({ type, timeRemaining, endsAt, expiresAt }) {
-    const [time, setTime] = useState(timeRemaining || { hours: 0, minutes: 0, seconds: 0 });
-    
-    useEffect(() => {
-        if (!timeRemaining) return;
-        setTime(timeRemaining);
-    }, [timeRemaining]);
-    
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTime(prev => {
-                let { hours, minutes, seconds } = prev;
-                
-                if (seconds > 0) {
-                    seconds--;
-                } else if (minutes > 0) {
-                    minutes--;
-                    seconds = 59;
-                } else if (hours > 0) {
-                    hours--;
-                    minutes = 59;
-                    seconds = 59;
-                }
-                
-                return { hours, minutes, seconds };
-            });
-        }, 1000);
-        
-        return () => clearInterval(interval);
-    }, []);
-    
-    const formatTime = (val) => String(val).padStart(2, '0');
-    
-    if (type === 'ongoing') {
-        return (
-            <div className="bg-green-500/20 border border-green-500/30 rounded-lg px-4 py-2 flex items-center gap-2">
-                <HiClock className="w-4 h-4 text-green-400 animate-pulse" />
-                <div className="text-center">
-                    <p className="text-green-400 text-xs uppercase tracking-wide mb-0.5">Voting ends in</p>
-                    <p className="text-white font-mono font-bold text-sm">
-                        {formatTime(time.hours)}:{formatTime(time.minutes)}:{formatTime(time.seconds)}
-                    </p>
-                </div>
-            </div>
-        );
-    }
-    
-    return (
-        <div className="bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2 flex items-center gap-2">
-            <HiClock className="w-4 h-4 text-red-400" />
-            <div className="text-center">
-                <p className="text-red-400 text-xs uppercase tracking-wide mb-0.5">Results expire in</p>
-                <p className="text-white font-mono font-bold text-sm">
-                    {formatTime(time.hours)}:{formatTime(time.minutes)}:{formatTime(time.seconds)}
-                </p>
-            </div>
-        </div>
-    );
-}

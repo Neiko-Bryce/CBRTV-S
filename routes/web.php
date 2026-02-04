@@ -48,6 +48,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('elections/stats/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getStats'])->name('elections.stats.get');
     Route::get('elections/data/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getElectionsData'])->name('elections.data.get');
 
+    // Live Results Viewing (control which elections appear on the landing page)
+    Route::get('live-results-viewing', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'index'])->name('live-results-viewing.index');
+    Route::post('live-results-viewing/{electionId}/display', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'display'])->name('live-results-viewing.display');
+    Route::post('live-results-viewing/{electionId}/hide', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'hide'])->name('live-results-viewing.hide');
+
     // Students Management
     Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
     Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');

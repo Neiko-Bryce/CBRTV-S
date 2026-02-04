@@ -1,5 +1,11 @@
 # Deployment (Railway)
 
+## 0. Frontend build (runs on every deploy)
+
+Every deploy runs **`npm run build`** during the Nixpacks **build** phase (see `nixpacks.toml`). That compiles Vite assets (React landing page, Tailwind, etc.) into `public/build/`, so the live site always serves the latest frontend. You don’t need to run `npm run build` manually before pushing; the deployment pipeline does it.
+
+If you change only JS/CSS and redeploy, a new build runs and new assets are used. If you see old UI after a deploy, do a hard refresh (Ctrl+Shift+R) or clear cache; the build itself is already run on each deploy.
+
 ## 1. Fix the build (lock file)
 
 If the build fails with **"league/flysystem-aws-s3-v3 is not present in the lock file"**:

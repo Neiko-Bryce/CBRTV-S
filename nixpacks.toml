@@ -1,16 +1,19 @@
 # Railway/Nixpacks configuration for Laravel + PostgreSQL + Vite
 # PHP 8.3 - symfony/filesystem ^7.2 in composer.lock for compatibility
+# Every deploy runs npm run build in [phases.build] so the landing page and Vite assets are always fresh.
 
 [phases.setup]
 nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql", "nodejs_20", "php83Packages.composer"]
 
 [phases.install]
+# Install PHP and Node deps (npm ci includes devDependencies so Vite can run in build)
 cmds = [
     "composer install --no-dev --optimize-autoloader --no-interaction",
     "npm ci"
 ]
 
 [phases.build]
+# Frontend build runs on every deploy so public/build/ is always up to date (landing page, admin, student UI).
 cmds = [
     "npm run build",
     "chmod +x start.sh"

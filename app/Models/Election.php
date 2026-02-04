@@ -22,6 +22,7 @@ class Election extends Model
         'timestarted',
         'time_ended',
         'status',
+        'show_live_results',
     ];
 
     /**
@@ -31,6 +32,7 @@ class Election extends Model
      */
     protected $casts = [
         'election_date' => 'date',
+        'show_live_results' => 'boolean',
     ];
 
     /**

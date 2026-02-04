@@ -147,15 +147,15 @@ export default function Hero() {
                         </motion.div>
                     </div>
 
-                    {/* Hero Illustration - Shows compact version on tablet, full on desktop */}
+                    {/* Hero Illustration - Visible on all screens (mobile: below content; tablet/desktop: right column) */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8, x: 50 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.3 }}
-                        className="relative hidden md:block"
+                        className="relative block mt-8 sm:mt-10 md:mt-0"
                     >
-                        <div className="relative">
-                            {/* Main Card - Responsive sizing */}
+                        <div className="relative max-w-sm mx-auto md:max-w-none md:mx-0">
+                            {/* Main Card - Student Council Election / Live Results */}
                             <motion.div
                                 animate={{ y: [0, -15, 0] }}
                                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -217,12 +217,12 @@ export default function Hero() {
                                 Real-Time
                             </motion.div>
 
-                            {/* Security Badge - Hidden on tablet, visible on desktop */}
+                            {/* Security Badge - Visible on all screens */}
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 1.2, duration: 0.5 }}
-                                className="absolute -bottom-3 -left-3 lg:-bottom-4 lg:-left-4 bg-white px-2.5 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl shadow-lg hidden lg:flex items-center gap-2 lg:gap-3"
+                                className="absolute -bottom-3 -left-2 sm:-left-3 lg:-bottom-4 lg:-left-4 bg-white px-2.5 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl shadow-lg flex items-center gap-2 lg:gap-3"
                             >
                                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-md lg:rounded-lg flex items-center justify-center">
                                     <MdVerified className="w-4 h-4 lg:w-6 lg:h-6 text-green-600" />

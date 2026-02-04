@@ -12,31 +12,18 @@ use Illuminate\Support\Facades\DB;
 class LiveResultsController extends Controller
 {
     /**
-     * Get ongoing elections and recently completed elections (within 24 hours) with anonymized results.
+     * Get elections whose live results are displayed on the landing page (admin-controlled).
+     * Only elections with show_live_results = true are returned.
      */
     public function getCompletedElections()
     {
         $now = Carbon::now('Asia/Manila');
-        $twentyFourHoursAgo = $now->copy()->subHours(24);
 
-        // Get elections that are ONGOING or recently COMPLETED (within 24 hours)
-        $elections = Election::whereIn('status', ['ongoing', 'completed'])
+        // Only elections that admin has turned on for landing page display
+        $elections = Election::where('show_live_results', true)
+            ->whereIn('status', ['ongoing', 'completed'])
             ->with(['organization'])
-            ->get()
-            ->filter(function ($election) use ($twentyFourHoursAgo, $now) {
-                // If ongoing, always show
-                if ($election->status === 'ongoing') {
-                    return true;
-                }
-
-                // If completed, check if within 24-hour window
-                $endDateTime = $this->parseElectionEndTime($election);
-                if (! $endDateTime) {
-                    return false;
-                }
-
-                return $endDateTime->gte($twentyFourHoursAgo) && $endDateTime->lte($now);
-            });
+            ->get();
 
         $results = [];
 
@@ -216,31 +203,22 @@ class LiveResultsController extends Controller
     }
 
     /**
-     * Get real-time vote counts for a specific election.
+     * Get real-time vote counts for a specific election (only if show_live_results is on).
      */
     public function getElectionResults($electionId)
     {
         $now = Carbon::now('Asia/Manila');
-        $twentyFourHoursAgo = $now->copy()->subHours(24);
 
         $election = Election::where('id', $electionId)
-            ->where('status', 'completed')
+            ->where('show_live_results', true)
+            ->whereIn('status', ['ongoing', 'completed'])
             ->first();
 
         if (! $election) {
             return response()->json([
                 'success' => false,
-                'message' => 'Election not found or not completed',
+                'message' => 'Election not found or results are not displayed.',
             ], 404);
-        }
-
-        // Check if within 24-hour window
-        $endDateTime = $this->parseElectionEndTime($election);
-        if (! $endDateTime || $endDateTime->lt($twentyFourHoursAgo)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Results are no longer available (24-hour window expired)',
-            ], 410);
         }
 
         // Get vote counts
