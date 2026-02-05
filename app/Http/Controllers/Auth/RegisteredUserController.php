@@ -12,38 +12,64 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    private const SESSION_KEY = 'registration_access_until';
+
     /**
-     * Display the registration view.
+     * Only allow registration page if the user has already entered the secret code (e.g. neikocbrtvs).
+     * If not, redirect to the access page. Typing /register in the URL does nothing without the code.
      */
-    public function create(): View
+    private function ensureRegistrationAccess(Request $request): ?RedirectResponse
     {
+        $until = $request->session()->get(self::SESSION_KEY);
+        if (! is_numeric($until) || (int) $until <= time()) {
+            $request->session()->forget(self::SESSION_KEY);
+            return redirect()->route('register.access');
+        }
+        return null;
+    }
+
+    /**
+     * Display the registration view. Blocked unless secret code was entered on landing or register/access.
+     */
+    public function create(Request $request): View|RedirectResponse
+    {
+        $redirect = $this->ensureRegistrationAccess($request);
+        if ($redirect !== null) {
+            return $redirect;
+        }
         return view('auth.register');
     }
 
     /**
      * Handle an incoming registration request.
+     * Only student accounts can be created. Blocked unless secret code was entered first.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
+        $redirect = $this->ensureRegistrationAccess($request);
+        if ($redirect !== null) {
+            return $redirect;
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'usertype' => ['required', 'in:admin,student'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => $request->password, // Will be hashed by model
-            'usertype' => $request->usertype,
+            'password' => $request->password,
+            'usertype' => 'student',
         ]);
 
         event(new Registered($user));
 
-        // Redirect to login page with success message
+        $request->session()->forget('registration_access_until');
+
         return redirect()->route('login')->with('success', 'Registration successful! Please login with your credentials to continue.');
     }
 }

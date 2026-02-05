@@ -56,6 +56,8 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'registration_access_key' => env('REGISTRATION_ACCESS_KEY', 'neikocbrtvs'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

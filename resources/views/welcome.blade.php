@@ -14,6 +14,7 @@
     <meta property="og:image" content="{{ asset('images/og-image.png') }}">
     
     <title>VoteWisely - Cloud-Based Real-Time Voting System</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
