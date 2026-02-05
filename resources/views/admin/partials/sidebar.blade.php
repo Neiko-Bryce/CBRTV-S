@@ -16,12 +16,12 @@
     
     <div class="h-full flex flex-col relative z-40 transition-colors sidebar-container" style="background-color: var(--card-bg); border-right: 1px solid var(--border-color);">
         <!-- Logo -->
-        <div class="p-6 border-b transition-colors sidebar-header" style="background: linear-gradient(135deg, rgba(0, 102, 51, 0.05) 0%, rgba(0, 136, 68, 0.05) 100%); border-color: var(--border-color);">
+        <div class="p-6 border-b transition-colors sidebar-header" style="background: linear-gradient(135deg, rgba(22, 101, 52, 0.06) 0%, rgba(20, 83, 45, 0.08) 100%); border-color: var(--border-color);">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all hover:scale-105" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all hover:scale-105" style="background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 100%);">
+                        <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 13h-.68l-2 2h1.91L19 17H5l1.78-2h2.05l-2-2H6l-3 3v4c0 1.1.89 2 1.99 2H19c1.1 0 2-.89 2-2v-4l-3-3zm-1-5.05l-4.95 4.95-3.54-3.54 4.95-4.95 3.54 3.54zm-4.24-5.66L6.39 8.66a.996.996 0 000 1.41l4.95 4.95c.39.39 1.02.39 1.41 0l6.36-6.36a.996.996 0 000-1.41l-4.95-4.95a.996.996 0 00-1.41 0z"/>
                         </svg>
                     </div>
                     <div>

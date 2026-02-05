@@ -16,7 +16,8 @@
     <title>VoteWisely - Cloud-Based Real-Time Voting System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <!-- Favicon -->
+    <!-- Favicon – same ballot box logo as admin/login -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
     <!-- Fonts -->

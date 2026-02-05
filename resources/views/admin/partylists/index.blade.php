@@ -229,7 +229,7 @@ function openCreateModal() {
     document.getElementById('election_id').value = '{{ request("election") ?? "" }}';
     document.getElementById('name').value = '';
     document.getElementById('code').value = '';
-    document.getElementById('color').value = '#006633';
+    document.getElementById('color').value = '#166534';
     document.getElementById('description').value = '';
     document.getElementById('is_active').checked = true;
     document.getElementById('partylistModal').classList.add('active');
@@ -246,7 +246,7 @@ function editPartylist(id) {
             document.getElementById('election_id').value = data.election_id || '';
             document.getElementById('name').value = data.name || '';
             document.getElementById('code').value = data.code || '';
-            document.getElementById('color').value = data.color || '#006633';
+            document.getElementById('color').value = data.color || '#166534';
             document.getElementById('description').value = data.description || '';
             document.getElementById('is_active').checked = data.is_active;
             document.getElementById('partylistModal').classList.add('active');

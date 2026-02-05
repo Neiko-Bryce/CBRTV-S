@@ -9,6 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard') - CpsuVotewisely.com</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -36,13 +38,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <style>
+        /* Landing page design system: gov-green + gov-gold */
         :root {
-            --cpsu-green: #006633;
-            --cpsu-gold: #D4AF37;
-            --cpsu-green-light: #008844;
-            --cpsu-green-dark: #004422;
-            --cpsu-gold-light: #E8D08A;
-            --cpsu-gold-dark: #B8941F;
+            --cpsu-green: #166534;
+            --cpsu-gold: #facc15;
+            --cpsu-green-light: #16a34a;
+            --cpsu-green-dark: #14532d;
+            --cpsu-gold-light: #eab308;
+            --cpsu-gold-dark: #ca8a04;
         }
         
         .heading-font {
@@ -125,6 +128,7 @@
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
             transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
@@ -134,11 +138,11 @@
         }
         
         .card:hover {
-            box-shadow: 0 4px 12px rgba(0, 102, 51, 0.1);
+            box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12);
         }
         
         .dark .card:hover {
-            box-shadow: 0 4px 12px rgba(0, 102, 51, 0.2);
+            box-shadow: 0 4px 12px rgba(22, 101, 52, 0.25);
         }
         
         /* Sidebar Styles */
@@ -154,13 +158,13 @@
         }
         
         .sidebar-header {
-            background: linear-gradient(135deg, rgba(0, 102, 51, 0.05) 0%, rgba(0, 136, 68, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.06) 0%, rgba(20, 83, 45, 0.08) 100%);
             border-color: var(--border-color);
             transition: background 0.3s ease, border-color 0.3s ease;
         }
         
         .dark .sidebar-header {
-            background: linear-gradient(135deg, rgba(0, 102, 51, 0.12) 0%, rgba(0, 136, 68, 0.12) 100%);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.15) 0%, rgba(20, 83, 45, 0.2) 100%);
         }
         
         .sidebar-nav {
@@ -197,24 +201,24 @@
             background-color: var(--hover-bg);
             color: var(--cpsu-green);
             transform: translateX(4px);
-            box-shadow: 0 2px 6px rgba(0, 102, 51, 0.1);
+            box-shadow: 0 2px 6px rgba(22, 101, 52, 0.1);
         }
         
         .dark .nav-link:hover {
-            background-color: rgba(0, 136, 68, 0.15);
-            box-shadow: 0 2px 6px rgba(0, 136, 68, 0.2);
+            background-color: rgba(22, 101, 52, 0.15);
+            box-shadow: 0 2px 6px rgba(22, 101, 52, 0.2);
         }
         
         .nav-link.active {
-            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+            background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(0, 102, 51, 0.25);
+            box-shadow: 0 4px 12px rgba(22, 101, 52, 0.25);
             font-weight: 600;
             transform: translateX(0);
         }
         
         .dark .nav-link.active {
-            box-shadow: 0 4px 12px rgba(0, 136, 68, 0.35);
+            box-shadow: 0 4px 12px rgba(22, 101, 52, 0.35);
         }
         
         .nav-link.active::before {
@@ -227,12 +231,12 @@
             height: 70%;
             background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);
             border-radius: 0 3px 3px 0;
-            box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
         .dark .nav-link.active::before {
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
         }
         
         .nav-link.active svg {
@@ -257,65 +261,65 @@
             letter-spacing: 0.025em;
         }
         
-        /* CPSU Branded Buttons */
+        /* CPSU Branded Buttons – landing style */
         .btn-cpsu-primary {
-            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-dark) 100%);
             color: white;
             transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
         }
         
         .btn-cpsu-primary:hover {
-            background: linear-gradient(135deg, var(--cpsu-green-dark) 0%, var(--cpsu-green) 100%);
+            background: var(--cpsu-green-dark);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 102, 51, 0.3);
+            box-shadow: 0 4px 14px rgba(22, 101, 52, 0.3);
         }
         
         .btn-cpsu-secondary {
             background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);
-            color: var(--cpsu-green-dark);
+            color: #14532d;
             transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
         }
         
         .btn-cpsu-secondary:hover {
-            background: linear-gradient(135deg, var(--cpsu-gold-dark) 0%, var(--cpsu-gold) 100%);
+            background: var(--cpsu-gold-light);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35);
         }
         
-        /* Stat Card Gradients */
+        /* Stat Card Gradients – landing gov-green / gov-gold */
         .stat-card-primary {
-            background: linear-gradient(135deg, rgba(0, 102, 51, 0.08) 0%, rgba(0, 136, 68, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.08) 0%, rgba(20, 83, 45, 0.06) 100%);
             border-left: 4px solid var(--cpsu-green);
         }
         
         .dark .stat-card-primary {
-            background: linear-gradient(135deg, rgba(0, 102, 51, 0.2) 0%, rgba(0, 136, 68, 0.2) 100%);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.2) 0%, rgba(20, 83, 45, 0.15) 100%);
         }
         
         .stat-card-gold {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(232, 208, 138, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.08) 0%, rgba(234, 179, 8, 0.06) 100%);
             border-left: 4px solid var(--cpsu-gold);
         }
         
         .dark .stat-card-gold {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(232, 208, 138, 0.2) 100%);
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(234, 179, 8, 0.12) 100%);
         }
         
-        /* Activity Icons */
+        /* Activity Icons – landing palette */
         .activity-icon-green {
-            background: rgba(0, 102, 51, 0.1);
+            background: rgba(22, 101, 52, 0.1);
         }
         
         .dark .activity-icon-green {
-            background: rgba(0, 136, 68, 0.2);
+            background: rgba(22, 101, 52, 0.2);
         }
         
         .activity-icon-gold {
-            background: rgba(212, 175, 55, 0.1);
+            background: rgba(250, 204, 21, 0.12);
         }
         
         .dark .activity-icon-gold {
-            background: rgba(212, 175, 55, 0.2);
+            background: rgba(250, 204, 21, 0.2);
         }
         
         /* Text Colors */
@@ -327,14 +331,15 @@
             color: var(--text-secondary);
         }
         
-        /* Table Styles */
+        /* Table Styles – landing-style header accent */
         .table-header {
-            background-color: var(--bg-tertiary);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.06) 0%, rgba(20, 83, 45, 0.04) 100%);
             color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
         }
         
         .dark .table-header {
-            background-color: var(--bg-tertiary);
+            background: linear-gradient(135deg, rgba(22, 101, 52, 0.15) 0%, rgba(20, 83, 45, 0.1) 100%);
         }
         
         .table-row {
@@ -394,7 +399,7 @@
         .pagination a,
         .pagination span {
             padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             text-decoration: none;
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
             border: 1px solid var(--border-color);
@@ -409,7 +414,7 @@
         }
         
         .pagination .active span {
-            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-dark) 100%);
             color: white;
             border-color: var(--cpsu-green);
         }
@@ -430,11 +435,11 @@
         input:focus, select:focus, textarea:focus {
             border-color: var(--cpsu-green) !important;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 102, 51, 0.1);
+            box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.15);
         }
         
         .dark input:focus, .dark select:focus, .dark textarea:focus {
-            box-shadow: 0 0 0 3px rgba(0, 136, 68, 0.2);
+            box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.25);
         }
         
         /* Info Boxes */
@@ -489,13 +494,13 @@
         }
         
         .header-btn:hover {
-            background-color: rgba(0, 102, 51, 0.1);
+            background-color: rgba(22, 101, 52, 0.1);
             color: var(--cpsu-green);
         }
         
         .dark .header-btn:hover {
-            background-color: rgba(0, 136, 68, 0.15);
-            color: var(--cpsu-green-light);
+            background-color: rgba(22, 101, 52, 0.15);
+            color: #4ade80;
         }
     </style>
     
@@ -650,10 +655,10 @@
                 </div>
             </header>
             
-            <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-6" style="background-color: var(--bg-secondary);">
+            <!-- Page Content – balanced spacing, landing-style background -->
+            <main class="flex-1 overflow-y-auto p-6 lg:p-8" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
                 @if(session('success'))
-                    <div class="mb-6 p-4 rounded-lg flex items-center space-x-3 shadow-sm" style="background: linear-gradient(135deg, rgba(0, 102, 51, 0.1) 0%, rgba(0, 136, 68, 0.1) 100%); border-left: 4px solid var(--cpsu-green);">
+                    <div class="mb-6 p-4 rounded-xl flex items-center space-x-3 shadow-sm" style="background: linear-gradient(135deg, rgba(22, 101, 52, 0.1) 0%, rgba(20, 83, 45, 0.08) 100%); border-left: 4px solid var(--cpsu-green);">
                         <svg class="w-5 h-5 flex-shrink-0" style="color: var(--cpsu-green);" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
@@ -679,8 +684,8 @@
                     <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
                         <div class="flex items-center space-x-3">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
-                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18 13h-.68l-2 2h1.91L19 17H5l1.78-2h2.05l-2-2H6l-3 3v4c0 1.1.89 2 1.99 2H19c1.1 0 2-.89 2-2v-4l-3-3zm-1-5.05l-4.95 4.95-3.54-3.54 4.95-4.95 3.54 3.54zm-4.24-5.66L6.39 8.66a.996.996 0 000 1.41l4.95 4.95c.39.39 1.02.39 1.41 0l6.36-6.36a.996.996 0 000-1.41l-4.95-4.95a.996.996 0 00-1.41 0z"/>
                                 </svg>
                             </div>
                             <div>
