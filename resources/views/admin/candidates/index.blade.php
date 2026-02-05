@@ -115,43 +115,108 @@ use Illuminate\Support\Facades\Storage;
         border: 2px solid var(--border-color);
         display: block;
     }
+
+    /* Responsive: header and buttons */
+    @media (max-width: 768px) {
+        .candidates-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        .candidates-header-actions {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+        .candidates-header-actions .btn-add {
+            width: 100%;
+            justify-content: center;
+        }
+        .candidates-header-actions select {
+            width: 100%;
+        }
+    }
+    @media (max-width: 640px) {
+        .candidates-header-actions {
+            flex-wrap: wrap;
+        }
+        .candidates-header-actions .btn-add {
+            flex: 1 1 100%;
+        }
+    }
+    /* Modal responsive */
+    @media (max-width: 640px) {
+        .modal-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+        .modal-body .grid.grid-cols-2 {
+            grid-template-columns: 1fr;
+        }
+        .modal-footer {
+            flex-direction: column;
+        }
+        .modal-footer button {
+            width: 100%;
+        }
+    }
+    /* Table responsive: tighter padding and horizontal scroll hint on small screens */
+    @media (max-width: 768px) {
+        .candidates-table-wrap {
+            -webkit-overflow-scrolling: touch;
+        }
+        .candidates-table th,
+        .candidates-table td {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+        .candidates-table .candidate-photo {
+            width: 40px;
+            height: 40px;
+        }
+        .candidates-table .actions-cell .flex {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Actions -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-4 candidates-header">
         <div>
             <h3 class="text-lg font-semibold text-primary">All Candidates</h3>
             <p class="text-sm text-secondary mt-1">Manage candidates for elections</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <select id="electionFilter" onchange="filterByElection(this.value)" class="px-3 py-2 border rounded-lg text-sm" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+        <div class="flex flex-wrap items-center gap-3 candidates-header-actions">
+            <select id="electionFilter" onchange="filterByElection(this.value)" class="px-3 py-2 border rounded-lg text-sm min-w-0 flex-1 sm:flex-none sm:min-w-[180px]" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                 <option value="">All Elections</option>
                 @foreach($elections as $election)
                 <option value="{{ $election->id }}" {{ request('election') == $election->id ? 'selected' : '' }}>{{ $election->election_name }}</option>
                 @endforeach
             </select>
-            <button onclick="openCreateModal('single')" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="openCreateModal('single')" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary btn-add">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Add Single Candidate
+                <span>Add Single Candidate</span>
             </button>
-            <button onclick="openCreateModal('partylist')" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm" style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="openCreateModal('partylist')" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-add" style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%); color: #14532d;">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                Add Full Partylist
+                <span>Add Full Partylist</span>
             </button>
         </div>
     </div>
 
     <!-- Candidates Table -->
     <div class="card rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y" style="border-collapse: separate; border-spacing: 0;">
+        <div class="overflow-x-auto candidates-table-wrap">
+            <table class="min-w-full divide-y candidates-table" style="border-collapse: separate; border-spacing: 0;">
                 <thead class="table-header" style="background-color: var(--bg-tertiary);">
                     <tr>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Candidate Photo</th>
@@ -215,7 +280,7 @@ use Illuminate\Support\Facades\Storage;
                                 {{ $candidate->votes_count ?? 0 }}
                             </span>
                         </td>
-                        <td class="px-5 py-4 whitespace-nowrap text-center">
+                        <td class="px-5 py-4 whitespace-nowrap text-center actions-cell">
                             <div class="flex items-center justify-center space-x-1.5">
                                 <button onclick="editCandidate({{ $candidate->id }})" class="p-2 rounded-lg hover:bg-[var(--hover-bg)] transition-all duration-200" style="color: var(--cpsu-green-light);" title="Edit Candidate">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
