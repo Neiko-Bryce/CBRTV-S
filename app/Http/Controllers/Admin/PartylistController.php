@@ -99,18 +99,24 @@ class PartylistController extends Controller
     /**
      * Remove the specified partylist from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $partylist = Partylist::findOrFail($id);
 
         // Check if partylist has candidates
         if ($partylist->candidates()->count() > 0) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete partylist with existing candidates.'], 422);
+            }
             return redirect()->route('admin.partylists.index')
                 ->with('error', 'Cannot delete partylist with existing candidates.');
         }
 
         $partylist->delete();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Partylist deleted successfully.']);
+        }
         return redirect()->route('admin.partylists.index')
             ->with('success', 'Partylist deleted successfully.');
     }

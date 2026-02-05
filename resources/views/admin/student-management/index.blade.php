@@ -111,6 +111,19 @@
         font-size: 0.875rem;
         color: var(--text-secondary);
     }
+    /* Mobile: same pattern as candidates/organizations */
+    @media (max-width: 768px) {
+        .student-search-row { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .student-search-row .flex-1.relative { min-width: 0; }
+        .student-search-row button { width: 100%; justify-content: center; }
+        .student-password-row { flex-direction: column; align-items: stretch; }
+        .student-password-row button { width: 100%; }
+        .student-form-actions { flex-direction: column; }
+        .student-form-actions button { width: 100%; }
+        .table-wrap { -webkit-overflow-scrolling: touch; }
+        .table-wrap th, .table-wrap td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+        .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+    }
 </style>
 @endpush
 
@@ -119,15 +132,15 @@
     <!-- Search Section -->
     <div class="card">
         <h2 class="text-xl font-semibold text-primary mb-4">Search Student</h2>
-        <div class="flex gap-4 items-start">
-            <div class="flex-1">
+        <div class="flex flex-wrap gap-4 items-start">
+            <div class="flex-1 min-w-0">
                 <label for="student_id_search" class="block text-sm font-medium text-primary mb-2">Student ID or Name *</label>
-                <div class="flex items-center gap-3">
-                    <div class="flex-1 relative">
+                <div class="flex flex-wrap items-center gap-3 student-search-row">
+                    <div class="flex-1 relative min-w-0">
                         <input type="text" id="student_id_search" autocomplete="off" placeholder="Type Student ID or Name for suggestions..." class="w-full px-4 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
                         <div id="student_suggestions" class="absolute left-0 right-0 top-full mt-0.5"></div>
                     </div>
-                    <button onclick="searchStudent()" class="px-6 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90 whitespace-nowrap" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                    <button type="button" onclick="searchStudent()" class="inline-flex items-center justify-center px-6 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90 whitespace-nowrap btn-add" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                         Search
                     </button>
                 </div>
@@ -155,9 +168,9 @@
             <div class="space-y-4">
                 <div>
                     <label for="password" class="block text-sm font-medium text-primary mb-2">Password *</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="password" name="password" required readonly class="flex-1 px-4 py-2 rounded-lg transition-all font-mono" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" placeholder="Click Generate Password">
-                        <button type="button" onclick="generatePassword()" class="px-4 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                    <div class="flex flex-wrap gap-2 student-password-row">
+                        <input type="text" id="password" name="password" required readonly class="flex-1 min-w-0 px-4 py-2 rounded-lg transition-all font-mono" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" placeholder="Click Generate Password">
+                        <button type="button" onclick="generatePassword()" class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                             Generate Password
                         </button>
                     </div>
@@ -165,11 +178,11 @@
                     <div id="password_error" class="text-red-500 text-sm mt-1"></div>
                 </div>
                 
-                <div class="flex gap-4">
-                    <button type="submit" class="px-6 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                <div class="flex flex-wrap gap-3 student-form-actions">
+                    <button type="submit" class="inline-flex items-center justify-center px-6 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90 btn-add" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                         Create Account
                     </button>
-                    <button type="button" onclick="resetForm()" class="px-6 py-2 rounded-lg font-medium transition-all" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">
+                    <button type="button" onclick="resetForm()" class="inline-flex items-center justify-center px-6 py-2 rounded-lg font-medium transition-all" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">
                         Reset
                     </button>
                 </div>
@@ -193,7 +206,7 @@
     <!-- Student Accounts Table -->
     <div class="card">
         <h2 class="text-xl font-semibold text-primary mb-4">Created Student Accounts</h2>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto table-wrap">
             <table class="min-w-full divide-y" style="border-collapse: separate; border-spacing: 0;">
                 <thead>
                     <tr>
@@ -249,9 +262,9 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-6 py-4 align-middle actions-cell">
                             <div class="flex items-center justify-center space-x-2">
-                                <button onclick="openRegenerateModal({{ $account->id }}, '{{ $account->email }}', '{{ $account->name }}', {{ $account->password_regenerated_count ?? 0 }})" class="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-sm" style="background-color: rgba(0, 136, 68, 0.08); color: var(--cpsu-green-light); border: 1px solid rgba(0, 136, 68, 0.2);" 
+                                <button type="button" onclick="openRegenerateModal({{ $account->id }}, '{{ $account->email }}', '{{ $account->name }}', {{ $account->password_regenerated_count ?? 0 }})" class="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-sm" style="background-color: rgba(0, 136, 68, 0.08); color: var(--cpsu-green-light); border: 1px solid rgba(0, 136, 68, 0.2);" 
                                         onmouseover="this.style.backgroundColor='rgba(0, 136, 68, 0.12)'; this.style.borderColor='rgba(0, 136, 68, 0.3)';"
                                         onmouseout="this.style.backgroundColor='rgba(0, 136, 68, 0.08)'; this.style.borderColor='rgba(0, 136, 68, 0.2)';"
                                         title="Regenerate Password">
@@ -260,7 +273,7 @@
                                     </svg>
                                     <span class="text-sm font-semibold">Regenerate</span>
                                 </button>
-                                <button onclick="openDeleteModal({{ $account->id }}, '{{ $account->email }}', '{{ $account->name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete Account">
+                                <button type="button" onclick="openDeleteModal({{ $account->id }}, '{{ $account->email }}', '{{ $account->name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete Account">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>

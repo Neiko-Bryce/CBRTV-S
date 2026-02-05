@@ -83,23 +83,37 @@
     label {
         color: var(--text-primary);
     }
+    /* Mobile: header and buttons like candidates */
+    @media (max-width: 768px) {
+        .page-header-wrap { flex-direction: column; align-items: stretch; gap: 1rem; }
+        .page-header-actions { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .page-header-actions .btn-add { width: 100%; justify-content: center; }
+    }
+    @media (max-width: 640px) {
+        .page-header-actions .btn-add { flex: 1 1 100%; }
+    }
+    @media (max-width: 768px) {
+        .table-wrap { -webkit-overflow-scrolling: touch; }
+        .table-wrap th, .table-wrap td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+        .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Actions -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-4 page-header-wrap">
         <div>
             <h3 class="text-lg font-semibold text-primary">All Elections</h3>
             <p class="text-sm text-secondary mt-1">Manage election records and information</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="openCreateModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-wrap items-center gap-3 page-header-actions">
+            <button type="button" onclick="openCreateModal()" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary btn-add">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Add New Election
+                <span>Add New Election</span>
             </button>
         </div>
     </div>
@@ -187,7 +201,7 @@
 
     <!-- Elections Table -->
     <div class="card rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto table-wrap">
             <table class="min-w-full divide-y" style="border-collapse: separate; border-spacing: 0;">
                 <thead class="table-header">
                     <tr>
@@ -400,20 +414,20 @@
                                 </span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-6 py-4 align-middle actions-cell">
                             <div class="flex items-center justify-center space-x-2">
-                                <button onclick="viewElection({{ $election->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green);" title="View">
+                                <button type="button" onclick="viewElection({{ $election->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green);" title="View">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="editElection({{ $election->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
+                                <button type="button" onclick="editElection({{ $election->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="deleteElection({{ $election->id }}, '{{ $election->election_name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
+                                <button type="button" onclick="deleteElection({{ $election->id }}, '{{ $election->election_name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>

@@ -40,9 +40,7 @@
         justify-content: space-between;
         align-items: center;
     }
-    .modal-body {
-        padding: 1.5rem;
-    }
+    .modal-body { padding: 1.5rem; }
     .modal-footer {
         padding: 1.5rem;
         border-top: 1px solid var(--border-color);
@@ -56,37 +54,55 @@
         font-weight: bold;
         cursor: pointer;
     }
+    .close:hover { color: var(--text-primary); }
+    @media (max-width: 768px) {
+        .page-header-wrap { flex-direction: column; align-items: stretch; gap: 1rem; }
+        .page-header-actions { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .page-header-actions .btn-add { width: 100%; justify-content: center; }
+        .page-header-actions select { width: 100%; }
+    }
+    @media (max-width: 640px) {
+        .page-header-actions .btn-add { flex: 1 1 100%; }
+    }
+    @media (max-width: 640px) {
+        .modal-content { width: 95%; max-height: 95vh; }
+        .modal-footer { flex-direction: column; }
+        .modal-footer button { width: 100%; }
+    }
+    @media (max-width: 768px) {
+        .table-wrap { -webkit-overflow-scrolling: touch; }
+        .data-table th, .data-table td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+        .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header Actions -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-4 page-header-wrap">
         <div>
             <h3 class="text-lg font-semibold text-primary">All Positions</h3>
             <p class="text-sm text-secondary mt-1">Manage positions for each organization</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <select id="organizationFilter" onchange="filterByOrganization(this.value)" class="px-3 py-2 border rounded-lg text-sm" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+        <div class="flex flex-wrap items-center gap-3 page-header-actions">
+            <select id="organizationFilter" onchange="filterByOrganization(this.value)" class="px-3 py-2 border rounded-lg text-sm min-w-0 flex-1 sm:flex-none sm:min-w-[180px]" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                 <option value="">All Organizations</option>
                 @foreach($organizations as $org)
                 <option value="{{ $org->id }}" {{ request('organization') == $org->id ? 'selected' : '' }}>{{ $org->name }}</option>
                 @endforeach
             </select>
-            <button onclick="openCreateModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="openCreateModal()" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary btn-add">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Add New Position
+                <span>Add New Position</span>
             </button>
         </div>
     </div>
 
-    <!-- Positions Table -->
     <div class="card rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full" style="border-collapse: separate; border-spacing: 0;">
+        <div class="overflow-x-auto table-wrap">
+            <table class="min-w-full data-table" style="border-collapse: separate; border-spacing: 0;">
                 <thead class="table-header">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">Position</th>
@@ -116,14 +132,14 @@
                                 {{ $position->is_active ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-4 py-4 text-center actions-cell">
                             <div class="flex items-center justify-center space-x-2">
-                                <button onclick="editPosition({{ $position->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
+                                <button type="button" onclick="editPosition({{ $position->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="deletePosition({{ $position->id }}, '{{ $position->name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
+                                <button type="button" onclick="openDeleteModal({{ $position->id }}, '{{ addslashes($position->name) }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -144,7 +160,6 @@
                 </tbody>
             </table>
         </div>
-
         @if($positions->hasPages())
         <div class="px-6 py-4 border-t" style="border-color: var(--border-color);">
             {{ $positions->links() }}
@@ -200,9 +215,38 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-primary">Confirm Delete</h3>
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(220, 38, 38, 0.1);">
+                    <svg class="w-6 h-6" style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-primary">Are you sure you want to delete this position?</p>
+                    <p class="text-sm text-secondary mt-1" id="deleteItemName"></p>
+                    <p class="text-xs mt-2" style="color: #dc2626;">This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style="background-color: var(--bg-tertiary); color: var(--text-primary);">Cancel</button>
+            <button type="button" onclick="confirmDelete()" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style="background: #dc2626;">Delete Position</button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 let currentPositionId = null;
+let currentDeleteId = null;
 
 function filterByOrganization(orgId) {
     if (orgId) {
@@ -226,8 +270,13 @@ function openCreateModal() {
 }
 
 function editPosition(id) {
-    fetch(`/admin/positions/${id}`)
-        .then(res => res.json())
+    fetch(`/admin/positions/${id}`, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to load');
+            return res.json();
+        })
         .then(data => {
             currentPositionId = id;
             document.getElementById('modalTitle').textContent = 'Edit Position';
@@ -236,56 +285,111 @@ function editPosition(id) {
             document.getElementById('organization_id').value = data.organization_id || '';
             document.getElementById('name').value = data.name || '';
             document.getElementById('description').value = data.description || '';
-            document.getElementById('order').value = data.order || 0;
-            document.getElementById('is_active').checked = data.is_active;
+            document.getElementById('order').value = data.order ?? 0;
+            document.getElementById('is_active').checked = !!data.is_active;
             document.getElementById('positionModal').classList.add('active');
         })
         .catch(err => {
-            alert('Error loading position data');
+            showNotification('Failed to load position. Please try again.', 'error');
             console.error(err);
         });
 }
 
-function deletePosition(id, name) {
-    if (confirm(`Are you sure you want to delete "${name}"?`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/positions/${id}`;
-        form.innerHTML = '@csrf @method("DELETE")';
-        document.body.appendChild(form);
-        form.submit();
-    }
+function openDeleteModal(id, name) {
+    currentDeleteId = id;
+    document.getElementById('deleteItemName').textContent = name ? `Position: ${name}` : 'this position';
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    currentDeleteId = null;
+    document.getElementById('deleteModal').classList.remove('active');
+}
+
+function confirmDelete() {
+    if (!currentDeleteId) return;
+    fetch(`/admin/positions/${currentDeleteId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })).catch(() => ({ ok: false, data: {} })))
+    .then(({ ok, data }) => {
+        closeDeleteModal();
+        if (ok && data.success) {
+            showNotification(data.message || 'Position deleted successfully.', 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showNotification(data.message || 'Could not delete position.', 'error');
+        }
+    })
+    .catch(err => {
+        closeDeleteModal();
+        showNotification('An error occurred. Please try again.', 'error');
+        console.error(err);
+    });
 }
 
 function closeModal() {
     document.getElementById('positionModal').classList.remove('active');
 }
 
+function showNotification(message, type) {
+    const existing = document.querySelectorAll('.notification-toast');
+    existing.forEach(n => n.remove());
+    const el = document.createElement('div');
+    el.className = 'notification-toast fixed top-4 right-4 z-[9999] p-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[280px] ' + (type === 'success' ? 'bg-green-500' : 'bg-red-500') + ' text-white';
+    el.style.cssText = 'transform:translateX(100%);opacity:0;transition:all 0.3s ease-out';
+    el.innerHTML = '<div class="flex-shrink-0">' + (type === 'success' ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>') + '</div><div class="flex-1"><p class="font-medium">' + message + '</p></div>';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { el.style.transform = 'translateX(0)'; el.style.opacity = '1'; });
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(100%)';
+        setTimeout(() => el.remove(), 300);
+    }, 4000);
+}
+
 document.getElementById('positionForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     const url = this.action;
-    
+    const method = currentPositionId ? 'PUT' : 'POST';
     fetch(url, {
         method: 'POST',
         body: formData,
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'X-HTTP-Method-Override': currentPositionId ? 'PUT' : 'POST'
+            'X-HTTP-Method-Override': method,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
     .then(res => {
+        const contentType = res.headers.get('content-type');
+        const isJson = contentType && contentType.includes('application/json');
         if (res.ok) {
-            window.location.reload();
-        } else {
-            alert('Error saving position');
+            closeModal();
+            showNotification(currentPositionId ? 'Position updated successfully.' : 'Position created successfully.', 'success');
+            setTimeout(() => location.reload(), 800);
+            return;
         }
+        if (isJson) return res.json().then(data => { throw data; });
+        throw { message: 'Something went wrong. Please try again.' };
     })
     .catch(err => {
-        alert('Error saving position');
-        console.error(err);
+        const msg = (err && (err.message || err.errors && Object.values(err.errors).flat().join(' '))) || 'Failed to save position.';
+        showNotification(msg, 'error');
     });
 });
+
+window.onclick = function(event) {
+    if (event.target.id === 'positionModal') closeModal();
+    if (event.target.id === 'deleteModal') closeDeleteModal();
+};
 </script>
 @endpush
 @endsection

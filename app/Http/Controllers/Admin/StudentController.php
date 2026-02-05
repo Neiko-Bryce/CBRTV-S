@@ -204,6 +204,27 @@ class StudentController extends Controller
     }
 
     /**
+     * Delete all students (e.g. before re-importing from Excel).
+     */
+    public function destroyAll(Request $request)
+    {
+        $count = Student::count();
+        Student::query()->delete();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $count > 0
+                    ? "All {$count} student(s) have been deleted."
+                    : 'No students to delete.',
+            ]);
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with('success', $count > 0 ? "All {$count} student(s) have been deleted." : 'No students to delete.');
+    }
+
+    /**
      * Import students from Excel file.
      */
     public function import(Request $request)

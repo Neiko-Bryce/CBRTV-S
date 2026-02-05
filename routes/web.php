@@ -56,9 +56,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('live-results-viewing/{electionId}/display', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'display'])->name('live-results-viewing.display');
     Route::post('live-results-viewing/{electionId}/hide', [\App\Http\Controllers\Admin\LiveResultsViewController::class, 'hide'])->name('live-results-viewing.hide');
 
-    // Students Management
-    Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
+    // Students Management (specific routes before resource so they match first)
+    Route::delete('students/destroy-all', [\App\Http\Controllers\Admin\StudentController::class, 'destroyAll'])->name('students.destroy-all');
     Route::post('students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
+    Route::resource('students', \App\Http\Controllers\Admin\StudentController::class);
 
     // Student Account Management
     Route::get('student-management', [\App\Http\Controllers\Admin\StudentAccountController::class, 'index'])->name('student-management.index');

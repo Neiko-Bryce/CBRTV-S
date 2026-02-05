@@ -94,18 +94,24 @@ class PositionController extends Controller
     /**
      * Remove the specified position from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $position = Position::findOrFail($id);
 
         // Check if position has candidates
         if ($position->candidates()->count() > 0) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete position with existing candidates.'], 422);
+            }
             return redirect()->route('admin.positions.index')
                 ->with('error', 'Cannot delete position with existing candidates.');
         }
 
         $position->delete();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Position deleted successfully.']);
+        }
         return redirect()->route('admin.positions.index')
             ->with('success', 'Position deleted successfully.');
     }

@@ -85,18 +85,24 @@ class OrganizationController extends Controller
     /**
      * Remove the specified organization from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $organization = Organization::findOrFail($id);
 
         // Check if organization has elections
         if ($organization->elections()->count() > 0) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete organization with existing elections.'], 422);
+            }
             return redirect()->route('admin.organizations.index')
                 ->with('error', 'Cannot delete organization with existing elections.');
         }
 
         $organization->delete();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Organization deleted successfully.']);
+        }
         return redirect()->route('admin.organizations.index')
             ->with('success', 'Organization deleted successfully.');
     }

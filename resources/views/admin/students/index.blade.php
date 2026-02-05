@@ -103,29 +103,49 @@
     input[type="file"]::file-selector-button:hover {
         background-color: var(--hover-bg);
     }
+    /* Mobile: same pattern as candidates */
+    @media (max-width: 768px) {
+        .page-header-wrap { flex-direction: column; align-items: stretch; gap: 1rem; }
+        .page-header-actions { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .page-header-actions .btn-add { width: 100%; justify-content: center; }
+    }
+    @media (max-width: 640px) {
+        .page-header-actions .btn-add { flex: 1 1 100%; }
+    }
+    @media (max-width: 768px) {
+        .table-wrap { -webkit-overflow-scrolling: touch; }
+        .table-wrap th, .table-wrap td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+        .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Actions -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-4 page-header-wrap">
         <div>
             <h3 class="text-lg font-semibold text-primary">All Students</h3>
             <p class="text-sm text-secondary mt-1">Manage student records and information</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="openImportModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-secondary">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-wrap items-center gap-3 page-header-actions">
+            <button type="button" onclick="openImportModal()" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-secondary btn-add">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
-                Import Excel
+                <span>Import Excel</span>
             </button>
-            <button onclick="openCreateModal()" class="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="openCreateModal()" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary btn-add">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Add New Student
+                <span>Add New Student</span>
+            </button>
+            <button type="button" onclick="openDeleteAllModal()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all shadow-sm btn-add" style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white;">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                <span>Delete All Students</span>
             </button>
         </div>
     </div>
@@ -195,7 +215,7 @@
 
     <!-- Students Table -->
     <div class="card rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto table-wrap">
             <table class="min-w-full" style="border-collapse: separate; border-spacing: 0;">
                 <thead class="table-header">
                     <tr>
@@ -270,20 +290,20 @@
                                 <span class="text-sm text-secondary opacity-75">-</span>
                             @endif
                         </td>
-                        <td class="px-4 py-4 align-middle text-center">
+                        <td class="px-4 py-4 align-middle text-center actions-cell">
                             <div class="flex items-center justify-center space-x-2">
-                                <button onclick="viewStudent({{ $student->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green);" title="View">
+                                <button type="button" onclick="viewStudent({{ $student->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green);" title="View">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="editStudent({{ $student->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
+                                <button type="button" onclick="editStudent({{ $student->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="deleteStudent({{ $student->id }}, '{{ ($student->fname ? $student->fname . ' ' : '') . $student->lname }}{{ $student->ext ? ' ' . $student->ext : '' }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
+                                <button type="button" onclick="deleteStudent({{ $student->id }}, '{{ addslashes(($student->fname ? $student->fname . ' ' : '') . $student->lname . ($student->ext ? ' ' . $student->ext : '')) }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -567,6 +587,42 @@
     </div>
 </div>
 
+<!-- Delete All Students Confirmation Modal -->
+<div id="deleteAllModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-primary">Delete All Students</h3>
+            <span class="close" onclick="closeModal('deleteAllModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(220, 38, 38, 0.1);">
+                    <svg class="w-6 h-6" style="color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-primary">Are you sure you want to delete <strong>all</strong> students?</p>
+                    <p class="text-sm text-secondary mt-1">This will remove every student record from the system.</p>
+                    <p class="text-xs mt-2" style="color: #dc2626;">This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeModal('deleteAllModal')" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style="background-color: var(--bg-tertiary); color: var(--text-primary);" 
+                    onmouseover="this.style.backgroundColor='var(--hover-bg)'"
+                    onmouseout="this.style.backgroundColor='var(--bg-tertiary)'">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmDeleteAll()" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style="background: #dc2626;" 
+                    onmouseover="this.style.background='#b91c1c'"
+                    onmouseout="this.style.background='#dc2626'">
+                Delete All Students
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Import Excel Modal -->
 <div id="importModal" class="modal">
     <div class="modal-content">
@@ -638,7 +694,7 @@
 
     // Close modal when clicking outside
     window.onclick = function(event) {
-        const modals = ['studentModal', 'viewModal', 'deleteModal', 'importModal'];
+        const modals = ['studentModal', 'viewModal', 'deleteModal', 'deleteAllModal', 'importModal'];
         modals.forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (event.target === modal) {
@@ -945,6 +1001,36 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Failed to delete student');
+        });
+    }
+
+    // Delete All Students
+    function openDeleteAllModal() {
+        openModal('deleteAllModal');
+    }
+
+    function confirmDeleteAll() {
+        fetch('/admin/students/destroy-all', {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('deleteAllModal');
+                showNotification(data.message || 'All students deleted successfully.', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message || 'Failed to delete all students.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to delete all students.', 'error');
         });
     }
 
