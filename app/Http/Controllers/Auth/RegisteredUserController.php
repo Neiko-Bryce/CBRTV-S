@@ -42,7 +42,8 @@ class RegisteredUserController extends Controller
 
     /**
      * Handle an incoming registration request.
-     * Only student accounts can be created. Blocked unless secret code was entered first.
+     * User type (student or admin) is taken from the form selection.
+     * Blocked unless secret code was entered first.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -53,17 +54,18 @@ class RegisteredUserController extends Controller
             return $redirect;
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'usertype' => ['required', 'string', 'in:student,admin'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password,
-            'usertype' => 'student',
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'usertype' => $validated['usertype'],
         ]);
 
         event(new Registered($user));
