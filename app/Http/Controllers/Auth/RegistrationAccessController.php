@@ -28,7 +28,7 @@ class RegistrationAccessController extends Controller
         $key = config('app.registration_access_key', 'neikocbrtvs');
         if (! hash_equals($key, $request->input('access_code'))) {
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Invalid access code.'], 403);
+                return response()->json(['success' => false, 'message' => 'Invalid access code.'], 422);
             }
             return redirect()->route('register.access')
                 ->with('error', 'Invalid access code. You cannot access registration.')

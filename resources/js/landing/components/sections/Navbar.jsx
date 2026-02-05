@@ -16,11 +16,6 @@ const navLinks = [
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-    const [registerCode, setRegisterCode] = useState('');
-    const [registerError, setRegisterError] = useState('');
-    const [registerLoading, setRegisterLoading] = useState(false);
-
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
@@ -85,17 +80,8 @@ export default function Navbar() {
                         ))}
                     </div>
 
-                    {/* CTA Buttons */}
+                    {/* CTA Buttons – Register hidden on landing; use /register/access directly if needed */}
                     <div className="hidden lg:flex items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={() => { setIsRegisterModalOpen(true); setRegisterError(''); setRegisterCode(''); }}
-                            className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-                                isScrolled ? 'text-gov-green-800 hover:bg-gov-green-50' : 'text-white/90 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            Register
-                        </button>
                         <a href="/login">
                             <Button variant={isScrolled ? 'primary' : 'secondary'} size="sm">
                                 Sign In
@@ -184,15 +170,8 @@ export default function Navbar() {
                                     })}
                                 </ul>
                             </nav>
-                            {/* Register & Sign In */}
+                            {/* Sign In & Results */}
                             <div className="px-4 pt-2 space-y-3">
-                                <button
-                                    type="button"
-                                    onClick={() => { setIsMobileMenuOpen(false); setIsRegisterModalOpen(true); setRegisterError(''); setRegisterCode(''); }}
-                                    className="w-full rounded-xl py-3 px-4 font-semibold border-2 border-gov-green-700 text-gov-green-800 hover:bg-gov-green-50 transition-colors"
-                                >
-                                    Register
-                                </button>
                                 <a
                                     href="/login"
                                     onClick={() => setIsMobileMenuOpen(false)}
@@ -213,94 +192,6 @@ export default function Navbar() {
                                 </a>
                             </div>
                             <div className="px-4 pb-5" />
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-
-            {/* Registration checkpoint modal – enter code (e.g. cbrtvs) to access /register */}
-            <AnimatePresence>
-                {isRegisterModalOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
-                            onClick={() => setIsRegisterModalOpen(false)}
-                            aria-hidden="true"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-md mx-4 bg-white rounded-2xl shadow-xl border border-gray-200 p-6"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Registration access</h3>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsRegisterModalOpen(false)}
-                                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-                                    aria-label="Close"
-                                >
-                                    <HiX className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Enter the access code to continue to registration. Without it you cannot create an account.
-                            </p>
-                            <form
-                                onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    setRegisterError('');
-                                    setRegisterLoading(true);
-                                    try {
-                                        const formData = new FormData();
-                                        formData.append('access_code', registerCode);
-                                        formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
-                                        const res = await fetch('/register/access', {
-                                            method: 'POST',
-                                            body: formData,
-                                            credentials: 'same-origin',
-                                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                                        });
-                                        const data = await res.json().catch(() => ({}));
-                                        if (res.ok && data.success && data.redirect) {
-                                            window.location.href = data.redirect;
-                                            return;
-                                        }
-                                        setRegisterError(data.message || 'Invalid access code.');
-                                    } catch {
-                                        setRegisterError('Something went wrong. Please try again.');
-                                    } finally {
-                                        setRegisterLoading(false);
-                                    }
-                                }}
-                            >
-                                <input
-                                    type="text"
-                                    value={registerCode}
-                                    onChange={(e) => setRegisterCode(e.target.value)}
-                                    placeholder="Access code"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gov-green-500 focus:border-gov-green-500 mb-3"
-                                    required
-                                    autoComplete="off"
-                                    autoFocus
-                                />
-                                {registerError && (
-                                    <p className="text-sm text-red-600 mb-3">{registerError}</p>
-                                )}
-                                <button
-                                    type="submit"
-                                    disabled={registerLoading}
-                                    className="w-full py-3 rounded-xl font-semibold text-white bg-gov-green-700 hover:bg-gov-green-800 disabled:opacity-70 transition-colors"
-                                >
-                                    {registerLoading ? 'Checking…' : 'Continue to registration'}
-                                </button>
-                            </form>
                         </motion.div>
                     </>
                 )}
