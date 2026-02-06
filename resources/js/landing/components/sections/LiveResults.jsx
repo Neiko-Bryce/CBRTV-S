@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdHowToVote, MdPerson, MdLeaderboard } from 'react-icons/md';
-import { HiQuestionMarkCircle, HiTrendingUp, HiStatusOnline } from 'react-icons/hi';
+import { HiQuestionMarkCircle, HiStatusOnline } from 'react-icons/hi';
 
 export default function LiveResults() {
     const [elections, setElections] = useState([]);
@@ -183,30 +183,15 @@ export default function LiveResults() {
                                     </div>
                                 </div>
 
-                                {/* Positions and Candidates */}
+                                {/* Positions and Candidates – flat list, no cards; no yellow border/arrow when ongoing */}
                                 <div className="space-y-6">
                                     {election.positions.length > 0 ? (
-                                        election.positions.map((position, posIndex) => (
-                                            <div key={position.position_id} className="bg-white/5 rounded-xl p-4 sm:p-5 border border-white/10">
-                                                <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                                                    <MdHowToVote className="w-5 h-5 text-gov-gold-400" />
-                                                    {position.position_name}
-                                                </h4>
-                                                
-                                                {/* Candidates Grid */}
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                                                    {position.candidates.map((candidate, candIndex) => (
-                                                        <CandidateCard 
-                                                            key={candidate.id}
-                                                            candidate={candidate}
-                                                            totalVotes={position.total_votes}
-                                                            rank={candIndex + 1}
-                                                            isLeader={candIndex === 0 && position.total_votes > 0}
-                                                            isLive={true}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
+                                        election.positions.map((position) => (
+                                            <PositionResults
+                                                key={position.position_id}
+                                                position={position}
+                                                isLive={true}
+                                            />
                                         ))
                                     ) : (
                                         <div className="text-center py-8 text-white/60">
@@ -273,30 +258,15 @@ export default function LiveResults() {
                                     </div>
                                 </div>
 
-                                {/* Positions and Candidates */}
+                                {/* Positions and Candidates – flat list, partylist shown; yellow border/Winner only when done */}
                                 <div className="space-y-6">
                                     {election.positions.length > 0 ? (
-                                        election.positions.map((position, posIndex) => (
-                                            <div key={position.position_id} className="bg-white/5 rounded-xl p-4 sm:p-5 border border-white/10">
-                                                <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                                                    <MdHowToVote className="w-5 h-5 text-gov-gold-400" />
-                                                    {position.position_name}
-                                                </h4>
-                                                
-                                                {/* Candidates Grid */}
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                                                    {position.candidates.map((candidate, candIndex) => (
-                                                        <CandidateCard 
-                                                            key={candidate.id}
-                                                            candidate={candidate}
-                                                            totalVotes={position.total_votes}
-                                                            rank={candIndex + 1}
-                                                            isLeader={candIndex === 0 && position.total_votes > 0}
-                                                            isLive={false}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
+                                        election.positions.map((position) => (
+                                            <PositionResults
+                                                key={position.position_id}
+                                                position={position}
+                                                isLive={false}
+                                            />
                                         ))
                                     ) : (
                                         <div className="text-center py-8 text-white/60">
@@ -323,141 +293,100 @@ export default function LiveResults() {
     );
 }
 
-// Candidate Card Component - Dark green card theme (white text, translucent panels, gold accents)
-function CandidateCard({ candidate, totalVotes, rank, isLeader, isLive }) {
-    const percentage = totalVotes > 0 ? ((candidate.votes_count / totalVotes) * 100).toFixed(1) : 0;
-    const isAnonymous = candidate.is_anonymous;
-    
+// Position block: flat list, no nested cards. Section title + rows only.
+function PositionResults({ position, isLive }) {
+    const totalVotes = position.total_votes || 0;
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            layout
-            className={`
-                relative bg-white/10 rounded-xl p-3 sm:p-4 text-center border border-white/10
-                ${isLeader ? 'ring-2 ring-gov-gold-400 bg-gov-gold-500/10' : ''}
-                transition-all duration-300 hover:bg-white/15
-            `}
-        >
-            {/* Winner/Leader Badge */}
-            {isLeader && (
-                <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 w-7 h-7 bg-gov-gold-500 rounded-full flex items-center justify-center shadow-lg z-10"
-                >
-                    {isAnonymous ? (
-                        <HiTrendingUp className="w-4 h-4 text-gov-green-900" />
-                    ) : (
-                        <span className="text-gov-green-900 text-xs font-bold">1st</span>
-                    )}
-                </motion.div>
-            )}
-            
-            {/* Live indicator for ongoing elections */}
-            {isLive && (
-                <div className="absolute -top-1 -left-1 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50" />
-            )}
-            
-            {/* Photo - Anonymous or Revealed */}
-            <AnimatePresence mode="wait">
-                {isAnonymous ? (
-                    <motion.div
-                        key="anonymous"
-                        initial={{ opacity: 0, rotateY: 90 }}
-                        animate={{ opacity: 1, rotateY: 0 }}
-                        exit={{ opacity: 0, rotateY: -90 }}
-                        className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 bg-gray-600 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden"
-                    >
-                        <HiQuestionMarkCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white/70" />
-                        {isLive && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-gov-gold-500/20 to-transparent animate-pulse" />
-                        )}
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="revealed"
-                        initial={{ opacity: 0, rotateY: 90, scale: 0.8 }}
-                        animate={{ opacity: 1, rotateY: 0, scale: 1 }}
-                        transition={{ duration: 0.6, ease: 'easeOut' }}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 rounded-full shadow-lg overflow-hidden ${isLeader ? 'ring-4 ring-gov-gold-400' : 'ring-2 ring-white/20'}`}
-                    >
-                        {candidate.photo ? (
-                            <img 
-                                src={candidate.photo} 
-                                alt={candidate.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                }}
-                            />
-                        ) : null}
-                        <div 
-                            className={`w-full h-full bg-gradient-to-br from-gov-green-600 to-gov-green-800 items-center justify-center ${candidate.photo ? 'hidden' : 'flex'}`}
-                        >
-                            <span className="text-2xl font-bold text-white">
-                                {candidate.name?.charAt(0)?.toUpperCase() || '?'}
-                            </span>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            
-            {/* Name - Anonymous or Revealed */}
-            <AnimatePresence mode="wait">
-                <motion.h5
-                    key={isAnonymous ? 'anon-name' : 'real-name'}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className={`font-bold text-white text-sm sm:text-base mb-1 truncate ${!isAnonymous && isLeader ? 'text-gov-gold-400' : ''}`}
-                    title={candidate.name}
-                >
-                    {candidate.name}
-                </motion.h5>
-            </AnimatePresence>
-            
-            {/* Vote Count */}
-            <div className="mt-2">
-                <motion.p 
-                    key={candidate.votes_count}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    className={`text-xl sm:text-2xl font-bold ${isLeader && !isAnonymous ? 'text-gov-gold-400' : 'text-gov-gold-400'}`}
-                >
-                    {candidate.votes_count.toLocaleString()}
-                </motion.p>
-                <p className="text-white/60 text-xs">{isAnonymous ? 'votes' : 'final votes'}</p>
+        <div className="space-y-0">
+            <div className="border-b border-white/10 pb-2.5 mb-3">
+                <h4 className="text-sm font-medium tracking-wide text-white/90 uppercase flex items-center gap-2">
+                    <MdHowToVote className="w-4 h-4 text-gov-gold-400/90 flex-shrink-0" aria-hidden />
+                    {position.position_name}
+                </h4>
             </div>
-            
-            {/* Progress Bar */}
-            <div className="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
+            <ul className="space-y-0">
+                {position.candidates.map((candidate, candIndex) => {
+                    const percentage = totalVotes > 0 ? ((candidate.votes_count / totalVotes) * 100).toFixed(1) : 0;
+                    const isLeader = candIndex === 0 && totalVotes > 0;
+                    const showWinnerStyle = !isLive && isLeader;
+                    return (
+                        <CandidateRow
+                            key={candidate.id}
+                            candidate={candidate}
+                            percentage={percentage}
+                            rank={candIndex + 1}
+                            showWinnerStyle={showWinnerStyle}
+                            isLive={isLive}
+                        />
+                    );
+                })}
+            </ul>
+        </div>
+    );
+}
+
+// One row per candidate: photo, name, partylist (party reminder), votes, bar. No yellow border/arrow when ongoing.
+function CandidateRow({ candidate, percentage, rank, showWinnerStyle, isLive }) {
+    const isAnonymous = candidate.is_anonymous;
+    const partylistName = candidate.partylist_name || null;
+    const votesLabel = candidate.votes_count === 1 ? 'vote' : 'votes';
+    return (
+        <motion.li
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className={
+                'grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_6rem] gap-x-3 gap-y-1.5 sm:gap-x-4 items-center py-3 px-0 border-b border-white/5 last:border-b-0 ' +
+                (showWinnerStyle ? 'border-l-2 border-l-gov-gold-400 pl-3 -ml-0 sm:pl-4' : '')
+            }
+        >
+            <div className="row-span-2 sm:row-span-1 self-center">
+                {isAnonymous ? (
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 border border-white/10">
+                        <HiQuestionMarkCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white/50" aria-hidden />
+                    </div>
+                ) : (
+                    <div className={'w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0 border ' + (showWinnerStyle ? 'border-gov-gold-400/80' : 'border-white/15')}>
+                        {candidate.photo ? (
+                            <img src={candidate.photo} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.classList.remove('hidden'); }} />
+                        ) : null}
+                        <div className={'w-full h-full bg-gov-green-700 flex items-center justify-center ' + (candidate.photo ? 'hidden' : '')}>
+                            <span className="text-sm font-semibold text-white">{candidate.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <span className={'text-sm font-semibold text-white break-words line-clamp-2 sm:line-clamp-1 sm:truncate ' + (showWinnerStyle ? 'text-gov-gold-400' : '')} title={candidate.name}>
+                        {candidate.name}
+                    </span>
+                    {!isLive && !isAnonymous && rank <= 3 && (
+                        <span className={
+                            'text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ' +
+                            (rank === 1 ? 'bg-gov-gold-500/90 text-gov-green-900' : rank === 2 ? 'bg-white/15 text-white' : 'bg-amber-600/70 text-white')
+                        }>
+                            {rank === 1 ? 'Winner' : rank === 2 ? '2nd' : '3rd'}
+                        </span>
+                    )}
+                </div>
+                {partylistName && (
+                    <p className="text-xs text-white/50 mt-0.5 truncate" title={partylistName}>Partylist: {partylistName}</p>
+                )}
+            </div>
+            <div className="text-right col-start-3 row-span-2 sm:row-span-1 sm:col-start-3 self-center">
+                <p className="text-sm font-medium text-white/90 tabular-nums">{candidate.votes_count.toLocaleString()} {votesLabel}</p>
+                <p className="text-xs text-white/50 tabular-nums">{percentage}%</p>
+            </div>
+            <div className="col-span-3 sm:col-span-1 sm:col-start-4 h-1.5 bg-white/10 rounded-full overflow-hidden self-center">
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className={`h-full rounded-full ${isLeader ? 'bg-gradient-to-r from-gov-gold-400 to-gov-gold-500' : 'bg-white/40'}`}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    className={'h-full rounded-full min-w-0 ' + (showWinnerStyle ? 'bg-gov-gold-400/90' : 'bg-white/30')}
                 />
             </div>
-            <p className="text-white/70 text-xs mt-1">{percentage}%</p>
-            
-            {/* Rank Badge for revealed candidates */}
-            {!isAnonymous && rank <= 3 && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-xs font-bold ${
-                        rank === 1 ? 'bg-gov-gold-500 text-gov-green-900' :
-                        rank === 2 ? 'bg-gray-300 text-gray-800' :
-                        'bg-amber-600 text-white'
-                    }`}
-                >
-                    {rank === 1 ? '🏆 Winner' : rank === 2 ? '2nd' : '3rd'}
-                </motion.div>
-            )}
-        </motion.div>
+        </motion.li>
     );
 }
 

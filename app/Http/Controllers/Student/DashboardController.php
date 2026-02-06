@@ -79,8 +79,9 @@ class DashboardController extends Controller
                 ->orderBy('candidate_name', 'asc')
                 ->get();
 
-            // Group candidates by position
-            $election->candidatesByPosition = $candidates->groupBy('position_id');
+            // Group candidates by position, then sort by position order (admin-configured)
+            $election->candidatesByPosition = $candidates->groupBy('position_id')
+                ->sortBy(fn ($cands) => $cands->first()->position->order ?? 0);
 
             // Check if user has already voted for this election
             $userVotes = Vote::where('election_id', $election->id)
@@ -148,7 +149,9 @@ class DashboardController extends Controller
             ->orderBy('candidate_name', 'asc')
             ->get();
 
-        $candidatesByPosition = $candidates->groupBy('position_id');
+        // Group by position and sort by position order (admin-configured)
+        $candidatesByPosition = $candidates->groupBy('position_id')
+            ->sortBy(fn ($cands) => $cands->first()->position->order ?? 0);
 
         // Get user's existing votes for this election
         $userVotes = Vote::where('election_id', $election->id)

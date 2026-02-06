@@ -48,7 +48,7 @@ class LiveResultsController extends Controller
         foreach ($elections as $election) {
             // Get candidates grouped by position with vote counts
             $candidatesByPosition = Candidate::where('election_id', $election->id)
-                ->with(['position'])
+                ->with(['position', 'partylist'])
                 ->withCount('votes')
                 ->get()
                 ->groupBy('position_id');
@@ -60,6 +60,7 @@ class LiveResultsController extends Controller
                 if (! $position) {
                     continue;
                 }
+                $positionOrder = (int) ($position->order ?? 0);
 
                 $candidatesData = [];
 
@@ -80,6 +81,7 @@ class LiveResultsController extends Controller
                             'photo' => null, // Hidden during ongoing
                             'votes_count' => $currentVotes,
                             'is_anonymous' => true,
+                            'partylist_name' => null, // Hidden during ongoing
                         ];
                         $letterIndex++;
                     }
@@ -100,6 +102,7 @@ class LiveResultsController extends Controller
                             'photo' => $photoUrl,
                             'votes_count' => $currentVotes,
                             'is_anonymous' => false,
+                            'partylist_name' => $candidate->partylist?->name ?? null,
                         ];
                     }
                 }
@@ -112,10 +115,16 @@ class LiveResultsController extends Controller
                 $positionsData[] = [
                     'position_id' => $positionId,
                     'position_name' => $position->name,
+                    'position_order' => $positionOrder,
                     'candidates' => $candidatesData,
                     'total_votes' => array_sum(array_column($candidatesData, 'votes_count')),
                 ];
             }
+
+            // Sort positions by admin-configured order (same as Positions management)
+            usort($positionsData, function ($a, $b) {
+                return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
+            });
 
             // Calculate time remaining based on election status
             $endDateTime = $this->parseElectionEndTime($election);

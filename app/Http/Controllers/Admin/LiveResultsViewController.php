@@ -126,10 +126,16 @@ class LiveResultsViewController extends Controller
             $positionsData[] = [
                 'position_id' => $positionId,
                 'position_name' => $position->name,
+                'position_order' => (int) ($position->order ?? 0),
                 'candidates' => $candidatesData,
                 'total_votes' => $totalVotes,
             ];
         }
+
+        // Sort positions by admin-configured order (same as Positions management)
+        usort($positionsData, function ($a, $b) {
+            return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
+        });
 
         $totalVoters = Vote::where('election_id', $election->id)->distinct('voter_id')->count();
 

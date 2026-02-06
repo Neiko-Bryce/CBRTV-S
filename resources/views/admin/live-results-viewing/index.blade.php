@@ -22,17 +22,17 @@
     .live-results-panel .position-block { margin-bottom: 1.5rem; }
     .live-results-panel .position-block:last-child { margin-bottom: 0; }
     .live-results-panel .position-title { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.75rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border-color); }
-    /* Vertical bar graph per position */
-    .live-results-panel .chart-bars-vertical { display: flex; gap: 1rem; align-items: flex-end; justify-content: flex-start; flex-wrap: wrap; min-height: 160px; margin-top: 0.5rem; }
-    .live-results-panel .chart-bar-col { flex: 1; min-width: 80px; max-width: 140px; display: flex; flex-direction: column; align-items: center; }
-    .live-results-panel .chart-bar-track { width: 100%; height: 120px; min-height: 120px; background: var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: flex-end; }
-    .live-results-panel .chart-bar-fill { width: 100%; min-height: 4px; border-radius: 8px; background: linear-gradient(180deg, var(--cpsu-green-light), var(--cpsu-green)); transition: height 0.3s ease; }
+    /* Vertical bar graph per position – compact bar, larger photo, clear vote count */
+    .live-results-panel .chart-bars-vertical { display: flex; gap: 1rem; align-items: flex-end; justify-content: flex-start; flex-wrap: wrap; min-height: 1px; margin-top: 0.5rem; }
+    .live-results-panel .chart-bar-col { flex: 1; min-width: 72px; max-width: 120px; display: flex; flex-direction: column; align-items: center; }
+    .live-results-panel .chart-bar-track { width: 100%; height: 48px; min-height: 48px; background: var(--border-color); border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
+    .live-results-panel .chart-bar-fill { width: 100%; min-height: 4px; border-radius: 6px; background: linear-gradient(180deg, var(--cpsu-green-light), var(--cpsu-green)); transition: height 0.3s ease; }
     .live-results-panel .chart-bar-label { margin-top: 0.5rem; text-align: center; }
-    .live-results-panel .chart-bar-label .candidate-photo-wrap { width: 36px; height: 36px; margin: 0 auto 0.25rem; border-radius: 50%; overflow: hidden; border: 2px solid var(--border-color); background: var(--card-bg); }
+    .live-results-panel .chart-bar-label .candidate-photo-wrap { width: 56px; height: 56px; margin: 0 auto 0.35rem; border-radius: 50%; overflow: hidden; border: 2px solid var(--border-color); background: var(--card-bg); flex-shrink: 0; }
     .live-results-panel .chart-bar-label .candidate-photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
-    .live-results-panel .chart-bar-label .candidate-photo-wrap .no-photo { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--hover-bg); color: var(--text-secondary); font-size: 0.65rem; }
-    .live-results-panel .chart-bar-label .candidate-name { font-size: 0.75rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.15rem; line-height: 1.2; }
-    .live-results-panel .chart-bar-label .candidate-votes { font-size: 0.875rem; font-weight: 700; color: var(--cpsu-green); }
+    .live-results-panel .chart-bar-label .candidate-photo-wrap .no-photo { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--hover-bg); color: var(--text-secondary); font-size: 0.7rem; }
+    .live-results-panel .chart-bar-label .candidate-name { font-size: 0.75rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.2rem; line-height: 1.2; }
+    .live-results-panel .chart-bar-label .candidate-votes { font-size: 1rem; font-weight: 700; color: var(--cpsu-green); display: block; margin-bottom: 0.1rem; }
     .live-results-panel .chart-bar-label .candidate-pct { font-size: 0.7rem; color: var(--text-secondary); }
     .live-results-panel .panel-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.75rem; }
     .live-results-panel .panel-loading, .live-results-panel .panel-error { text-align: center; padding: 1rem; color: var(--text-secondary); font-size: 0.875rem; }
@@ -297,7 +297,7 @@
                         : '<span class="no-photo">—</span>';
                     html += '<div class="chart-bar-col" data-candidate-id="' + escapeAttr(String(c.id)) + '">';
                     html += '<div class="chart-bar-track"><span class="chart-bar-fill" style="height:' + barPct + '%"></span></div>';
-                    html += '<div class="chart-bar-label"><div class="candidate-photo-wrap">' + photoHtml + '</div><span class="candidate-name">' + escapeHtml(c.name) + '</span><span class="candidate-votes">' + votes + '</span><span class="candidate-pct">' + pct + '%</span></div>';
+                    html += '<div class="chart-bar-label"><div class="candidate-photo-wrap">' + photoHtml + '</div><span class="candidate-name">' + escapeHtml(c.name) + '</span><span class="candidate-votes">' + votes + ' vote' + (votes !== 1 ? 's' : '') + '</span><span class="candidate-pct">' + pct + '%</span></div>';
                     html += '</div>';
                 });
                 html += '</div></div>';
@@ -325,7 +325,7 @@
                     var votesEl = col.querySelector('.candidate-votes');
                     var pctEl = col.querySelector('.candidate-pct');
                     if (fill) fill.style.height = barPct + '%';
-                    if (votesEl) votesEl.textContent = votes;
+                    if (votesEl) votesEl.textContent = votes + ' vote' + (votes !== 1 ? 's' : '');
                     if (pctEl) pctEl.textContent = pct + '%';
                 }
             });
