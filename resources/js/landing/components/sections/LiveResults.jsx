@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdHowToVote, MdPerson, MdLeaderboard } from 'react-icons/md';
 import { HiQuestionMarkCircle, HiStatusOnline } from 'react-icons/hi';
@@ -7,13 +7,18 @@ export default function LiveResults() {
     const [elections, setElections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const prevOngoingIdsRef = useRef(new Set());
+    const liveResultsCardRef = useRef(null);
+    const confettiCanvasRef = useRef(null);
+    const isLiveResultsInViewRef = useRef(false);
 
     const fetchResults = async () => {
         try {
-            const response = await fetch('/api/live-results');
+            const response = await fetch('/api/live-results?t=' + Date.now(), { cache: 'no-store' });
             const data = await response.json();
-            if (data.success) {
-                setElections(data.elections);
+            if (data.success && Array.isArray(data.elections)) {
+                const sorted = [...data.elections].sort((a, b) => (b.id || 0) - (a.id || 0));
+                setElections(sorted);
                 setError(null);
             } else {
                 setError('Failed to load results');
@@ -26,16 +31,58 @@ export default function LiveResults() {
         }
     };
 
-    // Initial fetch and polling every 5 seconds for real-time updates
+    // Poll every 2.5s so when an election ends, results show quickly without refresh
     useEffect(() => {
         fetchResults();
-        const interval = setInterval(fetchResults, 5000);
-        return () => clearInterval(interval);
+        const id = setInterval(fetchResults, 2500);
+        return () => clearInterval(id);
+    }, []);
+
+    // Track when the live results section is in view – confetti only when user is in this area
+    useEffect(() => {
+        const card = liveResultsCardRef.current;
+        if (!card) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    isLiveResultsInViewRef.current = entry.isIntersecting;
+                });
+            },
+            { threshold: 0.2, rootMargin: '0px' }
+        );
+        observer.observe(card);
+        return () => observer.disconnect();
     }, []);
 
     const ongoingElections = elections.filter(e => e.status === 'ongoing');
     const completedElections = elections.filter(e => e.status === 'completed');
     const hasElections = elections.length > 0;
+
+    // Celebration: confetti only inside the card, only once when an election just ended (ongoing → completed), and only if user is viewing that section
+    useEffect(() => {
+        const currentOngoingIds = new Set(ongoingElections.map(e => e.id));
+        const justEndedIds = completedElections.filter(e => prevOngoingIdsRef.current.has(e.id));
+        prevOngoingIdsRef.current = currentOngoingIds;
+
+        if (justEndedIds.length === 0) return;
+        if (!isLiveResultsInViewRef.current) return;
+
+        const canvas = confettiCanvasRef.current;
+        const card = liveResultsCardRef.current;
+        const confettiGlobal = typeof window !== 'undefined' ? window.confetti : null;
+        if (!canvas || !card || !confettiGlobal || typeof confettiGlobal.create !== 'function') return;
+
+        const rect = card.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        const confettiFn = confettiGlobal.create(canvas, { resize: true });
+        if (!confettiFn) return;
+
+        const colors = ['#facc15', '#22c55e', '#166534', '#ffffff'];
+        setTimeout(() => { confettiFn({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors }); }, 100);
+        setTimeout(() => { confettiFn({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors }); }, 200);
+        setTimeout(() => { confettiFn({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 }, colors }); }, 300);
+    }, [ongoingElections, completedElections]);
 
     // Placeholder bar heights for "Hourly Activity" when empty (like reference dashboard)
     const placeholderBars = [28, 42, 38, 55, 48, 65, 72, 88];
@@ -45,6 +92,7 @@ export default function LiveResults() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* ONE permanent card – dark green like Real-Time Analytics Dashboard reference */}
                 <motion.div
+                    ref={liveResultsCardRef}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -53,6 +101,14 @@ export default function LiveResults() {
                         background: 'linear-gradient(135deg, #166534 0%, #14532d 50%, #052e16 100%)',
                     }}
                 >
+                    {/* Confetti canvas – only inside this card so confetti stays in live results area */}
+                    {hasElections && (
+                        <canvas
+                            ref={confettiCanvasRef}
+                            className="absolute inset-0 pointer-events-none"
+                            style={{ zIndex: 20, width: '100%', height: '100%' }}
+                        />
+                    )}
                     {/* Subtle dot texture */}
                     <div className="absolute inset-0 opacity-30" style={{
                         backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)`,
@@ -214,11 +270,10 @@ export default function LiveResults() {
 
                         {completedElections.map((election, electionIndex) => (
                             <motion.div
-                                key={election.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: electionIndex * 0.1 }}
+                                key={'completed-' + election.id}
+                                initial={{ opacity: 0, y: 24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: electionIndex * 0.08, ease: 'easeOut' }}
                                 className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
                             >
                                 {/* Election Header */}
@@ -317,6 +372,7 @@ function PositionResults({ position, isLive }) {
                             rank={candIndex + 1}
                             showWinnerStyle={showWinnerStyle}
                             isLive={isLive}
+                            revealDelay={!isLive ? candIndex * 0.06 : 0}
                         />
                     );
                 })}
@@ -326,15 +382,15 @@ function PositionResults({ position, isLive }) {
 }
 
 // One row per candidate: photo, name, partylist (party reminder), votes, bar. No yellow border/arrow when ongoing.
-function CandidateRow({ candidate, percentage, rank, showWinnerStyle, isLive }) {
+function CandidateRow({ candidate, percentage, rank, showWinnerStyle, isLive, revealDelay = 0 }) {
     const isAnonymous = candidate.is_anonymous;
     const partylistName = candidate.partylist_name || null;
     const votesLabel = candidate.votes_count === 1 ? 'vote' : 'votes';
     return (
         <motion.li
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: revealDelay, ease: 'easeOut' }}
             className={
                 'grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_6rem] gap-x-3 gap-y-1.5 sm:gap-x-4 items-center py-3 px-0 border-b border-white/5 last:border-b-0 ' +
                 (showWinnerStyle ? 'border-l-2 border-l-gov-gold-400 pl-3 -ml-0 sm:pl-4' : '')

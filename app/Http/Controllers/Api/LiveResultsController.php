@@ -30,10 +30,12 @@ class LiveResultsController extends Controller
         }
 
         try {
-            // Only elections that admin has turned on for landing page display
+            // Only elections that admin has turned on for landing page display; latest first
             $elections = Election::where('show_live_results', true)
                 ->whereIn('status', ['ongoing', 'completed'])
                 ->with(['organization'])
+                ->orderBy('election_date', 'desc')
+                ->orderBy('id', 'desc')
                 ->get();
         } catch (\Throwable $e) {
             return response()->json([
@@ -46,7 +48,13 @@ class LiveResultsController extends Controller
         $results = [];
 
         foreach ($elections as $election) {
-            // Get candidates grouped by position with vote counts
+            $endDateTime = $this->parseElectionEndTime($election);
+            $effectiveStatus = $election->status;
+            if ($election->status === 'ongoing' && $endDateTime && $now->greaterThan($endDateTime)) {
+                $effectiveStatus = 'completed';
+                $election->update(['status' => 'completed']);
+            }
+
             $candidatesByPosition = Candidate::where('election_id', $election->id)
                 ->with(['position', 'partylist'])
                 ->withCount('votes')
@@ -64,7 +72,7 @@ class LiveResultsController extends Controller
 
                 $candidatesData = [];
 
-                if ($election->status === 'ongoing') {
+                if ($effectiveStatus === 'ongoing') {
                     // ONGOING: Use anonymized data (question marks, Candidate A/B/C)
                     $candidatesArray = $candidates->toArray();
                     $seed = crc32($election->id.'-'.$positionId);
@@ -126,8 +134,6 @@ class LiveResultsController extends Controller
                 return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
             });
 
-            // Calculate time remaining based on election status
-            $endDateTime = $this->parseElectionEndTime($election);
             $startDateTime = $this->parseElectionStartTime($election);
 
             $resultData = [
@@ -135,12 +141,12 @@ class LiveResultsController extends Controller
                 'election_name' => $election->election_name,
                 'organization' => $election->organization ? $election->organization->name : null,
                 'election_date' => $election->election_date->format('M d, Y'),
-                'status' => $election->status,
+                'status' => $effectiveStatus,
                 'positions' => $positionsData,
                 'total_voters' => Vote::where('election_id', $election->id)->distinct('voter_id')->count(),
             ];
 
-            if ($election->status === 'ongoing') {
+            if ($effectiveStatus === 'ongoing') {
                 // For ongoing elections, show time until election ends
                 if ($endDateTime) {
                     $timeUntilEnd = $now->diff($endDateTime);
@@ -178,7 +184,7 @@ class LiveResultsController extends Controller
             'success' => true,
             'elections' => $results,
             'timestamp' => $now->toIso8601String(),
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     /**
