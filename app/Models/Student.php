@@ -26,4 +26,12 @@ class Student extends Model
         'yearlevel',
         'section',
     ];
+
+    /**
+     * Get the user account associated with this student.
+     */
+    public function user()
+    {
+        return $this->hasOne(User::class, 'email', 'student_id_number');
+    }
 }

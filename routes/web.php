@@ -100,6 +100,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('candidates/multiple', [\App\Http\Controllers\Admin\CandidateController::class, 'storeMultiple'])->name('candidates.store-multiple');
     Route::put('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'update'])->name('candidates.update');
     Route::delete('candidates/{id}', [\App\Http\Controllers\Admin\CandidateController::class, 'destroy'])->name('candidates.destroy');
+
+    // Reports
+    Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
+    Route::get('reports/{electionId}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
 });
 
 // Student-only routes:
