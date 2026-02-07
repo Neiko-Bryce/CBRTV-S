@@ -29,6 +29,9 @@ if [ "$MIGRATE_OK" -eq 0 ]; then
   echo "WARNING: Migrations did not run successfully. The app will start anyway. Check deploy logs or run: php artisan migrate --force"
 fi
 
+echo "Initializing landing page database table..."
+php -r "require 'vendor/autoload.php'; \$app = require_once 'bootstrap/app.php'; \$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); require 'database/init-landing-page-table.php';" || echo "WARNING: Database initialization script failed"
+
 echo "Linking storage (public/storage -> storage/app/public)..."
 php artisan storage:link 2>/dev/null || true
 
