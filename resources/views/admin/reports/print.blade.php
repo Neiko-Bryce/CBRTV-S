@@ -462,7 +462,8 @@
                         @if ($filterType === 'all')
                             Complete Results (All Students)
                         @else
-                            Filtered — {{ ucfirst($filterType === 'yearlevel' ? 'Year Level' : $filterType) }}: {{ $filterValue }}
+                            Filtered — {{ ucfirst($filterType === 'yearlevel' ? 'Year Level' : $filterType) }}:
+                            {{ $filterValue }}
                         @endif
                     </td>
                 </tr>
@@ -499,9 +500,9 @@
         </div>
 
         <!-- Results by position -->
-        @foreach ($reportData['resultsByPosition'] as $position => $candidates)
+        @foreach ($reportData['resultsByPosition'] as $group)
             <div class="position-block">
-                <div class="position-head">{{ $position }}</div>
+                <div class="position-head">{{ $group['position_name'] }}</div>
                 <table class="results-table">
                     <thead>
                         <tr>
@@ -512,7 +513,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($candidates as $index => $candidate)
+                        @foreach ($group['candidates'] as $index => $candidate)
                             <tr class="{{ $index === 0 ? 'winner' : '' }}">
                                 <td class="col-rank">{{ $index + 1 }}</td>
                                 <td>
@@ -535,7 +536,10 @@
         @endif
 
         <!-- Participation breakdown -->
-        @if ($filterType === 'all' && (count($reportData['participationBreakdown']['byCourse']) > 0 || count($reportData['participationBreakdown']['byYearlevel']) > 0))
+        @if (
+            $filterType === 'all' &&
+                (count($reportData['participationBreakdown']['byCourse']) > 0 ||
+                    count($reportData['participationBreakdown']['byYearlevel']) > 0))
             <div class="breakdown-section">
                 <div class="breakdown-caption">Voter Participation Breakdown</div>
                 <div class="breakdown-tables">
@@ -588,9 +592,11 @@
         <!-- Certification -->
         <div class="certification">
             <p>
-                We, the undersigned members of the Election Committee, hereby certify that the above results are true and correct
+                We, the undersigned members of the Election Committee, hereby certify that the above results are true
+                and correct
                 based on the official tally of votes conducted during the {{ $election->election_name }} held on
-                {{ $election->election_date ? $election->election_date->format('F d, Y') : 'the scheduled date' }}. The election
+                {{ $election->election_date ? $election->election_date->format('F d, Y') : 'the scheduled date' }}. The
+                election
                 was conducted in accordance with the established rules and guidelines of the institution.
             </p>
             <div class="signatures">

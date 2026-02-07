@@ -71,25 +71,29 @@
                         <div class="flex flex-nowrap sm:flex-wrap">
                             <button @click="setFilter('all')"
                                 :class="filterType === 'all' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                                :style="filterType === 'all' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                :style="filterType === 'all' ?
+                                    'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
                                 class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
                                 All Students
                             </button>
                             <button @click="setFilter('course')"
                                 :class="filterType === 'course' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                                :style="filterType === 'course' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                :style="filterType === 'course' ?
+                                    'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
                                 class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
                                 By Course
                             </button>
                             <button @click="setFilter('yearlevel')"
                                 :class="filterType === 'yearlevel' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                                :style="filterType === 'yearlevel' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                :style="filterType === 'yearlevel' ?
+                                    'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
                                 class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
                                 By Year Level
                             </button>
                             <button @click="setFilter('section')"
                                 :class="filterType === 'section' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                                :style="filterType === 'section' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                :style="filterType === 'section' ?
+                                    'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
                                 class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
                                 By Section
                             </button>
@@ -177,7 +181,9 @@
                 <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0 flex-1">
-                            <p class="text-xs sm:text-sm text-secondary truncate"><span class="sm:hidden">Eligible</span><span class="hidden sm:inline">Eligible Students</span></p>
+                            <p class="text-xs sm:text-sm text-secondary truncate"><span
+                                    class="sm:hidden">Eligible</span><span class="hidden sm:inline">Eligible
+                                    Students</span></p>
                             <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-green);"
                                 x-text="reportData?.totalEligible?.toLocaleString() || '0'"></p>
                         </div>
@@ -196,9 +202,11 @@
                 <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0 flex-1">
-                            <p class="text-xs sm:text-sm text-secondary truncate"><span class="sm:hidden">Turnout</span><span class="hidden sm:inline">Participation Rate</span></p>
-                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-gold-dark);"><span
-                                    x-text="reportData?.participationRate || '0'"></span>%</p>
+                            <p class="text-xs sm:text-sm text-secondary truncate"><span
+                                    class="sm:hidden">Turnout</span><span class="hidden sm:inline">Participation
+                                    Rate</span></p>
+                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-gold-dark);">
+                                <span x-text="reportData?.participationRate || '0'"></span>%</p>
                         </div>
                         <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 sm:ml-2"
                             style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);">
@@ -217,15 +225,16 @@
                 style="background: linear-gradient(135deg, rgba(22, 101, 52, 0.08) 0%, rgba(20, 83, 45, 0.06) 100%); border-left: 4px solid var(--cpsu-green);">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div class="flex items-center gap-3 min-w-0">
-                        <svg class="w-5 h-5 flex-shrink-0" style="color: var(--cpsu-green);" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 flex-shrink-0" style="color: var(--cpsu-green);" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
                         </svg>
                         <span class="text-sm font-medium text-primary truncate min-w-0">
                             <span x-text="currentElection?.election_name"></span>
-                            <span class="text-secondary sm:ml-2">| Election Year: <span x-text="reportData?.electionYear"></span></span>
+                            <span class="text-secondary sm:ml-2">| Election Year: <span
+                                    x-text="reportData?.electionYear"></span></span>
                         </span>
                     </div>
                     <a :href="`{{ url('admin/reports') }}/${selectedElection}/print?filter_type=${filterType}&filter_value=${filterValue || ''}`"
@@ -248,26 +257,33 @@
                     <p class="text-xs sm:text-sm text-secondary mt-1">Candidates ranked by vote count</p>
                 </div>
                 <div class="p-4 sm:p-6 overflow-x-auto">
-                    <template x-for="(candidates, position) in reportData?.resultsByPosition || {}"
-                        :key="position">
+                    <template x-for="item in reportData?.resultsByPosition || []" :key="item.position_name">
                         <div class="mb-8 last:mb-0">
                             <h5
                                 class="text-sm font-semibold text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full" style="background: var(--cpsu-green);"></span>
-                                <span x-text="position"></span>
+                                <span x-text="item.position_name"></span>
                             </h5>
                             <div class="overflow-x-auto">
                                 <table class="w-full">
                                     <thead>
                                         <tr class="table-header border-b" style="border-color: var(--border-color);">
-                                            <th class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">Rank</th>
-                                            <th class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">Candidate</th>
-                                            <th class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary hidden sm:table-cell">Partylist</th>
-                                            <th class="text-right py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">Votes</th>
+                                            <th
+                                                class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">
+                                                Rank</th>
+                                            <th
+                                                class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">
+                                                Candidate</th>
+                                            <th
+                                                class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary hidden sm:table-cell">
+                                                Partylist</th>
+                                            <th
+                                                class="text-right py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">
+                                                Votes</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y" style="border-color: var(--border-color);">
-                                        <template x-for="(candidate, index) in candidates" :key="candidate.id">
+                                        <template x-for="(candidate, index) in item.candidates" :key="candidate.id">
                                             <tr class="table-row transition-colors">
                                                 <td class="py-3 sm:py-4 px-3 sm:px-4">
                                                     <span x-show="index === 0"
@@ -284,7 +300,8 @@
                                                     <div x-show="candidate.student" class="text-xs text-secondary"
                                                         x-text="candidate.student?.course + ' - ' + candidate.student?.yearlevel">
                                                     </div>
-                                                    <div class="sm:hidden text-xs text-secondary mt-0.5" x-text="candidate.partylist?.name || 'Independent'"></div>
+                                                    <div class="sm:hidden text-xs text-secondary mt-0.5"
+                                                        x-text="candidate.partylist?.name || 'Independent'"></div>
                                                 </td>
                                                 <td class="py-3 sm:py-4 px-3 sm:px-4 text-secondary hidden sm:table-cell"
                                                     x-text="candidate.partylist?.name || 'Independent'"></td>
@@ -301,7 +318,7 @@
                     </template>
 
                     <!-- Empty State -->
-                    <div x-show="Object.keys(reportData?.resultsByPosition || {}).length === 0" class="text-center py-8">
+                    <div x-show="(reportData?.resultsByPosition || []).length === 0" class="text-center py-8">
                         <p class="text-secondary">No candidates found for this election.</p>
                     </div>
                 </div>

@@ -127,27 +127,44 @@ class ReportController extends Controller
         // Participation rate
         $participationRate = $totalEligible > 0 ? round(($totalParticipants / $totalEligible) * 100, 1) : 0;
 
-        // Get candidates with vote counts grouped by position
+        // Get candidates with vote counts
         $candidates = Candidate::where('election_id', $electionId)
             ->with(['position', 'partylist', 'student'])
-            ->get()
-            ->map(function ($candidate) use ($filteredVoteIds) {
-                // Count votes for this candidate from filtered votes
-                $voteCount = DB::table('votes')
-                    ->whereIn('id', $filteredVoteIds)
-                    ->where('candidate_id', $candidate->id)
-                    ->count();
-                
-                $candidate->filtered_votes = $voteCount;
-                return $candidate;
-            })
-            ->sortByDesc('filtered_votes');
+            ->get();
 
-        // Group by position
-        $resultsByPosition = $candidates->groupBy(function ($candidate) {
-            return $candidate->position ? $candidate->position->name : 'Unknown Position';
-        })->map(function ($group) {
-            return $group->sortByDesc('filtered_votes')->values();
+        // Calculate filtered votes for each candidate
+        $candidates->each(function ($candidate) use ($filteredVoteIds) {
+            $voteCount = DB::table('votes')
+                ->whereIn('id', $filteredVoteIds)
+                ->where('candidate_id', $candidate->id)
+                ->count();
+            
+            $candidate->filtered_votes = $voteCount;
+        });
+
+        // Group by position ID to access position metadata for sorting
+        $candidatesByPosition = $candidates->groupBy('position_id');
+        
+        $resultsByPosition = [];
+
+        foreach ($candidatesByPosition as $positionId => $group) {
+            $position = $group->first()->position;
+            $positionName = $position ? $position->name : 'Unknown Position';
+            $positionOrder = $position ? ($position->order ?? 0) : 9999;
+
+            // Sort candidates by votes desc
+            $sortedCandidates = $group->sortByDesc('filtered_votes')->values();
+
+            $resultsByPosition[] = [
+                'position_name' => $positionName,
+                'position_order' => $positionOrder,
+                'candidates' => $sortedCandidates
+            ];
+        }
+
+        // Sort positions by defined order
+        usort($resultsByPosition, function ($a, $b) {
+            return $a['position_order'] <=> $b['position_order'];
         });
 
         // Get participation by course/yearlevel/section for the filtered data
