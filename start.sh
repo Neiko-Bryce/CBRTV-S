@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # Ensure we run from the application root (required on Railway)
 cd "$(dirname "$0")"
@@ -11,14 +10,16 @@ echo "Waiting for database connection..."
 sleep 5
 
 echo "Ensuring storage directories exist (required when using a volume at /app/storage)..."
-mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs storage/app/public
+mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs storage/app/public || true
 
 # Run migrations with retries (DB may not be ready immediately). If migrations fail after retries, still start the server so the app responds.
 echo "Running database migrations..."
 MIGRATE_OK=0
 for attempt in 1 2 3; do
+  echo "Migration attempt $attempt..."
   if php artisan migrate --force --verbose 2>&1; then
     MIGRATE_OK=1
+    echo "✓ Migrations completed successfully"
     break
   fi
   echo "Migration attempt $attempt failed, retrying in 5s..."
