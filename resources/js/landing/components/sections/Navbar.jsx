@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiMenuAlt3, HiX, HiInformationCircle, HiLightningBolt, HiPlay, HiUserGroup, HiShieldCheck } from 'react-icons/hi';
+import { HiMenuAlt3, HiX, HiInformationCircle, HiLightningBolt } from 'react-icons/hi';
 import { MdHowToVote, MdEmojiEvents } from 'react-icons/md';
 import Button from '../ui/Button';
 
@@ -8,9 +8,6 @@ const navLinks = [
     { name: 'Election Results', href: '#live-results', icon: MdEmojiEvents },
     { name: 'About', href: '#about', icon: HiInformationCircle },
     { name: 'Features', href: '#features', icon: HiLightningBolt },
-    { name: 'How It Works', href: '#how-it-works', icon: HiPlay },
-    { name: 'Roles', href: '#roles', icon: HiUserGroup },
-    { name: 'Security', href: '#security', icon: HiShieldCheck },
 ];
 
 export default function Navbar() {
@@ -152,8 +149,8 @@ export default function Navbar() {
                                                     href={link.href}
                                                     onClick={() => setIsMobileMenuOpen(false)}
                                                     className={`flex items-center gap-3 py-3.5 px-3 rounded-xl font-medium text-[15px] transition-colors ${isElectionResults
-                                                            ? 'text-gov-green-800 hover:bg-gov-green-50 hover:text-gov-green-900'
-                                                            : 'text-gray-700 hover:text-gov-green-800 hover:bg-gray-50'
+                                                        ? 'text-gov-green-800 hover:bg-gov-green-50 hover:text-gov-green-900'
+                                                        : 'text-gray-700 hover:text-gov-green-800 hover:bg-gray-50'
                                                         }`}
                                                 >
                                                     <Icon

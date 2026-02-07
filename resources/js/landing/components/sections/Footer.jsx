@@ -4,44 +4,25 @@ import { MdHowToVote } from 'react-icons/md';
 import {
     HiMail,
     HiPhone,
-    HiLocationMarker
+    HiLocationMarker,
+    HiLockClosed,
+    HiShieldCheck,
+    HiGlobeAlt,
+    HiServer
 } from 'react-icons/hi';
 import {
     FaFacebookF,
-    FaTwitter,
-    FaLinkedinIn,
-    FaYoutube
+    FaInstagram,
+    FaTelegram
 } from 'react-icons/fa';
 
 const footerLinks = {
-    product: {
-        title: 'Product',
+    navigation: {
+        title: 'Navigation',
         links: [
+            { name: 'Election Results', href: '#live-results' },
             { name: 'Features', href: '#features' },
-            { name: 'Security', href: '#security' },
-            { name: 'Pricing', href: '#' },
-            { name: 'Integrations', href: '#' },
-            { name: 'API Documentation', href: '#' },
-        ],
-    },
-    company: {
-        title: 'Company',
-        links: [
             { name: 'About Us', href: '#about' },
-            { name: 'Careers', href: '#' },
-            { name: 'Press Kit', href: '#' },
-            { name: 'Contact', href: '#' },
-            { name: 'Partners', href: '#' },
-        ],
-    },
-    resources: {
-        title: 'Resources',
-        links: [
-            { name: 'Help Center', href: '#' },
-            { name: 'Blog', href: '#' },
-            { name: 'Case Studies', href: '#' },
-            { name: 'Webinars', href: '#' },
-            { name: 'System Status', href: '#' },
         ],
     },
     legal: {
@@ -49,18 +30,14 @@ const footerLinks = {
         links: [
             { name: 'Privacy Policy', href: '#' },
             { name: 'Terms of Service', href: '#' },
-            { name: 'Cookie Policy', href: '#' },
-            { name: 'GDPR Compliance', href: '#' },
-            { name: 'Accessibility', href: '#' },
         ],
     },
 };
 
 const socialLinks = [
-    { icon: FaFacebookF, href: '#', label: 'Facebook' },
-    { icon: FaTwitter, href: '#', label: 'Twitter' },
-    { icon: FaLinkedinIn, href: '#', label: 'LinkedIn' },
-    { icon: FaYoutube, href: '#', label: 'YouTube' },
+    { icon: FaFacebookF, href: 'https://www.facebook.com/neiko.bryce.fantilaga.2024/', label: 'Facebook' },
+    { icon: FaInstagram, href: 'https://instagram.com/mbryce_fntlg', label: 'Instagram' },
+    { icon: FaTelegram, href: 'https://t.me/+639152087468', label: 'Telegram' },
 ];
 
 export default function Footer() {
@@ -68,7 +45,7 @@ export default function Footer() {
         <footer className="bg-gray-900 text-white overflow-hidden">
             {/* Main Footer */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 sm:gap-10 lg:gap-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12">
                     {/* Brand Column */}
                     <div className="sm:col-span-2 lg:col-span-2">
                         <motion.a
@@ -88,23 +65,22 @@ export default function Footer() {
                         </motion.a>
 
                         <p className="text-gray-400 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
-                            A professional cloud-based real-time voting system designed for CPSU
-                            student council elections. Secure, transparent, and trusted.
+                            A professional cloud-based real-time voting system designed for secure, transparent, and efficient elections. Trusted by organizations worldwide.
                         </p>
 
                         {/* Contact Info */}
                         <div className="space-y-2 sm:space-y-3">
                             <div className="flex items-center gap-2 sm:gap-3 text-gray-400 text-sm sm:text-base">
                                 <HiMail className="w-4 h-4 sm:w-5 sm:h-5 text-gov-gold-500 flex-shrink-0" />
-                                <span className="truncate">support@cpsu.edu.ph</span>
+                                <span className="truncate">CBRT@votingsystem.gmail.com</span>
                             </div>
                             <div className="flex items-center gap-2 sm:gap-3 text-gray-400 text-sm sm:text-base">
                                 <HiPhone className="w-4 h-4 sm:w-5 sm:h-5 text-gov-gold-500 flex-shrink-0" />
-                                <span>+63 (34) 461-0000</span>
+                                <span>+63 946 024 1508</span>
                             </div>
                             <div className="flex items-center gap-2 sm:gap-3 text-gray-400 text-sm sm:text-base">
                                 <HiLocationMarker className="w-4 h-4 sm:w-5 sm:h-5 text-gov-gold-500 flex-shrink-0" />
-                                <span>San Carlos City, Negros Occ.</span>
+                                <span>Hinoba-an, Negros Occ.</span>
                             </div>
                         </div>
                     </div>
@@ -166,37 +142,6 @@ export default function Footer() {
                 </div>
             </div>
 
-            {/* Trust Badges - Responsive grid */}
-            <div className="bg-gray-950 py-3 sm:py-4">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 text-gray-500 text-xs sm:text-sm">
-                        <span className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
-                            </svg>
-                            <span className="whitespace-nowrap">256-bit SSL</span>
-                        </span>
-                        <span className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                            </svg>
-                            <span className="whitespace-nowrap">SOC 2</span>
-                        </span>
-                        <span className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                            </svg>
-                            <span className="whitespace-nowrap">GDPR Ready</span>
-                        </span>
-                        <span className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z" />
-                            </svg>
-                            <span className="whitespace-nowrap">99.9% Uptime</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
         </footer>
     );
 }
