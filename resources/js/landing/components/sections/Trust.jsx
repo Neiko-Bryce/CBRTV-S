@@ -164,7 +164,7 @@ export default function Trust() {
                         Ready to Transform Your Elections?
                     </h3>
                     <p className="text-gray-600 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto">
-                        Join hundreds of institutions that trust CpsuVotewisely.com for secure, transparent, 
+                        Join hundreds of institutions that trust CpsuVotewisely.com for secure, transparent,
                         and efficient elections. Get started with a free demo today.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">

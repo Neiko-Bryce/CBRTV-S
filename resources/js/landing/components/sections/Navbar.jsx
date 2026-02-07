@@ -31,8 +31,8 @@ export default function Navbar() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className={`
                 fixed top-0 left-0 right-0 z-50 transition-all duration-300
-                ${isScrolled 
-                    ? 'bg-white/95 backdrop-blur-md shadow-lg shadow-gray-200/50' 
+                ${isScrolled
+                    ? 'bg-white/95 backdrop-blur-md shadow-lg shadow-gray-200/50'
                     : 'bg-transparent'
                 }
             `}
@@ -69,8 +69,8 @@ export default function Navbar() {
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
                                 className={`
                                     font-medium transition-colors duration-200
-                                    ${isScrolled 
-                                        ? 'text-gray-700 hover:text-gov-green-800' 
+                                    ${isScrolled
+                                        ? 'text-gray-700 hover:text-gov-green-800'
                                         : 'text-white/90 hover:text-white'
                                     }
                                 `}
@@ -92,9 +92,8 @@ export default function Navbar() {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className={`lg:hidden p-2 rounded-lg transition-colors ${
-                            isScrolled ? 'text-gray-700' : 'text-white'
-                        }`}
+                        className={`lg:hidden p-2 rounded-lg transition-colors ${isScrolled ? 'text-gray-700' : 'text-white'
+                            }`}
                     >
                         {isMobileMenuOpen ? (
                             <HiX className="w-6 h-6" />
@@ -152,16 +151,14 @@ export default function Navbar() {
                                                 <a
                                                     href={link.href}
                                                     onClick={() => setIsMobileMenuOpen(false)}
-                                                    className={`flex items-center gap-3 py-3.5 px-3 rounded-xl font-medium text-[15px] transition-colors ${
-                                                        isElectionResults
+                                                    className={`flex items-center gap-3 py-3.5 px-3 rounded-xl font-medium text-[15px] transition-colors ${isElectionResults
                                                             ? 'text-gov-green-800 hover:bg-gov-green-50 hover:text-gov-green-900'
                                                             : 'text-gray-700 hover:text-gov-green-800 hover:bg-gray-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <Icon
-                                                        className={`w-5 h-5 flex-shrink-0 ${
-                                                            isElectionResults ? 'text-gov-gold-500' : 'text-gov-green-600'
-                                                        }`}
+                                                        className={`w-5 h-5 flex-shrink-0 ${isElectionResults ? 'text-gov-gold-500' : 'text-gov-green-600'
+                                                            }`}
                                                     />
                                                     <span>{link.name}</span>
                                                 </a>

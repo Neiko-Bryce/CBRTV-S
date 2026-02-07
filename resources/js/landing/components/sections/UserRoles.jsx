@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-    HiCog, 
-    HiClipboardList, 
+import {
+    HiCog,
+    HiClipboardList,
     HiUser,
     HiCheckCircle
 } from 'react-icons/hi';
@@ -92,7 +92,7 @@ export default function UserRoles() {
                             <Card className="h-full relative overflow-hidden" hover={false}>
                                 {/* Header Gradient */}
                                 <div className={`absolute top-0 left-0 right-0 h-32 bg-gradient-to-br ${role.color} opacity-10 rounded-t-2xl`} />
-                                
+
                                 <div className="relative">
                                     {/* Icon & Title */}
                                     <div className="flex items-start gap-4 mb-6">

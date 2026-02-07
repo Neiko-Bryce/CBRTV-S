@@ -1,6 +1,9 @@
 <aside
-    class="sidebar w-64 flex-shrink-0 fixed lg:static inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
-    x-data :class="$store.sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+    class="sidebar flex-shrink-0 w-64 h-full flex flex-col lg:static inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out"
+    :class="{
+        'translate-x-0': $store.sidebarOpen && window.innerWidth < 1024,
+        '-translate-x-full lg:translate-x-0': !$store.sidebarOpen || window.innerWidth >= 1024
+    }">
     <!-- Overlay for mobile -->
     <div x-show="$store.sidebarOpen && window.innerWidth < 1024"
         x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
@@ -176,9 +179,9 @@
             </a>
 
             <!-- Settings Dropdown -->
-            <div x-data="{ open: {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') ? 'true' : 'false' }} }" class="relative">
+            <div x-data="{ open: {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.landing-page.*') ? 'true' : 'false' }} }" class="relative">
                 <button @click="open = !open"
-                    class="nav-link w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                    class="nav-link w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.landing-page.*') ? 'active' : '' }}">
                     <div class="flex items-center space-x-3">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -204,6 +207,13 @@
                     x-transition:leave-start="opacity-100 transform scale-100"
                     x-transition:leave-end="opacity-0 transform scale-95" @click.outside="open = false"
                     class="mt-1 ml-4 space-y-1" style="display: none;">
+                    <a href="{{ route('admin.landing-page.index') }}"
+                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.landing-page.*') ? 'active' : '' }}">
+                        <div
+                            class="w-2 h-2 rounded-full {{ request()->routeIs('admin.landing-page.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
+                        </div>
+                        <span class="text-sm font-medium">Landing Page</span>
+                    </a>
                     <a href="{{ route('admin.users.index') }}"
                         class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                         <div

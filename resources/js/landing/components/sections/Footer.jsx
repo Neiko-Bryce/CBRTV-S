@@ -1,16 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MdHowToVote } from 'react-icons/md';
-import { 
-    HiMail, 
-    HiPhone, 
-    HiLocationMarker 
+import {
+    HiMail,
+    HiPhone,
+    HiLocationMarker
 } from 'react-icons/hi';
-import { 
-    FaFacebookF, 
-    FaTwitter, 
-    FaLinkedinIn, 
-    FaYoutube 
+import {
+    FaFacebookF,
+    FaTwitter,
+    FaLinkedinIn,
+    FaYoutube
 } from 'react-icons/fa';
 
 const footerLinks = {
@@ -172,25 +172,25 @@ export default function Footer() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 text-gray-500 text-xs sm:text-sm">
                         <span className="flex items-center justify-center gap-1.5 sm:gap-2">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
                             </svg>
                             <span className="whitespace-nowrap">256-bit SSL</span>
                         </span>
                         <span className="flex items-center justify-center gap-1.5 sm:gap-2">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                             </svg>
                             <span className="whitespace-nowrap">SOC 2</span>
                         </span>
                         <span className="flex items-center justify-center gap-1.5 sm:gap-2">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                             </svg>
                             <span className="whitespace-nowrap">GDPR Ready</span>
                         </span>
                         <span className="flex items-center justify-center gap-1.5 sm:gap-2">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z" />
                             </svg>
                             <span className="whitespace-nowrap">99.9% Uptime</span>
                         </span>

@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-    HiUserAdd, 
-    HiFingerPrint, 
-    HiClipboardCheck, 
-    HiPresentationChartBar 
+import {
+    HiUserAdd,
+    HiFingerPrint,
+    HiClipboardCheck,
+    HiPresentationChartBar
 } from 'react-icons/hi';
 import SectionTitle from '../ui/SectionTitle';
 

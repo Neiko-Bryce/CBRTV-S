@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-    HiChartBar, 
-    HiCloud, 
-    HiDocumentReport, 
+import {
+    HiChartBar,
+    HiCloud,
+    HiDocumentReport,
     HiDeviceMobile,
     HiShieldCheck,
     HiClock
@@ -12,7 +12,8 @@ import SectionTitle from '../ui/SectionTitle';
 import Card from '../ui/Card';
 import IconBox from '../ui/IconBox';
 
-const features = [
+// Default features when no settings exist
+const defaultFeatures = [
     {
         icon: HiChartBar,
         title: 'Real-Time Vote Tallying',
@@ -51,6 +52,22 @@ const features = [
     },
 ];
 
+const iconMap = {
+    'HiChartBar': HiChartBar,
+    'HiCloud': HiCloud,
+    'HiDocumentReport': HiDocumentReport,
+    'HiDeviceMobile': HiDeviceMobile,
+    'HiShieldCheck': HiShieldCheck,
+    'HiClock': HiClock,
+};
+
+const colorMap = {
+    'primary': 'primary',
+    'gradient': 'gradient',
+    'secondary': 'secondary',
+    'outline': 'outline',
+};
+
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -71,13 +88,54 @@ const itemVariants = {
 };
 
 export default function Features() {
+    const [settings, setSettings] = useState({
+        title: null,
+        subtitle: null,
+        description: null,
+        items: null,
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch('/api/landing-page/settings');
+                const data = await response.json();
+
+                if (data.features && data.features.items?.extra) {
+                    setSettings({
+                        title: data.features.title?.value || null,
+                        subtitle: data.features.subtitle?.value || null,
+                        description: data.features.description?.value || null,
+                        items: data.features.items.extra.map(item => ({
+                            ...item,
+                            icon: iconMap[item.icon] || HiChartBar,
+                            color: colorMap[item.color] || 'primary',
+                        })),
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching landing page settings:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSettings();
+    }, []);
+
+    const features = settings.items || defaultFeatures;
+    const title = settings.title || 'Everything You Need for Fair Elections';
+    const subtitle = settings.subtitle || 'Core Features';
+    const description = settings.description || 'Our comprehensive feature set ensures secure, transparent, and efficient elections for organizations of all sizes.';
+
     return (
         <section id="features" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle
-                    subtitle="Core Features"
-                    title="Everything You Need for Fair Elections"
-                    description="Our comprehensive feature set ensures secure, transparent, and efficient elections for organizations of all sizes."
+                    subtitle={subtitle}
+                    title={title}
+                    description={description}
                 />
 
                 <motion.div
@@ -90,10 +148,10 @@ export default function Features() {
                     {features.map((feature, index) => (
                         <motion.div key={index} variants={itemVariants}>
                             <Card className="h-full" gradient>
-                                <IconBox 
-                                    icon={feature.icon} 
-                                    variant={feature.color} 
-                                    size="lg" 
+                                <IconBox
+                                    icon={feature.icon}
+                                    variant={feature.color}
+                                    size="lg"
                                     className="mb-6"
                                 />
                                 <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -132,8 +190,8 @@ export default function Features() {
                                 Real-Time Analytics Dashboard
                             </h3>
                             <p className="text-white/80 text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 leading-relaxed">
-                                Monitor election progress with our powerful analytics dashboard. 
-                                Track voter turnout, geographic distribution, and voting patterns 
+                                Monitor election progress with our powerful analytics dashboard.
+                                Track voter turnout, geographic distribution, and voting patterns
                                 in real-time.
                             </p>
                             <ul className="space-y-2 sm:space-y-3">

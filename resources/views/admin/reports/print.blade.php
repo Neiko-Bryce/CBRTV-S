@@ -433,7 +433,7 @@
         <div class="letterhead">
             <div class="republic">Republic of the Philippines</div>
             <div class="school-name">Central Philippines State University</div>
-            <div class="school-address">Kabankalan City, Negros Occidental</div>
+            <div class="school-address">Brgy Po-ok, Hinoba-an, Negros Occidental</div>
             @if ($election->organization)
                 <div class="org-name">{{ $election->organization->name }}</div>
             @endif

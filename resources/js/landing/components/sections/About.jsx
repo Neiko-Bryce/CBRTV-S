@@ -1,161 +1,185 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { HiCheckCircle } from 'react-icons/hi';
-import { MdSchool, MdGroups, MdAccountBalance } from 'react-icons/md';
-import SectionTitle from '../ui/SectionTitle';
-import IconBox from '../ui/IconBox';
-
-const benefits = [
-    'Instant vote counting with live result updates',
-    'Complete audit trail for every election',
-    'Mobile-friendly voting from any device',
-    'Customizable election rules and workflows',
-    'Automated voter verification system',
-    'Detailed analytics and reporting',
-];
-
-const useCases = [
-    {
-        icon: MdSchool,
-        title: 'Educational Institutions',
-        description: 'Perfect for student council elections, class representatives, and academic committee voting.',
-    },
-    {
-        icon: MdGroups,
-        title: 'Community Organizations',
-        description: 'Ideal for homeowner associations, clubs, unions, and community-based decision making.',
-    },
-    {
-        icon: MdAccountBalance,
-        title: 'Government Bodies',
-        description: 'Designed for local government polls, advisory boards, and civic engagement initiatives.',
-    },
-];
+import React, { useState, useEffect, useContext } from 'react';
+import {
+    UsersIcon,
+    CheckBadgeIcon,
+    SparklesIcon
+} from '@heroicons/react/24/outline';
 
 export default function About() {
-    return (
-        <section id="about" className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <SectionTitle
-                    subtitle="About The System"
-                    title="Redefining Digital Democracy"
-                    description="CpsuVotewisely.com is a comprehensive cloud-based voting platform that brings transparency, security, and real-time capabilities to student council elections."
-                />
+    const [settings, setSettings] = useState({
+        subtitle: null,
+        title: null,
+        description: null,
+        benefits: null,
+        team_section_title: null,
+        team_section_subtitle: null,
+        team_members: null,
+    });
+    const [loading, setLoading] = useState(true);
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center mt-10 sm:mt-12 lg:mt-16">
-                    {/* Left: Image/Illustration */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="relative order-2 lg:order-1"
-                    >
-                        <div className="relative bg-gradient-to-br from-gov-green-50 to-gov-green-100 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12">
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg"
-                                >
-                                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gov-green-800">500+</p>
-                                    <p className="text-gray-600 mt-0.5 sm:mt-1 text-sm sm:text-base">Institutions</p>
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg"
-                                >
-                                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gov-green-800">2M+</p>
-                                    <p className="text-gray-600 mt-0.5 sm:mt-1 text-sm sm:text-base">Votes Cast</p>
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg"
-                                >
-                                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gov-green-800">99.9%</p>
-                                    <p className="text-gray-600 mt-0.5 sm:mt-1 text-sm sm:text-base">Uptime</p>
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg"
-                                >
-                                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gov-gold-600">0</p>
-                                    <p className="text-gray-600 mt-0.5 sm:mt-1 text-sm sm:text-base">Security Breaches</p>
-                                </motion.div>
-                            </div>
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch('/api/landing-page/settings');
+                const data = await response.json();
 
-                            {/* Decorative Elements - Hidden on mobile to prevent overflow */}
-                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-24 sm:h-24 bg-gov-gold-400/20 rounded-full blur-2xl hidden sm:block" />
-                            <div className="absolute -bottom-4 -left-4 w-20 h-20 sm:w-32 sm:h-32 bg-gov-green-400/20 rounded-full blur-2xl hidden sm:block" />
-                        </div>
-                    </motion.div>
+                if (data.about) {
+                    setSettings({
+                        subtitle: data.about.subtitle?.value || null,
+                        title: data.about.title?.value || null,
+                        description: data.about.description?.value || null,
+                        benefits: data.about.benefits?.extra || null,
+                        team_section_title: data.about.team_section_title?.value || null,
+                        team_section_subtitle: data.about.team_section_subtitle?.value || null,
+                        team_members: data.about.team_members?.extra || null,
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching landing page settings:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-                    {/* Right: Content */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="order-1 lg:order-2"
-                    >
-                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
-                            Built for Trust and Transparency
-                        </h3>
-                        <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
-                            Our platform empowers organizations to conduct fair, transparent, and 
-                            efficient elections. With real-time vote counting, comprehensive audit 
-                            logs, and bank-grade security, CpsuVotewisely.com ensures every voice is heard 
-                            and every vote counts.
-                        </p>
+        fetchSettings();
+    }, []);
 
-                        {/* Benefits List */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                            {benefits.map((benefit, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="flex items-start gap-2 sm:gap-3"
-                                >
-                                    <HiCheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gov-green-600 flex-shrink-0 mt-0.5" />
-                                    <span className="text-gray-700 text-sm sm:text-base">{benefit}</span>
-                                </motion.div>
+    if (loading) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="animate-pulse space-y-8">
+                        <div className="h-12 bg-gray-200 rounded w-1/3 mx-auto"></div>
+                        <div className="h-6 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-64 bg-gray-200 rounded-xl"></div>
                             ))}
                         </div>
-                    </motion.div>
-                </div>
-
-                {/* Use Cases */}
-                <div className="mt-16 sm:mt-20 lg:mt-24">
-                    <motion.h3
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-8 sm:mb-12"
-                    >
-                        Designed For Every Organization
-                    </motion.h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                        {useCases.map((useCase, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: index * 0.15 }}
-                                whileHover={{ y: -8 }}
-                                className="bg-gray-50 rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-gray-100 hover:border-gov-green-200 transition-colors"
-                            >
-                                <IconBox icon={useCase.icon} variant="gradient" size="lg" className="mb-4 sm:mb-6" />
-                                <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{useCase.title}</h4>
-                                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{useCase.description}</p>
-                            </motion.div>
-                        ))}
                     </div>
                 </div>
+            </section>
+        );
+    }
+
+    // Get settings with fallbacks
+    const subtitle = settings.subtitle || 'About The System';
+    const title = settings.title || 'Redefining Digital Democracy';
+    const description = settings.description ||
+        'CpsuVotewisely.com is a comprehensive cloud-based voting platform that brings transparency, security, and real-time capabilities to student council elections.';
+    const benefits = settings.benefits || [
+        'Instant vote counting with live result updates',
+        'Complete audit trail for every election',
+        'Mobile-friendly voting from any device',
+        'Customizable election rules and workflows',
+        'Automated voter verification system',
+        'Detailed analytics and reporting',
+    ];
+
+    // Team members data
+    const teamSectionTitle = settings.team_section_title || 'Meet The Team';
+    const teamSectionSubtitle = settings.team_section_subtitle || 'The dedicated team behind this voting system';
+    const teamMembers = settings.team_members || [];
+
+    return (
+        <section id="about" className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5" />
+                        </pattern>
+                    </defs>
+                    <rect width="100" height="100" fill="url(#grid)" />
+                </svg>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                {/* Header */}
+                <div className="text-center mb-16">
+                    <span className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold mb-4">
+                        <SparklesIcon className="w-4 h-4 mr-2" />
+                        {subtitle}
+                    </span>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 heading-font mb-6">
+                        {title}
+                    </h2>
+                    <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                        {description}
+                    </p>
+                </div>
+
+                {/* Benefits Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {benefits.map((benefit, index) => (
+                        <div
+                            key={index}
+                            className="flex items-start p-5 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                        >
+                            <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                <CheckBadgeIcon className="w-6 h-6 text-green-600" />
+                            </div>
+                            <p className="text-gray-700 font-medium leading-relaxed">{benefit}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Team Members Section */}
+                {teamMembers.length > 0 && (
+                    <div className="mt-20 pt-16 border-t border-gray-200">
+                        <div className="text-center mb-12">
+                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 heading-font mb-4">
+                                {teamSectionTitle}
+                            </h3>
+                            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                                {teamSectionSubtitle}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {teamMembers.map((member, index) => (
+                                <div
+                                    key={index}
+                                    className="group text-center"
+                                >
+                                    <div className="relative inline-block mb-4">
+                                        {/* Circular Photo Frame */}
+                                        <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                                            {member.image ? (
+                                                <img
+                                                    src={`/storage/${member.image}`}
+                                                    alt={member.name || 'Team Member'}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-300 flex items-center justify-center">
+                                                    <UsersIcon className="w-16 h-16 text-gray-400" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {/* Decorative ring on hover */}
+                                        <div className="absolute inset-0 rounded-full border-4 border-green-400 opacity-0 group-hover:opacity-50 transition-opacity duration-300 -m-1"></div>
+                                    </div>
+
+                                    <h4 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-green-600 transition-colors">
+                                        {member.name || 'Team Member'}
+                                    </h4>
+                                    {member.role && (
+                                        <p className="text-sm font-semibold text-green-600 mb-2">
+                                            {member.role}
+                                        </p>
+                                    )}
+                                    {member.bio && (
+                                        <p className="text-sm text-gray-500 px-4">
+                                            {member.bio}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     );

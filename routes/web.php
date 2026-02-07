@@ -11,6 +11,17 @@ Route::get('/', function () {
 Route::prefix('api')->group(function () {
     Route::get('/live-results', [\App\Http\Controllers\Api\LiveResultsController::class, 'getCompletedElections'])->name('api.live-results');
     Route::get('/live-results/{electionId}', [\App\Http\Controllers\Api\LiveResultsController::class, 'getElectionResults'])->name('api.live-results.election');
+
+    // Landing page settings (no auth required)
+    Route::get('/landing-page/settings', function () {
+        $aboutSettings = \App\Models\LandingPageSetting::getSectionWithExtras('about');
+        $featuresSettings = \App\Models\LandingPageSetting::getSectionWithExtras('features');
+
+        return response()->json([
+            'about' => $aboutSettings,
+            'features' => $featuresSettings,
+        ]);
+    })->name('api.landing-page.settings');
 });
 
 // Public candidate photo URL (no auth) so student-side images load even when DB/session is flaky
@@ -105,6 +116,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/{electionId}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
+
+    // Landing Page Management
+    Route::get('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('landing-page.index');
+    Route::post('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing-page.update');
+    Route::get('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
 });
 
 // Student-only routes:

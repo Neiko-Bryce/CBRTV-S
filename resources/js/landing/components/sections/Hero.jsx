@@ -23,7 +23,7 @@ export default function Hero() {
             {/* Floating Background Shapes - Smaller on mobile */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    animate={{ 
+                    animate={{
                         y: [0, -30, 0],
                         rotate: [0, 5, 0],
                     }}
@@ -31,7 +31,7 @@ export default function Hero() {
                     className="absolute top-1/4 right-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-gov-gold-500/10 rounded-full blur-3xl"
                 />
                 <motion.div
-                    animate={{ 
+                    animate={{
                         y: [0, 40, 0],
                         rotate: [0, -5, 0],
                     }}
@@ -45,12 +45,12 @@ export default function Hero() {
                 <motion.div
                     key={index}
                     initial={{ opacity: 0, scale: 0 }}
-                    animate={{ 
-                        opacity: 0.2, 
+                    animate={{
+                        opacity: 0.2,
                         scale: 1,
                         y: [0, -20, 0],
                     }}
-                    transition={{ 
+                    transition={{
                         delay: item.delay,
                         duration: 4,
                         y: { duration: 4, repeat: Infinity, ease: 'easeInOut' }
@@ -96,8 +96,8 @@ export default function Hero() {
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="text-base sm:text-lg lg:text-xl text-white/80 mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed px-2 sm:px-0"
                         >
-                            A secure and transparent digital voting platform for CPSU 
-                            student council elections. Experience democracy with complete 
+                            A secure and transparent digital voting platform for CPSU
+                            student council elections. Experience democracy with complete
                             transparency and instant results.
                         </motion.p>
 
@@ -107,8 +107,8 @@ export default function Hero() {
                             transition={{ duration: 0.6, delay: 0.3 }}
                             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start px-4 sm:px-0"
                         >
-                            <Button 
-                                variant="secondary" 
+                            <Button
+                                variant="secondary"
                                 size="lg"
                                 icon={HiArrowRight}
                                 iconPosition="right"
@@ -116,8 +116,8 @@ export default function Hero() {
                             >
                                 Launch Demo
                             </Button>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 size="lg"
                                 icon={HiPlay}
                                 className="w-full sm:w-auto justify-center border-white/30 text-white hover:bg-white/10 hover:text-white text-sm sm:text-base"
@@ -171,7 +171,7 @@ export default function Hero() {
                                         <p className="text-xs lg:text-sm text-gray-500">Live Results</p>
                                     </div>
                                 </div>
-                                
+
                                 {/* Progress Bars */}
                                 <div className="space-y-3 lg:space-y-4">
                                     {[
@@ -189,10 +189,9 @@ export default function Hero() {
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${candidate.percent}%` }}
                                                     transition={{ duration: 1.5, delay: 0.5 + idx * 0.2 }}
-                                                    className={`h-full rounded-full ${
-                                                        idx === 0 ? 'bg-gov-green-600' : 
+                                                    className={`h-full rounded-full ${idx === 0 ? 'bg-gov-green-600' :
                                                         idx === 1 ? 'bg-gov-gold-500' : 'bg-gray-400'
-                                                    }`}
+                                                        }`}
                                                 />
                                             </div>
                                         </div>
@@ -242,7 +241,7 @@ export default function Hero() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, y: [0, 10, 0] }}
-                transition={{ 
+                transition={{
                     opacity: { delay: 1.5 },
                     y: { duration: 2, repeat: Infinity }
                 }}
