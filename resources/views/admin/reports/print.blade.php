@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Official Election Results - {{ $election->election_name }}</title>
     <style>
+        /* A4 bond: 210mm x 297mm, standard margins */
         @page {
             size: A4 portrait;
-            margin: 10mm;
+            margin: 15mm;
         }
 
         * {
@@ -19,438 +20,402 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            line-height: 1.6;
+            font-size: 11pt;
+            line-height: 1.4;
             color: #000;
             background: #fff;
         }
 
-        .container {
+        .page {
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 15mm 20mm;
+            padding: 0 15mm;
             background: white;
         }
 
-        /* Letterhead Header */
+        /* Letterhead */
         .letterhead {
             text-align: center;
-            padding-bottom: 15px;
-            border-bottom: 3px double #000;
-            margin-bottom: 20px;
+            padding-bottom: 10pt;
+            border-bottom: 2px solid #000;
+            margin-bottom: 14pt;
         }
 
-        .letterhead-logo {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 10px;
-        }
-
-        .school-seal {
-            width: 70px;
-            height: 70px;
-            border: 2px solid #166534;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #166534;
-            font-weight: bold;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .school-info {
-            text-align: center;
-        }
-
-        .republic {
-            font-size: 10pt;
-            letter-spacing: 1px;
+        .letterhead .republic {
+            font-size: 9pt;
+            letter-spacing: 0.5pt;
             color: #333;
+            margin-bottom: 2pt;
         }
 
-        .school-name {
-            font-size: 16pt;
-            font-weight: bold;
-            color: #166534;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 3px 0;
-        }
-
-        .school-address {
-            font-size: 10pt;
-            color: #555;
-            font-style: italic;
-        }
-
-        .org-name {
-            font-size: 11pt;
-            font-weight: bold;
-            margin-top: 8px;
-            color: #14532d;
-        }
-
-        /* Document Title */
-        .document-title {
-            text-align: center;
-            margin: 25px 0;
-        }
-
-        .document-title h1 {
+        .letterhead .school-name {
             font-size: 14pt;
             font-weight: bold;
+            color: #000;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 5px;
-            text-decoration: underline;
+            letter-spacing: 1pt;
+            margin: 2pt 0;
         }
 
-        .document-title .subtitle {
+        .letterhead .school-address {
+            font-size: 9pt;
+            color: #444;
+            font-style: italic;
+            margin-bottom: 2pt;
+        }
+
+        .letterhead .org-name {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-top: 4pt;
+            color: #000;
+        }
+
+        /* Document title */
+        .doc-title {
+            text-align: center;
+            margin: 16pt 0 12pt;
+        }
+
+        .doc-title h1 {
             font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1pt;
+            text-decoration: underline;
+            margin-bottom: 4pt;
+        }
+
+        .doc-title .subtitle {
+            font-size: 11pt;
             font-weight: normal;
         }
 
-        /* Document Info */
-        .document-info {
-            margin-bottom: 20px;
-        }
-
-        .info-row {
-            display: flex;
-            margin-bottom: 5px;
-        }
-
-        .info-label {
-            font-weight: bold;
-            width: 150px;
-        }
-
-        .info-value {
-            flex: 1;
-        }
-
-        .filter-badge {
-            display: inline-block;
-            background: #f0f0f0;
-            padding: 3px 10px;
-            border: 1px solid #ccc;
+        /* Meta block */
+        .doc-meta {
+            margin-bottom: 12pt;
             font-size: 10pt;
-            margin-top: 10px;
         }
 
-        /* Summary Box */
-        .summary-section {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 20px 0;
+        .doc-meta table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .summary-title {
+        .doc-meta td {
+            padding: 2pt 0;
+            vertical-align: top;
+        }
+
+        .doc-meta .label {
+            width: 100pt;
             font-weight: bold;
-            font-size: 11pt;
-            margin-bottom: 10px;
+        }
+
+        /* Summary: compact horizontal block */
+        .summary {
+            border: 1px solid #000;
+            margin-bottom: 14pt;
+            page-break-inside: avoid;
+        }
+
+        .summary-caption {
+            background: #e8e8e8;
+            padding: 4pt 8pt;
+            font-size: 9pt;
+            font-weight: bold;
             text-transform: uppercase;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
+            letter-spacing: 0.5pt;
+            border-bottom: 1px solid #000;
         }
 
         .summary-grid {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
         }
 
-        .summary-item {
+        .summary-row {
+            display: table-row;
+        }
+
+        .summary-cell {
+            display: table-cell;
             text-align: center;
-            flex: 1;
-            min-width: 120px;
-            padding: 10px;
+            padding: 6pt 4pt;
+            border-right: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            font-size: 10pt;
         }
 
-        .summary-number {
-            font-size: 20pt;
+        .summary-cell:last-child {
+            border-right: none;
+        }
+
+        .summary-cell .num {
+            font-size: 12pt;
             font-weight: bold;
-            color: #166534;
+            display: block;
+            margin-bottom: 1pt;
         }
 
-        .summary-label {
-            font-size: 9pt;
-            color: #555;
+        .summary-cell .lbl {
+            font-size: 8pt;
             text-transform: uppercase;
+            color: #444;
         }
 
-        /* Position Section */
-        .position-section {
-            margin: 25px 0;
+        /* Position block */
+        .position-block {
+            margin-bottom: 14pt;
             page-break-inside: avoid;
         }
 
-        .position-header {
-            background: #166534;
-            color: white;
-            padding: 8px 15px;
+        .position-head {
+            background: #333;
+            color: #fff;
+            padding: 4pt 8pt;
+            font-size: 10pt;
             font-weight: bold;
-            font-size: 11pt;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5pt;
         }
 
-        /* Results Table */
         .results-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11pt;
-            margin-top: 0;
+            font-size: 10pt;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid #000;
+            padding: 4pt 6pt;
+            text-align: left;
         }
 
         .results-table th {
-            background: #e8e8e8;
-            padding: 10px;
-            text-align: left;
+            background: #f0f0f0;
             font-weight: bold;
-            border: 1px solid #ccc;
-            font-size: 10pt;
+            font-size: 9pt;
         }
 
-        .results-table th.rank-col {
-            width: 60px;
+        .results-table .col-rank {
+            width: 32pt;
             text-align: center;
         }
 
-        .results-table th.votes-col {
-            width: 100px;
-            text-align: center;
+        .results-table .col-votes {
+            width: 48pt;
+            text-align: right;
         }
 
-        .results-table td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            vertical-align: middle;
-        }
-
-        .results-table td.rank-cell {
+        .results-table td.col-rank {
             text-align: center;
             font-weight: bold;
         }
 
-        .results-table td.votes-cell {
-            text-align: center;
+        .results-table td.col-votes {
+            text-align: right;
             font-weight: bold;
-            font-size: 12pt;
-        }
-
-        .results-table tr:nth-child(odd) {
-            background: #fafafa;
-        }
-
-        .results-table tr.winner {
-            background: #f0fff4;
         }
 
         .results-table tr.winner td {
+            background: #f5f5f5;
             font-weight: bold;
         }
 
-        .winner-badge {
-            display: inline-block;
-            background: #166534;
-            color: white;
-            padding: 2px 8px;
+        .winner-tag {
             font-size: 8pt;
-            border-radius: 3px;
-            margin-left: 10px;
-            text-transform: uppercase;
+            margin-left: 4pt;
+            font-weight: normal;
         }
 
-        /* Breakdown Tables */
+        /* No candidates */
+        .no-candidates {
+            border: 1px solid #000;
+            padding: 16pt;
+            text-align: center;
+            margin: 14pt 0;
+            font-size: 10pt;
+        }
+
+        /* Breakdown section */
         .breakdown-section {
-            margin: 25px 0;
+            margin: 14pt 0;
             page-break-inside: avoid;
         }
 
-        .breakdown-title {
+        .breakdown-caption {
+            font-size: 10pt;
             font-weight: bold;
-            font-size: 11pt;
             text-transform: uppercase;
-            border-bottom: 2px solid #166534;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
+            letter-spacing: 0.5pt;
+            margin-bottom: 6pt;
+            padding-bottom: 2pt;
+            border-bottom: 1px solid #000;
         }
 
-        .breakdown-grid {
-            display: flex;
-            gap: 20px;
+        .breakdown-tables {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0;
+        }
+
+        .breakdown-col {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding-right: 10pt;
+        }
+
+        .breakdown-col:last-child {
+            padding-right: 0;
+            padding-left: 10pt;
         }
 
         .breakdown-table {
-            flex: 1;
+            width: 100%;
             border-collapse: collapse;
-            font-size: 10pt;
+            font-size: 9pt;
+        }
+
+        .breakdown-table th,
+        .breakdown-table td {
+            border: 1px solid #000;
+            padding: 3pt 6pt;
         }
 
         .breakdown-table th {
             background: #f0f0f0;
-            padding: 6px 10px;
-            text-align: left;
-            border: 1px solid #ccc;
             font-weight: bold;
-        }
-
-        .breakdown-table td {
-            padding: 5px 10px;
-            border: 1px solid #ccc;
         }
 
         .breakdown-table td:last-child {
-            text-align: center;
-            font-weight: bold;
+            text-align: right;
+            width: 40pt;
         }
 
-        /* Certification & Signatures */
-        .certification {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ccc;
-        }
-
-        .certification-text {
-            text-align: justify;
-            margin-bottom: 30px;
-            font-size: 11pt;
-            line-height: 1.8;
-        }
-
-        .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 50px;
-        }
-
-        .signature-box {
-            text-align: center;
-            width: 200px;
-        }
-
-        .signature-line {
-            border-top: 1px solid #000;
-            padding-top: 5px;
-            font-weight: bold;
-            font-size: 11pt;
-        }
-
-        .signature-title {
+        .breakdown-subtitle {
             font-size: 9pt;
-            color: #555;
-            margin-top: 2px;
+            font-weight: bold;
+            margin-bottom: 4pt;
         }
 
-        .date-signed {
+        /* Certification */
+        .certification {
+            margin-top: 20pt;
+            padding-top: 12pt;
+            border-top: 1px solid #000;
+            page-break-inside: avoid;
+        }
+
+        .certification p {
+            text-align: justify;
             font-size: 10pt;
-            margin-top: 5px;
+            line-height: 1.5;
+            margin-bottom: 16pt;
         }
 
-        /* Noted By Section */
-        .noted-section {
-            margin-top: 60px;
+        .signatures {
+            display: table;
+            width: 100%;
+            margin-top: 24pt;
+        }
+
+        .sig-cell {
+            display: table-cell;
+            width: 33.33%;
+            text-align: center;
+            padding: 0 8pt;
+        }
+
+        .sig-line {
+            border-top: 1px solid #000;
+            margin-top: 24pt;
+            padding-top: 4pt;
+            font-size: 10pt;
+            font-weight: bold;
+        }
+
+        .sig-role {
+            font-size: 8pt;
+            color: #444;
+            margin-top: 1pt;
+        }
+
+        .noted-by {
+            margin-top: 28pt;
             text-align: center;
         }
 
-        .noted-title {
-            font-size: 10pt;
-            margin-bottom: 40px;
-        }
-
-        .noted-signature {
-            margin: 0 auto;
-            width: 250px;
+        .noted-by .sig-line {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 180pt;
         }
 
         /* Footer */
-        .document-footer {
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #ccc;
+        .doc-footer {
+            margin-top: 20pt;
+            padding-top: 8pt;
+            border-top: 1px solid #999;
             text-align: center;
-            font-size: 9pt;
-            color: #777;
+            font-size: 8pt;
+            color: #555;
         }
 
-        .document-footer .generated {
-            margin-bottom: 5px;
-        }
-
-        .document-footer .system {
-            font-style: italic;
-        }
-
-        /* Print Button */
+        /* Screen-only: print buttons */
         .print-controls {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 12px;
+            right: 12px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             z-index: 1000;
         }
 
         .print-btn {
             background: #166534;
-            color: white;
+            color: #fff;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 10px 18px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             font-family: 'Segoe UI', sans-serif;
         }
 
-        .print-btn:hover {
-            background: #14532d;
-        }
-
-        .back-btn {
+        .print-btn.back-btn {
             background: #555;
         }
 
-        .back-btn:hover {
-            background: #333;
+        .print-btn:hover {
+            opacity: 0.9;
         }
 
-        /* Print Styles */
         @media print {
             .print-controls {
                 display: none !important;
             }
 
             body {
-                font-size: 11pt;
-                background: white;
+                background: #fff;
             }
 
-            .container {
+            .page {
                 width: 100%;
                 min-height: auto;
                 padding: 0;
                 margin: 0;
             }
 
-            .position-section {
-                page-break-inside: avoid;
-            }
-
-            .certification {
+            .position-block,
+            .certification,
+            .summary {
                 page-break-inside: avoid;
             }
         }
@@ -458,25 +423,12 @@
 </head>
 
 <body>
-    <!-- Print Controls -->
     <div class="print-controls">
-        <button class="print-btn" onclick="window.print()">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                </path>
-            </svg>
-            Print Report
-        </button>
-        <button class="print-btn back-btn" onclick="window.close()">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-            Close
-        </button>
+        <button class="print-btn" type="button" onclick="window.print()">Print Report</button>
+        <button class="print-btn back-btn" type="button" onclick="window.close()">Close</button>
     </div>
 
-    <div class="container">
+    <div class="page">
         <!-- Letterhead -->
         <div class="letterhead">
             <div class="republic">Republic of the Philippines</div>
@@ -487,89 +439,90 @@
             @endif
         </div>
 
-        <!-- Document Title -->
-        <div class="document-title">
+        <!-- Title -->
+        <div class="doc-title">
             <h1>Official Election Results</h1>
             <div class="subtitle">{{ $election->election_name }}</div>
         </div>
 
-        <!-- Document Information -->
-        <div class="document-info">
-            <div class="info-row">
-                <span class="info-label">Election Date:</span>
-                <span
-                    class="info-value">{{ $election->election_date ? $election->election_date->format('F d, Y') : 'N/A' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Academic Year:</span>
-                <span
-                    class="info-value">{{ $reportData['electionYear'] }}-{{ intval($reportData['electionYear']) + 1 }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Report Type:</span>
-                <span class="info-value">
-                    @if ($filterType === 'all')
-                        Complete Results (All Students)
-                    @else
-                        Filtered Results - {{ ucfirst($filterType === 'yearlevel' ? 'Year Level' : $filterType) }}:
-                        {{ $filterValue }}
-                    @endif
-                </span>
-            </div>
+        <!-- Document info -->
+        <div class="doc-meta">
+            <table>
+                <tr>
+                    <td class="label">Election Date:</td>
+                    <td>{{ $election->election_date ? $election->election_date->format('F d, Y') : 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Academic Year:</td>
+                    <td>{{ $reportData['electionYear'] }}-{{ (int) $reportData['electionYear'] + 1 }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Report Type:</td>
+                    <td>
+                        @if ($filterType === 'all')
+                            Complete Results (All Students)
+                        @else
+                            Filtered — {{ ucfirst($filterType === 'yearlevel' ? 'Year Level' : $filterType) }}: {{ $filterValue }}
+                        @endif
+                    </td>
+                </tr>
+            </table>
         </div>
 
-        <!-- Summary Statistics -->
-        <div class="summary-section">
-            <div class="summary-title">Election Summary Statistics</div>
+        <!-- Summary -->
+        <div class="summary">
+            <div class="summary-caption">Election Summary</div>
             <div class="summary-grid">
-                <div class="summary-item">
-                    <div class="summary-number">{{ number_format($reportData['totalParticipants']) }}</div>
-                    <div class="summary-label">Students Voted</div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-number">{{ number_format($reportData['maleVoters'] ?? 0) }}</div>
-                    <div class="summary-label">Male Voters</div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-number">{{ number_format($reportData['femaleVoters'] ?? 0) }}</div>
-                    <div class="summary-label">Female Voters</div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-number">{{ number_format($reportData['totalEligible']) }}</div>
-                    <div class="summary-label">Eligible Voters</div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-number">{{ $reportData['participationRate'] }}%</div>
-                    <div class="summary-label">Voter Turnout</div>
+                <div class="summary-row">
+                    <div class="summary-cell">
+                        <span class="num">{{ number_format($reportData['totalParticipants']) }}</span>
+                        <span class="lbl">Students Voted</span>
+                    </div>
+                    <div class="summary-cell">
+                        <span class="num">{{ number_format($reportData['maleVoters'] ?? 0) }}</span>
+                        <span class="lbl">Male Voters</span>
+                    </div>
+                    <div class="summary-cell">
+                        <span class="num">{{ number_format($reportData['femaleVoters'] ?? 0) }}</span>
+                        <span class="lbl">Female Voters</span>
+                    </div>
+                    <div class="summary-cell">
+                        <span class="num">{{ number_format($reportData['totalEligible']) }}</span>
+                        <span class="lbl">Eligible Voters</span>
+                    </div>
+                    <div class="summary-cell">
+                        <span class="num">{{ $reportData['participationRate'] }}%</span>
+                        <span class="lbl">Turnout</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Results by Position -->
+        <!-- Results by position -->
         @foreach ($reportData['resultsByPosition'] as $position => $candidates)
-            <div class="position-section">
-                <div class="position-header">{{ $position }}</div>
+            <div class="position-block">
+                <div class="position-head">{{ $position }}</div>
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th class="rank-col">Rank</th>
+                            <th class="col-rank">Rank</th>
                             <th>Candidate Name</th>
                             <th>Partylist / Affiliation</th>
-                            <th class="votes-col">Votes</th>
+                            <th class="col-votes">Votes</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($candidates as $index => $candidate)
                             <tr class="{{ $index === 0 ? 'winner' : '' }}">
-                                <td class="rank-cell">{{ $index + 1 }}</td>
+                                <td class="col-rank">{{ $index + 1 }}</td>
                                 <td>
                                     {{ $candidate->candidate_name }}
                                     @if ($index === 0)
-                                        <span class="winner-badge">Elected</span>
+                                        <span class="winner-tag">(Elected)</span>
                                     @endif
                                 </td>
                                 <td>{{ $candidate->partylist->name ?? 'Independent' }}</td>
-                                <td class="votes-cell">{{ number_format($candidate->filtered_votes) }}</td>
+                                <td class="col-votes">{{ number_format($candidate->filtered_votes) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -578,109 +531,92 @@
         @endforeach
 
         @if (count($reportData['resultsByPosition']) === 0)
-            <div style="text-align: center; padding: 40px; border: 1px solid #ccc; margin: 20px 0;">
-                <p>No candidates registered for this election.</p>
-            </div>
+            <div class="no-candidates">No candidates registered for this election.</div>
         @endif
 
-        <!-- Participation Breakdown -->
-        @if (
-            $filterType === 'all' &&
-                (count($reportData['participationBreakdown']['byCourse']) > 0 ||
-                    count($reportData['participationBreakdown']['byYearlevel']) > 0))
+        <!-- Participation breakdown -->
+        @if ($filterType === 'all' && (count($reportData['participationBreakdown']['byCourse']) > 0 || count($reportData['participationBreakdown']['byYearlevel']) > 0))
             <div class="breakdown-section">
-                <div class="breakdown-title">Voter Participation Breakdown</div>
-                <div class="breakdown-grid">
-                    @if (count($reportData['participationBreakdown']['byCourse']) > 0)
-                        <table class="breakdown-table">
-                            <thead>
-                                <tr>
-                                    <th colspan="2" style="text-align: center;">By Course/Program</th>
-                                </tr>
-                                <tr>
-                                    <th>Course</th>
-                                    <th style="width: 60px;">Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($reportData['participationBreakdown']['byCourse']->take(8) as $item)
+                <div class="breakdown-caption">Voter Participation Breakdown</div>
+                <div class="breakdown-tables">
+                    <div class="breakdown-col">
+                        @if (count($reportData['participationBreakdown']['byCourse']) > 0)
+                            <div class="breakdown-subtitle">By Course / Program</div>
+                            <table class="breakdown-table">
+                                <thead>
                                     <tr>
-                                        <td>{{ $item->course }}</td>
-                                        <td>{{ $item->count }}</td>
+                                        <th>Course</th>
+                                        <th>Count</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
-
-                    @if (count($reportData['participationBreakdown']['byYearlevel']) > 0)
-                        <table class="breakdown-table">
-                            <thead>
-                                <tr>
-                                    <th colspan="2" style="text-align: center;">By Year Level</th>
-                                </tr>
-                                <tr>
-                                    <th>Year Level</th>
-                                    <th style="width: 60px;">Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($reportData['participationBreakdown']['byYearlevel'] as $item)
+                                </thead>
+                                <tbody>
+                                    @foreach ($reportData['participationBreakdown']['byCourse']->take(8) as $item)
+                                        <tr>
+                                            <td>{{ $item->course }}</td>
+                                            <td>{{ $item->count }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+                    <div class="breakdown-col">
+                        @if (count($reportData['participationBreakdown']['byYearlevel']) > 0)
+                            <div class="breakdown-subtitle">By Year Level</div>
+                            <table class="breakdown-table">
+                                <thead>
                                     <tr>
-                                        <td>{{ $item->yearlevel }}</td>
-                                        <td>{{ $item->count }}</td>
+                                        <th>Year Level</th>
+                                        <th>Count</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
+                                </thead>
+                                <tbody>
+                                    @foreach ($reportData['participationBreakdown']['byYearlevel'] as $item)
+                                        <tr>
+                                            <td>{{ $item->yearlevel }}</td>
+                                            <td>{{ $item->count }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
                 </div>
             </div>
         @endif
 
         <!-- Certification -->
         <div class="certification">
-            <div class="certification-text">
-                We, the undersigned members of the Election Committee, hereby certify that the above results are true
-                and correct based on the official tally of votes conducted during the {{ $election->election_name }}
-                held on
-                {{ $election->election_date ? $election->election_date->format('F d, Y') : 'the scheduled date' }}. The
-                election was conducted in accordance with the established rules and guidelines of the institution.
-            </div>
-
-            <div class="signature-section">
-                <div class="signature-box">
-                    <div class="signature-line">________________________</div>
-                    <div class="signature-title">Election Committee Chairperson</div>
+            <p>
+                We, the undersigned members of the Election Committee, hereby certify that the above results are true and correct
+                based on the official tally of votes conducted during the {{ $election->election_name }} held on
+                {{ $election->election_date ? $election->election_date->format('F d, Y') : 'the scheduled date' }}. The election
+                was conducted in accordance with the established rules and guidelines of the institution.
+            </p>
+            <div class="signatures">
+                <div class="sig-cell">
+                    <div class="sig-line">_________________________</div>
+                    <div class="sig-role">Election Committee Chairperson</div>
                 </div>
-                <div class="signature-box">
-                    <div class="signature-line">________________________</div>
-                    <div class="signature-title">Election Committee Member</div>
+                <div class="sig-cell">
+                    <div class="sig-line">_________________________</div>
+                    <div class="sig-role">Election Committee Member</div>
                 </div>
-                <div class="signature-box">
-                    <div class="signature-line">________________________</div>
-                    <div class="signature-title">Election Committee Member</div>
+                <div class="sig-cell">
+                    <div class="sig-line">_________________________</div>
+                    <div class="sig-role">Election Committee Member</div>
                 </div>
             </div>
-
-            <div class="noted-section">
-                <div class="noted-title">Noted by:</div>
-                <div class="noted-signature">
-                    <div class="signature-line">________________________</div>
-                    <div class="signature-title">SSG / Organization Adviser</div>
-                </div>
+            <div class="noted-by">
+                <div class="sig-line">_________________________</div>
+                <div class="sig-role">SSG / Organization Adviser</div>
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="document-footer">
-            <div class="generated">
-                This report was generated on {{ $generatedAt->format('F d, Y') }} at
-                {{ $generatedAt->format('h:i A') }}
-            </div>
-            <div class="system">
-                CpsuVotewisely.com — Cloud-Based Real-Time Voting System
-            </div>
+        <div class="doc-footer">
+            <div>Generated on {{ $generatedAt->format('F d, Y') }} at {{ $generatedAt->format('h:i A') }}</div>
+            <div>CpsuVotewisely.com — Cloud-Based Real-Time Voting System</div>
         </div>
     </div>
 </body>

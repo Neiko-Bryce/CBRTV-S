@@ -4,17 +4,17 @@
 @section('page-title', 'Election Reports')
 
 @section('content')
-    <div class="space-y-6" x-data="reportManager()">
-        <!-- Header with Election Selector -->
-        <div class="card rounded-xl p-6 shadow-sm">
+    <div class="space-y-4 sm:space-y-6" x-data="reportManager()">
+        <!-- Header with Election Selector: original on desktop (sm+), stacked/full-width on mobile -->
+        <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-primary">Generate Election Report</h3>
-                    <p class="text-sm text-secondary mt-1">View vote tallies and participation statistics</p>
+                <div class="min-w-0">
+                    <h3 class="text-base sm:text-lg font-bold text-primary">Generate Election Report</h3>
+                    <p class="text-xs sm:text-sm text-secondary mt-1">View vote tallies and participation statistics</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 w-full md:w-auto">
                     <select x-model="selectedElection" @change="loadReport()"
-                        class="px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
+                        class="px-3 sm:px-4 py-2 rounded-lg border text-sm font-medium transition-colors w-full md:w-auto min-w-0"
                         style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                         <option value="">Select an Election</option>
                         @foreach ($elections as $election)
@@ -64,49 +64,47 @@
 
         <!-- Report Content -->
         <div x-show="reportData && !loading" x-cloak>
-            <!-- Filter Tabs -->
+            <!-- Filter Tabs: desktop (sm+) = original wrap; mobile = horizontal scroll -->
             <div class="card rounded-xl shadow-sm overflow-hidden">
                 <div class="border-b" style="border-color: var(--border-color);">
-                    <div class="flex flex-wrap">
-                        <button @click="setFilter('all')"
-                            :class="filterType === 'all' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                            :style="filterType === 'all' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' :
-                                ''"
-                            class="px-6 py-3 text-sm transition-colors">
-                            All Students
-                        </button>
-                        <button @click="setFilter('course')"
-                            :class="filterType === 'course' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                            :style="filterType === 'course' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' :
-                                ''"
-                            class="px-6 py-3 text-sm transition-colors">
-                            By Course
-                        </button>
-                        <button @click="setFilter('yearlevel')"
-                            :class="filterType === 'yearlevel' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                            :style="filterType === 'yearlevel' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' :
-                                ''"
-                            class="px-6 py-3 text-sm transition-colors">
-                            By Year Level
-                        </button>
-                        <button @click="setFilter('section')"
-                            :class="filterType === 'section' ? 'border-b-2 font-semibold' : 'text-secondary'"
-                            :style="filterType === 'section' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' :
-                                ''"
-                            class="px-6 py-3 text-sm transition-colors">
-                            By Section
-                        </button>
+                    <div class="overflow-x-auto sm:overflow-visible -mx-px" style="-webkit-overflow-scrolling: touch;">
+                        <div class="flex flex-nowrap sm:flex-wrap">
+                            <button @click="setFilter('all')"
+                                :class="filterType === 'all' ? 'border-b-2 font-semibold' : 'text-secondary'"
+                                :style="filterType === 'all' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
+                                All Students
+                            </button>
+                            <button @click="setFilter('course')"
+                                :class="filterType === 'course' ? 'border-b-2 font-semibold' : 'text-secondary'"
+                                :style="filterType === 'course' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
+                                By Course
+                            </button>
+                            <button @click="setFilter('yearlevel')"
+                                :class="filterType === 'yearlevel' ? 'border-b-2 font-semibold' : 'text-secondary'"
+                                :style="filterType === 'yearlevel' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
+                                By Year Level
+                            </button>
+                            <button @click="setFilter('section')"
+                                :class="filterType === 'section' ? 'border-b-2 font-semibold' : 'text-secondary'"
+                                :style="filterType === 'section' ? 'border-color: var(--cpsu-green); color: var(--cpsu-green);' : ''"
+                                class="px-4 py-3 sm:px-6 sm:py-3 text-sm transition-colors whitespace-nowrap flex-shrink-0 sm:flex-shrink">
+                                By Section
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Filter Value Selector -->
-                <div x-show="filterType !== 'all'" class="p-4 border-b"
+                <!-- Filter Value Selector: desktop = row; mobile = stacked, full-width select -->
+                <div x-show="filterType !== 'all'" class="p-3 sm:p-4 border-b"
                     style="border-color: var(--border-color); background: var(--bg-secondary);">
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                         <label class="text-sm font-medium text-primary">Select <span
                                 x-text="filterType === 'yearlevel' ? 'Year Level' : filterType.charAt(0).toUpperCase() + filterType.slice(1)"></span>:</label>
                         <select x-model="filterValue" @change="loadReport()"
-                            class="px-3 py-1.5 rounded-lg border text-sm transition-colors"
+                            class="px-3 py-2 sm:py-1.5 rounded-lg border text-sm transition-colors w-full sm:w-auto"
                             style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                             <option value="">All</option>
                             <template x-for="option in getFilterOptions()" :key="option">
@@ -117,17 +115,17 @@
                 </div>
             </div>
 
-            <!-- Summary Stats -->
-            <div class="grid grid-cols-5 gap-4 mt-6">
+            <!-- Summary Stats: desktop (sm+) = original 5 cols; mobile = 2 cols -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mt-4 sm:mt-6">
                 <!-- Total Students Voted -->
-                <div class="card rounded-lg p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div class="min-w-0">
-                            <p class="text-sm text-secondary truncate">Students Voted</p>
-                            <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);"
+                <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-secondary truncate">Students Voted</p>
+                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-green);"
                                 x-text="reportData?.totalParticipants?.toLocaleString() || '0'"></p>
                         </div>
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ml-2"
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 sm:ml-2"
                             style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -139,14 +137,14 @@
                 </div>
 
                 <!-- Male Voters -->
-                <div class="card rounded-lg p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div class="min-w-0">
-                            <p class="text-sm text-secondary truncate">Male Voters</p>
-                            <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);"
+                <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-secondary truncate">Male Voters</p>
+                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-green);"
                                 x-text="reportData?.maleVoters?.toLocaleString() || '0'"></p>
                         </div>
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ml-2"
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 sm:ml-2"
                             style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -157,14 +155,14 @@
                 </div>
 
                 <!-- Female Voters -->
-                <div class="card rounded-lg p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div class="min-w-0">
-                            <p class="text-sm text-secondary truncate">Female Voters</p>
-                            <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-gold-dark);"
+                <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-secondary truncate">Female Voters</p>
+                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-gold-dark);"
                                 x-text="reportData?.femaleVoters?.toLocaleString() || '0'"></p>
                         </div>
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ml-2"
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 sm:ml-2"
                             style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);">
                             <svg class="w-6 h-6" style="color: var(--cpsu-green-dark);" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -175,15 +173,15 @@
                     </div>
                 </div>
 
-                <!-- Eligible Students -->
-                <div class="card rounded-lg p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div class="min-w-0">
-                            <p class="text-sm text-secondary truncate">Eligible Students</p>
-                            <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-green);"
+                <!-- Eligible Students: full label on desktop, short on mobile -->
+                <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-secondary truncate"><span class="sm:hidden">Eligible</span><span class="hidden sm:inline">Eligible Students</span></p>
+                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-green);"
                                 x-text="reportData?.totalEligible?.toLocaleString() || '0'"></p>
                         </div>
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ml-2"
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 sm:ml-2"
                             style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -194,15 +192,15 @@
                     </div>
                 </div>
 
-                <!-- Participation Rate -->
-                <div class="card rounded-lg p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div class="min-w-0">
-                            <p class="text-sm text-secondary truncate">Participation Rate</p>
-                            <p class="text-2xl font-bold mt-1" style="color: var(--cpsu-gold-dark);"><span
+                <!-- Participation Rate: full label on desktop, short on mobile -->
+                <div class="card rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-secondary truncate"><span class="sm:hidden">Turnout</span><span class="hidden sm:inline">Participation Rate</span></p>
+                            <p class="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1" style="color: var(--cpsu-gold-dark);"><span
                                     x-text="reportData?.participationRate || '0'"></span>%</p>
                         </div>
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ml-2"
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 sm:ml-2"
                             style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%);">
                             <svg class="w-6 h-6" style="color: var(--cpsu-green-dark);" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -214,26 +212,25 @@
                 </div>
             </div>
 
-            <!-- Election Year Info -->
-            <div class="card rounded-xl p-4 shadow-sm mt-6"
+            <!-- Election Year Info: desktop = original row; mobile = stacked, full-width button -->
+            <div class="card rounded-xl p-4 shadow-sm mt-4 sm:mt-6"
                 style="background: linear-gradient(135deg, rgba(22, 101, 52, 0.08) 0%, rgba(20, 83, 45, 0.06) 100%); border-left: 4px solid var(--cpsu-green);">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5" style="color: var(--cpsu-green);" fill="none" stroke="currentColor"
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <svg class="w-5 h-5 flex-shrink-0" style="color: var(--cpsu-green);" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
                         </svg>
-                        <span class="text-sm font-medium text-primary">
+                        <span class="text-sm font-medium text-primary truncate min-w-0">
                             <span x-text="currentElection?.election_name"></span>
-                            <span class="text-secondary ml-2">| Election Year: <span
-                                    x-text="reportData?.electionYear"></span></span>
+                            <span class="text-secondary sm:ml-2">| Election Year: <span x-text="reportData?.electionYear"></span></span>
                         </span>
                     </div>
                     <a :href="`{{ url('admin/reports') }}/${selectedElection}/print?filter_type=${filterType}&filter_value=${filterValue || ''}`"
                         target="_blank"
-                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all shadow-md hover:shadow-lg btn-cpsu-primary">
+                        class="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 rounded-lg text-sm font-medium text-white transition-all shadow-md hover:shadow-lg btn-cpsu-primary w-full sm:w-auto flex-shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
@@ -245,12 +242,12 @@
             </div>
 
             <!-- Vote Tally by Position -->
-            <div class="card rounded-xl shadow-sm mt-6 overflow-hidden">
-                <div class="p-6 border-b" style="border-color: var(--border-color);">
-                    <h4 class="text-lg font-bold text-primary">Vote Tally by Position</h4>
-                    <p class="text-sm text-secondary mt-1">Candidates ranked by vote count</p>
+            <div class="card rounded-xl shadow-sm mt-4 sm:mt-6 overflow-hidden">
+                <div class="p-4 sm:p-6 border-b" style="border-color: var(--border-color);">
+                    <h4 class="text-base sm:text-lg font-bold text-primary">Vote Tally by Position</h4>
+                    <p class="text-xs sm:text-sm text-secondary mt-1">Candidates ranked by vote count</p>
                 </div>
-                <div class="p-6">
+                <div class="p-4 sm:p-6 overflow-x-auto">
                     <template x-for="(candidates, position) in reportData?.resultsByPosition || {}"
                         :key="position">
                         <div class="mb-8 last:mb-0">
@@ -263,19 +260,16 @@
                                 <table class="w-full">
                                     <thead>
                                         <tr class="table-header border-b" style="border-color: var(--border-color);">
-                                            <th class="text-left py-3 px-4 text-sm font-semibold text-secondary">Rank</th>
-                                            <th class="text-left py-3 px-4 text-sm font-semibold text-secondary">Candidate
-                                            </th>
-                                            <th class="text-left py-3 px-4 text-sm font-semibold text-secondary">Partylist
-                                            </th>
-                                            <th class="text-right py-3 px-4 text-sm font-semibold text-secondary">Votes
-                                            </th>
+                                            <th class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">Rank</th>
+                                            <th class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">Candidate</th>
+                                            <th class="text-left py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary hidden sm:table-cell">Partylist</th>
+                                            <th class="text-right py-3 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-secondary">Votes</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y" style="border-color: var(--border-color);">
                                         <template x-for="(candidate, index) in candidates" :key="candidate.id">
                                             <tr class="table-row transition-colors">
-                                                <td class="py-4 px-4">
+                                                <td class="py-3 sm:py-4 px-3 sm:px-4">
                                                     <span x-show="index === 0"
                                                         class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
                                                         style="background: linear-gradient(135deg, var(--cpsu-gold) 0%, var(--cpsu-gold-light) 100%); color: var(--cpsu-green-dark);">1</span>
@@ -284,16 +278,17 @@
                                                         style="background: var(--bg-tertiary); color: var(--text-secondary);"
                                                         x-text="index + 1"></span>
                                                 </td>
-                                                <td class="py-4 px-4">
-                                                    <div class="font-medium text-primary"
+                                                <td class="py-3 sm:py-4 px-3 sm:px-4">
+                                                    <div class="font-medium text-primary text-sm sm:text-base"
                                                         x-text="candidate.candidate_name"></div>
                                                     <div x-show="candidate.student" class="text-xs text-secondary"
                                                         x-text="candidate.student?.course + ' - ' + candidate.student?.yearlevel">
                                                     </div>
+                                                    <div class="sm:hidden text-xs text-secondary mt-0.5" x-text="candidate.partylist?.name || 'Independent'"></div>
                                                 </td>
-                                                <td class="py-4 px-4 text-secondary"
+                                                <td class="py-3 sm:py-4 px-3 sm:px-4 text-secondary hidden sm:table-cell"
                                                     x-text="candidate.partylist?.name || 'Independent'"></td>
-                                                <td class="py-4 px-4 text-right">
+                                                <td class="py-3 sm:py-4 px-3 sm:px-4 text-right">
                                                     <span class="font-bold" style="color: var(--cpsu-green);"
                                                         x-text="candidate.filtered_votes?.toLocaleString() || '0'"></span>
                                                 </td>
@@ -313,7 +308,7 @@
             </div>
 
             <!-- Participation Breakdown -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
                 <!-- By Course -->
                 <div class="card rounded-xl shadow-sm overflow-hidden">
                     <div class="p-4 border-b" style="border-color: var(--border-color);">

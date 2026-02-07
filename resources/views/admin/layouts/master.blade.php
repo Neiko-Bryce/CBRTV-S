@@ -525,9 +525,9 @@
                                 </svg>
                             </button>
                             
-                            <!-- Page Title -->
-                            <div class="flex items-center space-x-3 min-w-0">
-                                <h2 class="text-xl font-bold heading-font truncate" style="color: var(--cpsu-green);">@yield('page-title', 'Dashboard')</h2>
+                            <!-- Page Title: on mobile wrap to 2 lines; on desktop (sm+) original truncate -->
+                            <div class="flex items-center space-x-3 min-w-0 flex-1">
+                                <h2 class="text-base sm:text-xl font-bold heading-font break-words line-clamp-2 sm:line-clamp-none sm:truncate" style="color: var(--cpsu-green);">@yield('page-title', 'Dashboard')</h2>
                             </div>
                         </div>
                         
@@ -656,7 +656,7 @@
             </header>
             
             <!-- Page Content – balanced spacing, landing-style background -->
-            <main class="flex-1 overflow-y-auto p-6 lg:p-8" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
                 @if(session('success'))
                     <div class="mb-6 p-4 rounded-xl flex items-center space-x-3 shadow-sm" style="background: linear-gradient(135deg, rgba(22, 101, 52, 0.1) 0%, rgba(20, 83, 45, 0.08) 100%); border-left: 4px solid var(--cpsu-green);">
                         <svg class="w-5 h-5 flex-shrink-0" style="color: var(--cpsu-green);" fill="currentColor" viewBox="0 0 20 20">
