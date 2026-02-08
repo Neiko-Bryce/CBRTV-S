@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Election;
+use App\Models\Position;
 use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -220,6 +221,28 @@ class DashboardController extends Controller
         $candidatesToVote = Candidate::whereIn('id', $votes)
             ->where('election_id', $electionId)
             ->get();
+
+        // Get available positions and their slots
+        $positions = Position::where('organization_id', $election->organization_id)->get()->keyBy('id');
+
+        // Group selected votes by position
+        $votesByPosition = $candidatesToVote->groupBy('position_id');
+
+        // Validate vote counts per position
+        foreach ($votesByPosition as $positionId => $candidates) {
+            $position = $positions[$positionId] ?? null;
+            if ($position) {
+                // If number_of_slots is null or 0, default to 1 (safety fallback)
+                $maxSlots = $position->number_of_slots > 0 ? $position->number_of_slots : 1;
+                
+                if ($candidates->count() > $maxSlots) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "You selected too many candidates for {$position->name}. Max allowed is {$maxSlots}.",
+                    ], 422);
+                }
+            }
+        }
 
         // Get existing votes for this election
         $existingVotes = Vote::where('election_id', $electionId)

@@ -124,6 +124,7 @@ class LiveResultsController extends Controller
                     'position_id' => $positionId,
                     'position_name' => $position->name,
                     'position_order' => $positionOrder,
+                    'number_of_slots' => $position->number_of_slots ?? 1,
                     'candidates' => $candidatesData,
                     'total_votes' => array_sum(array_column($candidatesData, 'votes_count')),
                 ];

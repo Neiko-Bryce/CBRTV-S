@@ -4,10 +4,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 // Create landing_page_settings table if it doesn't exist
-if (!Schema::hasTable('landing_page_settings')) {
+if (! Schema::hasTable('landing_page_settings')) {
     echo "Creating landing_page_settings table...\n";
-    
-    DB::statement("
+
+    DB::statement('
         CREATE TABLE IF NOT EXISTS landing_page_settings (
             id BIGSERIAL PRIMARY KEY,
             section VARCHAR(255) NOT NULL,
@@ -18,8 +18,8 @@ if (!Schema::hasTable('landing_page_settings')) {
             updated_at TIMESTAMP,
             UNIQUE(section, key)
         )
-    ");
-    
+    ');
+
     echo "✓ Table created successfully\n";
 } else {
     echo "✓ Table already exists\n";
@@ -35,7 +35,7 @@ $hasImageColumn = DB::select("
 
 if (empty($hasImageColumn)) {
     echo "Adding image column...\n";
-    DB::statement("ALTER TABLE landing_page_settings ADD COLUMN image VARCHAR(255)");
+    DB::statement('ALTER TABLE landing_page_settings ADD COLUMN image VARCHAR(255)');
     echo "✓ Image column added\n";
 } else {
     echo "✓ Image column already exists\n";

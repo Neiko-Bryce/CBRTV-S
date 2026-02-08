@@ -50,6 +50,7 @@ class PositionController extends Controller
             'organization_id' => 'required|exists:organizations,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'number_of_slots' => 'required|integer|min:1',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
@@ -81,6 +82,7 @@ class PositionController extends Controller
             'organization_id' => 'required|exists:organizations,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'number_of_slots' => 'required|integer|min:1',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);

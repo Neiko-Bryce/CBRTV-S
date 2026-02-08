@@ -188,7 +188,24 @@ class CandidateController extends Controller
             $validated['photo'] = $photoPath;
         }
 
+        // Check Party Nomination Limit
+        if ($validated['partylist_id']) {
+            $position = Position::findOrFail($validated['position_id']);
+            $existingCount = Candidate::where('election_id', $validated['election_id'])
+                ->where('position_id', $validated['position_id'])
+                ->where('partylist_id', $validated['partylist_id'])
+                ->count();
+
+            if ($existingCount >= $position->number_of_slots) {
+                return back()->withInput()->with('error', "Party limit reached! This position only allows {$position->number_of_slots} candidates per party.");
+            }
+        }
+
         Candidate::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Candidate created successfully.']);
+        }
 
         return redirect()->route('admin.candidates.index', ['election' => $request->election_id])
             ->with('success', 'Candidate created successfully.');
@@ -199,6 +216,21 @@ class CandidateController extends Controller
      */
     public function storeMultiple(Request $request)
     {
+        // Filter out candidates with empty names (skipped slots)
+        if ($request->has('candidates') && is_array($request->candidates)) {
+            $filteredCandidates = collect($request->candidates)
+                ->filter(function ($candidate) {
+                    return !empty($candidate['candidate_name']);
+                })
+                ->values()
+                ->toArray();
+            
+            $request->merge(['candidates' => $filteredCandidates]);
+        }
+        
+        // Custom validation for checking duplicate/limit before proceeding? 
+        // We do it manually below anyway.
+
         $validated = $request->validate([
             'election_id' => 'required|exists:elections,id',
             'partylist_id' => 'required|exists:partylists,id',
@@ -215,11 +247,35 @@ class CandidateController extends Controller
         $partylistId = $validated['partylist_id'];
         $sharedPlatform = $validated['partylist_platform'] ?? null;
 
+        // Group candidates by position and validate limits
+        $candidatesByPosition = collect($validated['candidates'])->groupBy('position_id');
+        
+        foreach ($candidatesByPosition as $positionId => $candidates) {
+            $position = Position::findOrFail($positionId);
+            $existingCount = Candidate::where('election_id', $electionId)
+                ->where('position_id', $positionId)
+                ->where('partylist_id', $partylistId)
+                ->count();
+            
+            $newCount = count($candidates);
+            
+            if (($existingCount + $newCount) > $position->number_of_slots) {
+                $errorMsg = "Party limit reached for {$position->name}! This position only allows {$position->number_of_slots} candidates per party. You already have {$existingCount} and are trying to add {$newCount} more.";
+                
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => $errorMsg, 'errors' => ['candidates' => [$errorMsg]]], 422);
+                }
+                return back()->withInput()->with('error', $errorMsg);
+            }
+        }
+
         foreach ($validated['candidates'] as $index => $candidateData) {
             $candidateData['election_id'] = $electionId;
             $candidateData['partylist_id'] = $partylistId;
             // Apply shared platform to all candidates
-            $candidateData['platform'] = $sharedPlatform;
+            if ($sharedPlatform) {
+                $candidateData['platform'] = $sharedPlatform;
+            }
 
             // Handle photo upload - check if file exists in request
             if ($request->hasFile("candidates.{$index}.photo")) {
@@ -235,6 +291,10 @@ class CandidateController extends Controller
             }
 
             Candidate::create($candidateData);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Candidates created successfully.']);
         }
 
         return redirect()->route('admin.candidates.index', ['election' => $electionId])
@@ -286,6 +346,10 @@ class CandidateController extends Controller
         }
 
         $candidate->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Candidate updated successfully.']);
+        }
 
         return redirect()->route('admin.candidates.index', ['election' => $request->election_id])
             ->with('success', 'Candidate updated successfully.');

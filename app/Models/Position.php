@@ -10,12 +10,14 @@ class Position extends Model
         'organization_id',
         'name',
         'description',
+        'number_of_slots',
         'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'number_of_slots' => 'integer',
         'order' => 'integer',
     ];
 

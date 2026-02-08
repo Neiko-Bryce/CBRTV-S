@@ -151,6 +151,7 @@ class ReportController extends Controller
             $position = $group->first()->position;
             $positionName = $position ? $position->name : 'Unknown Position';
             $positionOrder = $position ? ($position->order ?? 0) : 9999;
+            $numberOfSlots = $position ? ($position->number_of_slots ?? 1) : 1;
 
             // Sort candidates by votes desc
             $sortedCandidates = $group->sortByDesc('filtered_votes')->values();
@@ -158,6 +159,7 @@ class ReportController extends Controller
             $resultsByPosition[] = [
                 'position_name' => $positionName,
                 'position_order' => $positionOrder,
+                'number_of_slots' => $numberOfSlots,
                 'candidates' => $sortedCandidates
             ];
         }
