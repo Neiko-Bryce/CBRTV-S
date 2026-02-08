@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdHowToVote, MdPerson, MdLeaderboard } from 'react-icons/md';
 import { HiQuestionMarkCircle, HiStatusOnline } from 'react-icons/hi';
+import confetti from 'canvas-confetti';
 
 export default function LiveResults() {
     const [elections, setElections] = useState([]);
@@ -9,7 +10,6 @@ export default function LiveResults() {
     const [error, setError] = useState(null);
     const prevOngoingIdsRef = useRef(new Set());
     const liveResultsCardRef = useRef(null);
-    const confettiCanvasRef = useRef(null);
     const isLiveResultsInViewRef = useRef(false);
 
     const fetchResults = async () => {
@@ -58,7 +58,7 @@ export default function LiveResults() {
     const completedElections = elections.filter(e => e.status === 'completed');
     const hasElections = elections.length > 0;
 
-    // Celebration: confetti only inside the card, only once when an election just ended (ongoing → completed), and only if user is viewing that section
+    // Celebration: confetti when an election just ended (ongoing → completed), and only if user is viewing that section
     useEffect(() => {
         const currentOngoingIds = new Set(ongoingElections.map(e => e.id));
         const justEndedIds = completedElections.filter(e => prevOngoingIdsRef.current.has(e.id));
@@ -67,21 +67,11 @@ export default function LiveResults() {
         if (justEndedIds.length === 0) return;
         if (!isLiveResultsInViewRef.current) return;
 
-        const canvas = confettiCanvasRef.current;
-        const card = liveResultsCardRef.current;
-        const confettiGlobal = typeof window !== 'undefined' ? window.confetti : null;
-        if (!canvas || !card || !confettiGlobal || typeof confettiGlobal.create !== 'function') return;
-
-        const rect = card.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        const confettiFn = confettiGlobal.create(canvas, { resize: true });
-        if (!confettiFn) return;
-
+        // Fire confetti!
         const colors = ['#facc15', '#22c55e', '#166534', '#ffffff'];
-        setTimeout(() => { confettiFn({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors }); }, 100);
-        setTimeout(() => { confettiFn({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors }); }, 200);
-        setTimeout(() => { confettiFn({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 }, colors }); }, 300);
+        setTimeout(() => { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors }); }, 100);
+        setTimeout(() => { confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors }); }, 200);
+        setTimeout(() => { confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 }, colors }); }, 300);
     }, [ongoingElections, completedElections]);
 
     // Placeholder bar heights for "Hourly Activity" when empty (like reference dashboard)
@@ -101,14 +91,6 @@ export default function LiveResults() {
                         background: 'linear-gradient(135deg, #166534 0%, #14532d 50%, #052e16 100%)',
                     }}
                 >
-                    {/* Confetti canvas – only inside this card so confetti stays in live results area */}
-                    {hasElections && (
-                        <canvas
-                            ref={confettiCanvasRef}
-                            className="absolute inset-0 pointer-events-none"
-                            style={{ zIndex: 20, width: '100%', height: '100%' }}
-                        />
-                    )}
                     {/* Subtle dot texture */}
                     <div className="absolute inset-0 opacity-30" style={{
                         backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)`,
@@ -184,163 +166,149 @@ export default function LiveResults() {
 
                     {/* Elections content – when admin displays elections; same dark green card, inner panels like reference */}
                     {!loading && !error && hasElections && (
-                    <div className="relative p-6 sm:p-8 lg:p-10 xl:p-12 space-y-8">
-                        {/* Ongoing Elections First */}
-                        {ongoingElections.map((election, electionIndex) => (
-                            <motion.div
-                                key={election.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: electionIndex * 0.1 }}
-                                className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
-                            >
-                                {/* Election Header */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/30 text-green-300 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                                <HiStatusOnline className="w-3 h-3 animate-pulse" />
-                                                LIVE NOW
+                        <div className="relative p-6 sm:p-8 lg:p-10 xl:p-12 space-y-8">
+                            {/* Ongoing Elections First */}
+                            {ongoingElections.map((election, electionIndex) => (
+                                <motion.div
+                                    key={election.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: electionIndex * 0.1 }}
+                                    className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
+                                >
+                                    {/* Election Header */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/30 text-green-300 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                                    <HiStatusOnline className="w-3 h-3 animate-pulse" />
+                                                    LIVE NOW
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
+                                                {election.election_name}
+                                            </h3>
+                                            {election.organization && (
+                                                <p className="text-white/70 text-sm">{election.organization}</p>
+                                            )}
+                                            {election.started_at && (
+                                                <p className="text-white/60 text-xs mt-1">
+                                                    Started: {election.started_at}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex-shrink-0">
+                                            <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white text-xs font-medium px-3 py-2 rounded-lg">
+                                                Results will be revealed soon
                                             </span>
                                         </div>
-                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                                            {election.election_name}
-                                        </h3>
-                                        {election.organization && (
-                                            <p className="text-white/70 text-sm">{election.organization}</p>
+                                    </div>
+
+                                    {/* Stats hidden during ongoing elections */}
+
+                                    {/* Positions and Candidates – flat list, no cards; no yellow border/arrow when ongoing */}
+                                    <div className="space-y-6">
+                                        {election.positions.length > 0 ? (
+                                            election.positions.map((position) => (
+                                                <PositionResults
+                                                    key={position.position_id}
+                                                    position={position}
+                                                    isLive={true}
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8 text-white/60">
+                                                <MdHowToVote className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                                <p>No candidates registered yet</p>
+                                            </div>
                                         )}
-                                        {election.started_at && (
+                                    </div>
+                                </motion.div>
+                            ))}
+
+                            {/* Completed Elections */}
+                            {completedElections.length > 0 && ongoingElections.length > 0 && (
+                                <div className="flex items-center gap-4 mt-8">
+                                    <div className="flex-1 h-px bg-white/20"></div>
+                                    <span className="text-white/70 text-sm font-medium">Recently Completed</span>
+                                    <div className="flex-1 h-px bg-white/20"></div>
+                                </div>
+                            )}
+
+                            {completedElections.map((election, electionIndex) => (
+                                <motion.div
+                                    key={'completed-' + election.id}
+                                    initial={{ opacity: 0, y: 24 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4, delay: electionIndex * 0.08, ease: 'easeOut' }}
+                                    className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
+                                >
+                                    {/* Election Header */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-400/30 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                                    <span className="text-sm">🏆</span>
+                                                    RESULTS REVEALED
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
+                                                {election.election_name}
+                                            </h3>
+                                            {election.organization && (
+                                                <p className="text-white/70 text-sm">{election.organization}</p>
+                                            )}
                                             <p className="text-white/60 text-xs mt-1">
-                                                Started: {election.started_at}
+                                                Election ended: {election.ended_at}
                                             </p>
-                                        )}
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                        <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white text-xs font-medium px-3 py-2 rounded-lg">
-                                            Results will be revealed soon
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Stats Bar */}
-                                <div className="flex flex-wrap gap-4 mb-6">
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                                        <MdPerson className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/90 text-sm">
-                                            <span className="font-semibold text-white">{election.total_voters}</span> votes cast
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                                        <MdLeaderboard className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/90 text-sm">
-                                            <span className="font-semibold text-white">{election.positions.length}</span> positions
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Positions and Candidates – flat list, no cards; no yellow border/arrow when ongoing */}
-                                <div className="space-y-6">
-                                    {election.positions.length > 0 ? (
-                                        election.positions.map((position) => (
-                                            <PositionResults
-                                                key={position.position_id}
-                                                position={position}
-                                                isLive={true}
-                                            />
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-8 text-white/60">
-                                            <MdHowToVote className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                            <p>No candidates registered yet</p>
                                         </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        ))}
+                                    </div>
 
-                        {/* Completed Elections */}
-                        {completedElections.length > 0 && ongoingElections.length > 0 && (
-                            <div className="flex items-center gap-4 mt-8">
-                                <div className="flex-1 h-px bg-white/20"></div>
-                                <span className="text-white/70 text-sm font-medium">Recently Completed</span>
-                                <div className="flex-1 h-px bg-white/20"></div>
-                            </div>
-                        )}
-
-                        {completedElections.map((election, electionIndex) => (
-                            <motion.div
-                                key={'completed-' + election.id}
-                                initial={{ opacity: 0, y: 24 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: electionIndex * 0.08, ease: 'easeOut' }}
-                                className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
-                            >
-                                {/* Election Header */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-400/30 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                                <span className="text-sm">🏆</span>
-                                                RESULTS REVEALED
+                                    {/* Stats Bar */}
+                                    <div className="flex flex-wrap gap-4 mb-6">
+                                        <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                                            <MdPerson className="w-4 h-4 text-gov-gold-400" />
+                                            <span className="text-white/90 text-sm">
+                                                <span className="font-semibold text-white">{election.total_voters}</span> total voters
                                             </span>
                                         </div>
-                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                                            {election.election_name}
-                                        </h3>
-                                        {election.organization && (
-                                            <p className="text-white/70 text-sm">{election.organization}</p>
-                                        )}
-                                        <p className="text-white/60 text-xs mt-1">
-                                            Election ended: {election.ended_at}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Stats Bar */}
-                                <div className="flex flex-wrap gap-4 mb-6">
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                                        <MdPerson className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/90 text-sm">
-                                            <span className="font-semibold text-white">{election.total_voters}</span> total voters
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                                        <MdLeaderboard className="w-4 h-4 text-gov-gold-400" />
-                                        <span className="text-white/90 text-sm">
-                                            <span className="font-semibold text-white">{election.positions.length}</span> positions
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Positions and Candidates – flat list, partylist shown; yellow border/Winner only when done */}
-                                <div className="space-y-6">
-                                    {election.positions.length > 0 ? (
-                                        election.positions.map((position) => (
-                                            <PositionResults
-                                                key={position.position_id}
-                                                position={position}
-                                                isLive={false}
-                                            />
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-8 text-white/60">
-                                            <MdHowToVote className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                            <p>No candidates were registered</p>
+                                        <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                                            <MdLeaderboard className="w-4 h-4 text-gov-gold-400" />
+                                            <span className="text-white/90 text-sm">
+                                                <span className="font-semibold text-white">{election.positions.length}</span> positions
+                                            </span>
                                         </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        ))}
+                                    </div>
 
-                        {/* Subtle refresh indicator */}
-                        <div className="text-center pt-4">
-                            <span className="inline-flex items-center gap-1.5 text-white/50 text-xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-gov-gold-400 animate-pulse" />
-                                Updates automatically
-                            </span>
+                                    {/* Positions and Candidates – flat list, partylist shown; yellow border/Winner only when done */}
+                                    <div className="space-y-6">
+                                        {election.positions.length > 0 ? (
+                                            election.positions.map((position) => (
+                                                <PositionResults
+                                                    key={position.position_id}
+                                                    position={position}
+                                                    isLive={false}
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8 text-white/60">
+                                                <MdHowToVote className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                                <p>No candidates were registered</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            ))}
+
+                            {/* Subtle refresh indicator */}
+                            <div className="text-center pt-4">
+                                <span className="inline-flex items-center gap-1.5 text-white/50 text-xs">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gov-gold-400 animate-pulse" />
+                                    Updates automatically
+                                </span>
+                            </div>
                         </div>
-                    </div>
                     )}
                 </motion.div>
             </div>
@@ -362,8 +330,9 @@ function PositionResults({ position, isLive }) {
             <ul className="space-y-0">
                 {position.candidates.map((candidate, candIndex) => {
                     const percentage = totalVotes > 0 ? ((candidate.votes_count / totalVotes) * 100).toFixed(1) : 0;
-                    const isLeader = candIndex === 0 && totalVotes > 0;
-                    const showWinnerStyle = !isLive && isLeader;
+                    const numberOfSlots = position.number_of_slots || 1;
+                    const isWinner = candIndex < numberOfSlots && totalVotes > 0;
+                    const showWinnerStyle = !isLive && isWinner;
                     return (
                         <CandidateRow
                             key={candidate.id}
@@ -373,6 +342,7 @@ function PositionResults({ position, isLive }) {
                             showWinnerStyle={showWinnerStyle}
                             isLive={isLive}
                             revealDelay={!isLive ? candIndex * 0.06 : 0}
+                            totalWinners={numberOfSlots}
                         />
                     );
                 })}
@@ -382,7 +352,7 @@ function PositionResults({ position, isLive }) {
 }
 
 // One row per candidate: photo, name, partylist (party reminder), votes, bar. No yellow border/arrow when ongoing.
-function CandidateRow({ candidate, percentage, rank, showWinnerStyle, isLive, revealDelay = 0 }) {
+function CandidateRow({ candidate, percentage, rank, showWinnerStyle, isLive, revealDelay = 0, totalWinners = 1 }) {
     const isAnonymous = candidate.is_anonymous;
     const partylistName = candidate.partylist_name || null;
     const votesLabel = candidate.votes_count === 1 ? 'vote' : 'votes';
@@ -417,12 +387,9 @@ function CandidateRow({ candidate, percentage, rank, showWinnerStyle, isLive, re
                     <span className={'text-sm font-semibold text-white break-words line-clamp-2 sm:line-clamp-1 sm:truncate ' + (showWinnerStyle ? 'text-gov-gold-400' : '')} title={candidate.name}>
                         {candidate.name}
                     </span>
-                    {!isLive && !isAnonymous && rank <= 3 && (
-                        <span className={
-                            'text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ' +
-                            (rank === 1 ? 'bg-gov-gold-500/90 text-gov-green-900' : rank === 2 ? 'bg-white/15 text-white' : 'bg-amber-600/70 text-white')
-                        }>
-                            {rank === 1 ? 'Winner' : rank === 2 ? '2nd' : '3rd'}
+                    {!isLive && !isAnonymous && showWinnerStyle && (
+                        <span className="text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded flex-shrink-0 bg-gov-gold-500/90 text-gov-green-900">
+                            Winner
                         </span>
                     )}
                 </div>
