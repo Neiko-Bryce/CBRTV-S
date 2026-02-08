@@ -1,16 +1,13 @@
+<!-- Overlay for mobile -->
+<div x-show="$store.sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+    x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0" class="fixed inset-0 lg:hidden z-30 transition-colors"
+    style="background-color: rgba(0, 0, 0, 0.5);" @click="$store.sidebarOpen = false" x-cloak></div>
+
 <aside
-    class="sidebar flex-shrink-0 w-64 h-full flex flex-col lg:static inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out"
-    :class="{
-        'translate-x-0': $store.sidebarOpen && window.innerWidth < 1024,
-        '-translate-x-full lg:translate-x-0': !$store.sidebarOpen || window.innerWidth >= 1024
-    }">
-    <!-- Overlay for mobile -->
-    <div x-show="$store.sidebarOpen && window.innerWidth < 1024"
-        x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 lg:hidden z-30 transition-colors" style="background-color: rgba(0, 0, 0, 0.5);"
-        @click="$store.sidebarOpen = false" x-cloak></div>
+    class="sidebar fixed lg:static inset-y-0 left-0 z-40 flex-shrink-0 w-64 h-full flex flex-col transition-transform duration-300 ease-in-out"
+    :class="$store.sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
     <div class="h-full flex flex-col relative z-40 transition-colors sidebar-container"
         style="background-color: var(--card-bg); border-right: 1px solid var(--border-color);">
