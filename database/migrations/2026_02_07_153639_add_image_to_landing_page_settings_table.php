@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('landing_page_settings', function (Blueprint $table) {
-            $table->string('image')->nullable()->after('value');
-        });
+        if (!Schema::hasColumn('landing_page_settings', 'image')) {
+            Schema::table('landing_page_settings', function (Blueprint $table) {
+                $table->string('image')->nullable()->after('value');
+            });
+        }
     }
 
     public function down(): void
