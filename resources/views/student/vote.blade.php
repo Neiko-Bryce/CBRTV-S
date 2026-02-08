@@ -1386,7 +1386,7 @@
                     // Check limit
                     const currentSelected = positionGroup.querySelectorAll('.candidate-card.selected').length;
                     if (currentSelected >= maxSlots) {
-                        alert(`You can only select up to ${maxSlots} candidates for this position.`);
+                        showLimitModal(`You can only select up to ${maxSlots} candidates for this position.`);
                         return;
                     }
                     card.classList.add('selected');
@@ -1456,6 +1456,49 @@
 
             // Show success notification
             showStraightVoteNotification();
+        }
+
+        function showLimitModal(message) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform scale-95 opacity-0 transition-all duration-300" id="limitModalContent">
+                    <div class="p-6">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">Selection Limit Reached</h3>
+                                <p class="text-sm text-gray-600 mt-1">${message}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="this.closest('.fixed').remove()" class="px-6 py-2.5 bg-gov-green-600 hover:bg-gov-green-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Animate in
+            setTimeout(() => {
+                const content = document.getElementById('limitModalContent');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
 
         function showStraightVoteNotification() {
@@ -1585,19 +1628,19 @@
                     summaryHTML += `
                         <div class="summary-candidate-item rounded-lg p-2.5 sm:p-3 flex items-center space-x-3">
                             ${candidate.photo ? `
-                                                                                        <img src="${candidate.photo}" alt="${candidate.name}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 border-2 border-gray-200 shadow" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                                                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 hidden items-center justify-center flex-shrink-0 border-2 border-gray-200">
-                                                                                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                                                                            </svg>
-                                                                                        </div>
-                                                                                    ` : `
-                                                                                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
-                                                                                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                                                                            </svg>
-                                                                                        </div>
-                                                                                    `}
+                                                                                            <img src="${candidate.photo}" alt="${candidate.name}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 border-2 border-gray-200 shadow" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 hidden items-center justify-center flex-shrink-0 border-2 border-gray-200">
+                                                                                                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                                                                </svg>
+                                                                                            </div>
+                                                                                        ` : `
+                                                                                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
+                                                                                                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                                                                </svg>
+                                                                                            </div>
+                                                                                        `}
                             <div class="flex-1 min-w-0">
                                 <p class="font-bold text-gray-900 text-sm sm:text-base truncate mb-1">${candidate.name}</p>
                                 <div class="flex items-center space-x-2">
