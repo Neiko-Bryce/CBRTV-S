@@ -76,6 +76,72 @@ class AnalyticsController extends Controller
                 ];
             });
 
+        // NEW: Votes by Year Level
+        $votesByYearLevel = Vote::query()
+            ->join('users', 'votes.voter_id', '=', 'users.id')
+            ->join('students', 'users.email', '=', 'students.student_id_number')
+            ->select('students.yearlevel', DB::raw('COUNT(*) as count'))
+            ->groupBy('students.yearlevel')
+            ->orderBy('students.yearlevel')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'yearlevel' => $item->yearlevel ?? 'Unknown',
+                    'count' => $item->count,
+                ];
+            });
+        $maxVotesByYear = $votesByYearLevel->max('count') ?: 1;
+
+        // NEW: Peak Voting Hours (24-hour breakdown)
+        $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+        $hourExtract = $isPostgres
+            ? DB::raw("EXTRACT(HOUR FROM created_at) as hour")
+            : DB::raw("HOUR(created_at) as hour");
+
+        $votesByHour = Vote::query()
+            ->select($hourExtract, DB::raw('COUNT(*) as count'))
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get()
+            ->keyBy('hour');
+
+        // Fill in all 24 hours
+        $peakVotingHours = [];
+        for ($h = 0; $h < 24; $h++) {
+            $peakVotingHours[] = [
+                'hour' => $h,
+                'label' => sprintf('%02d:00', $h),
+                'count' => (int) ($votesByHour->get($h)->count ?? 0),
+            ];
+        }
+        $maxVotesByHour = max(array_column($peakVotingHours, 'count')) ?: 1;
+
+        // NEW: Election Comparison (last 2 completed elections)
+        $lastTwoElections = Election::where('status', 'completed')
+            ->orderByDesc('election_date')
+            ->orderByDesc('id')
+            ->take(2)
+            ->get()
+            ->map(function ($election) use ($totalStudents) {
+                $uniqueInElection = Vote::where('election_id', $election->id)
+                    ->distinct('voter_id')
+                    ->count('voter_id');
+                $participation = $totalStudents > 0
+                    ? round(($uniqueInElection / $totalStudents) * 100, 1)
+                    : 0;
+                return [
+                    'name' => $election->election_name,
+                    'date' => $election->election_date,
+                    'unique_voters' => $uniqueInElection,
+                    'participation' => $participation,
+                ];
+            });
+
+        $electionComparison = [
+            'current' => $lastTwoElections->first(),
+            'previous' => $lastTwoElections->count() > 1 ? $lastTwoElections->last() : null,
+        ];
+
         return view('admin.analytics.index', compact(
             'totalStudents',
             'totalVotes',
@@ -87,7 +153,12 @@ class AnalyticsController extends Controller
             'upcomingElections',
             'last7Days',
             'maxVotesInPeriod',
-            'electionsWithStats'
+            'electionsWithStats',
+            'votesByYearLevel',
+            'maxVotesByYear',
+            'peakVotingHours',
+            'maxVotesByHour',
+            'electionComparison'
         ));
     }
 }
