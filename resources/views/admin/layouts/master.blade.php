@@ -679,7 +679,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                         <p class="text-xs truncate" style="color: var(--text-secondary);">
                                             {{ auth()->user()->email }}</p>
                                     </div>
-                                    <a href="{{ route('profile.edit') }}"
+                                    <a href="{{ route('admin.profile.edit') }}"
                                         class="flex items-center px-4 py-2 text-sm transition-colors hover:bg-[var(--hover-bg)]"
                                         style="color: var(--text-primary);">
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
@@ -690,6 +690,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                         </svg>
                                         Profile Settings
                                     </a>
+
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit"
