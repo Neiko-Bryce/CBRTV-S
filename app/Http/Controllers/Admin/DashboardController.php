@@ -79,6 +79,15 @@ class DashboardController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
+        // Election Status Distribution for Pie Chart
+        $electionStatusCounts = [
+            'ongoing' => DB::table('elections')->where('status', 'ongoing')->count(),
+            'upcoming' => DB::table('elections')->where('status', 'upcoming')->count(),
+            'completed' => DB::table('elections')->where('status', 'completed')->count(),
+            'cancelled' => DB::table('elections')->where('status', 'cancelled')->count(),
+        ];
+        $totalElectionsCount = array_sum($electionStatusCounts);
+
         return view('admin.dashboard', compact(
             'totalUsers',
             'userGrowth',
@@ -88,7 +97,11 @@ class DashboardController extends Controller
             'voteGrowth',
             'participationRate',
             'recentActivities',
-            'activeElectionsList'
+            'activeElectionsList',
+            'electionStatusCounts',
+            'totalElectionsCount',
+            'uniqueVoters',
+            'totalStudents'
         ));
     }
 
