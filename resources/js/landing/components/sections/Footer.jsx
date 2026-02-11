@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MdHowToVote } from 'react-icons/md';
+import { useLanding } from '../../context/LandingContext';
 import {
     HiMail,
     HiPhone,
@@ -41,6 +42,10 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+    const { organization } = useLanding();
+    const orgName = organization?.name || 'CpsuVotewisely.com';
+    const logoUrl = organization?.logo ? `/storage/${organization.logo}` : null;
+
     return (
         <footer className="bg-gray-900 text-white overflow-hidden">
             {/* Main Footer */}
@@ -55,11 +60,15 @@ export default function Footer() {
                             viewport={{ once: true }}
                             className="flex items-center gap-3 mb-4 sm:mb-6"
                         >
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-gov-green-600 to-gov-green-800 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <MdHowToVote className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
-                            </div>
+                            {logoUrl ? (
+                                <img src={logoUrl} alt={orgName} className="w-10 h-10 object-contain bg-white rounded-xl shadow-lg" />
+                            ) : (
+                                <div className="w-10 h-10 bg-gradient-to-br from-gov-green-600 to-gov-green-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <MdHowToVote className="w-5 h-5 text-white" />
+                                </div>
+                            )}
                             <div>
-                                <span className="text-lg sm:text-xl font-bold">CpsuVotewisely.com</span>
+                                <span className="text-lg sm:text-xl font-bold">{orgName}</span>
                                 <span className="block text-[10px] sm:text-xs text-gray-400">Secure Cloud-Based Real-Time Voting Platform</span>
                             </div>
                         </motion.a>
@@ -119,7 +128,7 @@ export default function Footer() {
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         {/* Copyright */}
                         <div className="text-gray-400 text-xs sm:text-sm text-center sm:text-left">
-                            <p>&copy; {new Date().getFullYear()} CpsuVotewisely.com. All rights reserved.</p>
+                            <p>&copy; {new Date().getFullYear()} {orgName}. All rights reserved.</p>
                             <p className="mt-0.5 sm:mt-1">Empowering transparent democracy through technology.</p>
                         </div>
 

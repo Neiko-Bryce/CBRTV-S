@@ -772,6 +772,65 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
         </div>
     </div>
 
+    <!-- Restricted Access Modal -->
+    <div id="restrictedAccessModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-300"
+        style="display: none; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);" x-cloak>
+        <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all"
+            style="background: var(--card-bg); border: 1px solid var(--border-color);">
+
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full"
+                style="background: rgba(220, 38, 38, 0.1);">
+                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+            </div>
+
+            <div class="mt-3 text-center sm:mt-5">
+                <h3 class="text-xl font-bold leading-6 text-primary heading-font">Access Restricted</h3>
+                <div class="mt-4">
+                    <p class="text-sm text-secondary">
+                        ONLY SUPER ADMINS CAN EDIT SYSTEM-WIDE SECTIONS.
+                    </p>
+                    <p class="mt-2 text-xs text-secondary opacity-75">
+                        Please contact the main administrator if you believe this is an error.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-center">
+                <button type="button" onclick="closeRestrictedModal()"
+                    class="inline-flex justify-center rounded-xl border border-transparent px-8 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                    Understood
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRestrictedModal() {
+            const modal = document.getElementById('restrictedAccessModal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRestrictedModal() {
+            const modal = document.getElementById('restrictedAccessModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Auto-show if session flag exists
+        @if (session('show_restricted_modal'))
+            document.addEventListener('DOMContentLoaded', function() {
+                showRestrictedModal();
+            });
+        @endif
+    </script>
+
     @stack('scripts')
 
     @if (request()->routeIs('admin.students.*') || request()->routeIs('admin.elections.*'))

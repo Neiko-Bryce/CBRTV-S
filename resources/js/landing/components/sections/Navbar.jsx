@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiMenuAlt3, HiX, HiInformationCircle, HiLightningBolt } from 'react-icons/hi';
 import { MdHowToVote, MdEmojiEvents } from 'react-icons/md';
 import Button from '../ui/Button';
+import { useLanding } from '../../context/LandingContext';
 
 const navLinks = [
     { name: 'Election Results', href: '#live-results', icon: MdEmojiEvents },
@@ -11,8 +12,10 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+    const { organization } = useLanding();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
@@ -20,6 +23,9 @@ export default function Navbar() {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const orgName = organization?.name || 'CpsuVotewisely.com';
+    const logoUrl = organization?.logo ? `/storage/${organization.logo}` : null;
 
     return (
         <motion.nav
@@ -42,12 +48,16 @@ export default function Navbar() {
                         whileHover={{ scale: 1.05 }}
                         className="flex items-center gap-3"
                     >
-                        <div className="w-12 h-12 bg-gradient-to-br from-gov-green-700 to-gov-green-900 rounded-xl flex items-center justify-center shadow-lg">
-                            <MdHowToVote className="w-7 h-7 text-white" />
-                        </div>
+                        {logoUrl ? (
+                            <img src={logoUrl} alt={orgName} className="w-12 h-12 object-contain bg-white rounded-xl shadow-lg" />
+                        ) : (
+                            <div className="w-12 h-12 bg-gradient-to-br from-gov-green-700 to-gov-green-900 rounded-xl flex items-center justify-center shadow-lg">
+                                <MdHowToVote className="w-7 h-7 text-white" />
+                            </div>
+                        )}
                         <div className="hidden sm:block">
                             <span className={`text-xl font-bold ${isScrolled ? 'text-gov-green-900' : 'text-white'}`}>
-                                CpsuVotewisely.com
+                                {orgName}
                             </span>
                             <span className={`block text-xs font-medium ${isScrolled ? 'text-gov-green-600' : 'text-white/70'}`}>
                                 Secure Cloud-Based Real-Time Voting Platform

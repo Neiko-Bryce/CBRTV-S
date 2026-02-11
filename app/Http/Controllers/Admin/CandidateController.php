@@ -201,6 +201,10 @@ class CandidateController extends Controller
             }
         }
 
+        // Inherit organization_id from election
+        $election = Election::findOrFail($validated['election_id']);
+        $validated['organization_id'] = $election->organization_id;
+
         Candidate::create($validated);
 
         if ($request->wantsJson()) {
@@ -269,9 +273,14 @@ class CandidateController extends Controller
             }
         }
 
+        // Inherit organization_id from election
+        $election = Election::findOrFail($electionId);
+        $organizationId = $election->organization_id;
+
         foreach ($validated['candidates'] as $index => $candidateData) {
             $candidateData['election_id'] = $electionId;
             $candidateData['partylist_id'] = $partylistId;
+            $candidateData['organization_id'] = $organizationId;
             // Apply shared platform to all candidates
             if ($sharedPlatform) {
                 $candidateData['platform'] = $sharedPlatform;

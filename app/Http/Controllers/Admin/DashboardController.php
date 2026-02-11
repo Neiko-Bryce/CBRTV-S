@@ -32,11 +32,9 @@ class DashboardController extends Controller
         $this->syncElectionStatuses();
 
         // Refresh the query to ensure we get updated statuses from database
-        // Use DB::table to avoid model caching issues
-        $activeElections = DB::table('elections')->where('status', 'ongoing')->count();
+        $activeElections = Election::where('status', 'ongoing')->count();
 
-        $endingSoon = DB::table('elections')
-            ->where('status', 'ongoing')
+        $endingSoon = Election::where('status', 'ongoing')
             ->whereNotNull('time_ended')
             ->where('time_ended', '<=', Carbon::now()->addDays(3))
             ->where('time_ended', '>', Carbon::now())
@@ -65,10 +63,7 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities();
 
         // Active Elections table: ONLY ongoing and upcoming elections (exclude completed and cancelled)
-        // Query directly from database using DB::table to get fresh data after status updates
-        // This ensures we get the exact same data as /admin/elections page
-        $activeElectionIds = DB::table('elections')
-            ->whereIn('status', ['ongoing', 'upcoming'])
+        $activeElectionIds = Election::whereIn('status', ['ongoing', 'upcoming'])
             ->orderBy('id', 'asc')
             ->pluck('id');
 
@@ -81,10 +76,10 @@ class DashboardController extends Controller
 
         // Election Status Distribution for Pie Chart
         $electionStatusCounts = [
-            'ongoing' => DB::table('elections')->where('status', 'ongoing')->count(),
-            'upcoming' => DB::table('elections')->where('status', 'upcoming')->count(),
-            'completed' => DB::table('elections')->where('status', 'completed')->count(),
-            'cancelled' => DB::table('elections')->where('status', 'cancelled')->count(),
+            'ongoing' => Election::where('status', 'ongoing')->count(),
+            'upcoming' => Election::where('status', 'upcoming')->count(),
+            'completed' => Election::where('status', 'completed')->count(),
+            'cancelled' => Election::where('status', 'cancelled')->count(),
         ];
         $totalElectionsCount = array_sum($electionStatusCounts);
 

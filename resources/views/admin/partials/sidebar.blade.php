@@ -111,8 +111,10 @@
                         </div>
                         <span class="text-sm font-medium">Candidates</span>
                     </a>
-                    <a href="{{ route('admin.organizations.index') }}"
-                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.organizations.*') ? 'active' : '' }}">
+                    <a @if (Auth::user()->is_super_admin) href="{{ route('admin.organizations.index') }}"
+                        @else
+                            href="javascript:void(0)" onclick="showRestrictedModal()" @endif
+                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.organizations.*') ? 'active' : '' }} {{ !Auth::user()->is_super_admin ? 'opacity-70 grayscale-[0.5]' : '' }}">
                         <div
                             class="w-2 h-2 rounded-full {{ request()->routeIs('admin.organizations.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
                         </div>
@@ -204,8 +206,10 @@
                     x-transition:leave-start="opacity-100 transform scale-100"
                     x-transition:leave-end="opacity-0 transform scale-95" @click.outside="open = false"
                     class="mt-1 ml-4 space-y-1" style="display: none;">
-                    <a href="{{ route('admin.landing-page.index') }}"
-                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.landing-page.*') ? 'active' : '' }}">
+                    <a @if (Auth::user()->is_super_admin) href="{{ route('admin.landing-page.index') }}"
+                        @else
+                            href="javascript:void(0)" onclick="showRestrictedModal()" @endif
+                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.landing-page.*') ? 'active' : '' }} {{ !Auth::user()->is_super_admin ? 'opacity-70 grayscale-[0.5]' : '' }}">
                         <div
                             class="w-2 h-2 rounded-full {{ request()->routeIs('admin.landing-page.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
                         </div>

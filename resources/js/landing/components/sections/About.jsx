@@ -1,48 +1,23 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React from 'react';
 import {
     UsersIcon,
     CheckBadgeIcon,
     SparklesIcon
 } from '@heroicons/react/24/outline';
+import { useLanding } from '../../context/LandingContext';
 
 export default function About() {
-    const [settings, setSettings] = useState({
-        subtitle: null,
-        title: null,
-        description: null,
-        benefits: null,
-        team_section_title: null,
-        team_section_subtitle: null,
-        team_members: null,
-    });
-    const [loading, setLoading] = useState(true);
+    const { about, loading } = useLanding();
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const response = await fetch('/api/landing-page/settings');
-                const data = await response.json();
-
-                if (data.about) {
-                    setSettings({
-                        subtitle: data.about.subtitle?.value || null,
-                        title: data.about.title?.value || null,
-                        description: data.about.description?.value || null,
-                        benefits: data.about.benefits?.extra || null,
-                        team_section_title: data.about.team_section_title?.value || null,
-                        team_section_subtitle: data.about.team_section_subtitle?.value || null,
-                        team_members: data.about.team_members?.extra || null,
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching landing page settings:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchSettings();
-    }, []);
+    const settings = {
+        subtitle: about.subtitle?.value || null,
+        title: about.title?.value || null,
+        description: about.description?.value || null,
+        benefits: about.benefits?.extra || null,
+        team_section_title: about.team_section_title?.value || null,
+        team_section_subtitle: about.team_section_subtitle?.value || null,
+        team_members: about.team_members?.extra || null,
+    };
 
     if (loading) {
         return (

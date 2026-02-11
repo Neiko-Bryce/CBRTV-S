@@ -5,6 +5,7 @@ import LiveResults from './components/sections/LiveResults';
 import About from './components/sections/About';
 import Features from './components/sections/Features';
 import Footer from './components/sections/Footer';
+import { LandingProvider } from './context/LandingContext';
 
 export default function App() {
     const typedKeys = useRef('');
@@ -34,15 +35,17 @@ export default function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden">
-            <Navbar />
-            <main className="overflow-x-hidden">
-                <Hero />
-                <LiveResults />
-                <About />
-                <Features />
-            </main>
-            <Footer />
-        </div>
+        <LandingProvider>
+            <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden">
+                <Navbar />
+                <main className="overflow-x-hidden">
+                    <Hero />
+                    <LiveResults />
+                    <About />
+                    <Features />
+                </main>
+                <Footer />
+            </div>
+        </LandingProvider>
     );
 }

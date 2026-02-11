@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\BelongsToOrganization;
+
 class Candidate extends Model
 {
+    use BelongsToOrganization;
     protected $fillable = [
+        'organization_id',
         'election_id',
         'position_id',
         'partylist_id',

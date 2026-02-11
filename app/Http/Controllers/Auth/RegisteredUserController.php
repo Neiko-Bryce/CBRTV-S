@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Organization;
+use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +39,14 @@ class RegisteredUserController extends Controller
         if ($redirect !== null) {
             return $redirect;
         }
-        return view('auth.register');
+
+        // Get organization from session (stored via /s/{slug} route)
+        $organization = null;
+        if ($request->session()->has('organization_id')) {
+            $organization = Organization::find($request->session()->get('organization_id'));
+        }
+
+        return view('auth.register', compact('organization'));
     }
 
     /**
@@ -59,13 +68,32 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'usertype' => ['required', 'string', 'in:student,admin'],
+            'school_name' => ['required_if:usertype,admin', 'string', 'max:255'],
         ]);
+
+        $organizationId = null;
+
+        // If registering as admin, create a new organization
+        if ($validated['usertype'] === 'admin') {
+            $org = Organization::create([
+                'name' => $validated['school_name'],
+                'slug' => Str::slug($validated['school_name']),
+                'is_active' => true,
+            ]);
+            $organizationId = $org->id;
+        } else {
+            // If registering as student, use the organization from session (if available)
+            // This is stored when the student visits /s/{slug}
+            $organizationId = $request->session()->get('organization_id') ?: $request->session()->get('org_id');
+        }
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
             'usertype' => $validated['usertype'],
+            'organization_id' => $organizationId,
+            'is_super_admin' => false,
         ]);
 
         event(new Registered($user));

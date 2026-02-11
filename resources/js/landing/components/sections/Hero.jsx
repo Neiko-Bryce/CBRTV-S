@@ -3,8 +3,12 @@ import { motion } from 'framer-motion';
 import { HiArrowRight, HiPlay } from 'react-icons/hi';
 import { MdHowToVote, MdVerified, MdSpeed } from 'react-icons/md';
 import Button from '../ui/Button';
+import { useLanding } from '../../context/LandingContext';
 
 export default function Hero() {
+    const { organization } = useLanding();
+    const orgName = organization?.name || 'Central Philippine State University';
+
     const floatingIcons = [
         { icon: MdHowToVote, delay: 0, position: 'top-20 left-10' },
         { icon: MdVerified, delay: 0.5, position: 'top-40 right-20' },
@@ -73,7 +77,7 @@ export default function Hero() {
                         >
                             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gov-gold-400 rounded-full animate-pulse" />
                             <span className="text-white/90 text-xs sm:text-sm font-medium">
-                                Central Philippine State University
+                                {orgName}
                             </span>
                         </motion.div>
 

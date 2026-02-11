@@ -662,6 +662,18 @@ class StudentController extends Controller
             $errors = [];
             $studentsToInsert = [];
             $studentIdsInBatch = [];
+            $organizationId = auth()->user()->organization_id;
+
+            if (! $organizationId) {
+                Log::error('Import failed: Admin user has no organization_id');
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is not associated with an organization. Please contact a Super Admin.',
+                    'imported' => 0,
+                    'skipped' => 0,
+                ], 403);
+            }
             $skipReasons = [
                 'missing_fields' => 0,
                 'duplicate_in_file' => 0,
@@ -956,6 +968,7 @@ class StudentController extends Controller
                     // Use empty string for course/yearlevel/section when missing (DB columns are NOT NULL)
                     $data = [
                         'student_id_number' => $studentId,
+                        'organization_id' => $organizationId,
                         'campus' => $campus,
                         'lname' => $lname,
                         'fname' => ($fname !== null && $fname !== '') ? $fname : null,

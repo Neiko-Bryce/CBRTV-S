@@ -57,6 +57,10 @@ class PartylistController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Inherit organization_id from election
+        $election = Election::findOrFail($validated['election_id']);
+        $validated['organization_id'] = $election->organization_id;
+
         Partylist::create($validated);
 
         return redirect()->route('admin.partylists.index', ['election' => $request->election_id])

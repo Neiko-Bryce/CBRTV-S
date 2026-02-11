@@ -89,9 +89,8 @@ class ReportController extends Controller
      */
     private function getReportData($electionId, $filterType = 'all', $filterValue = null)
     {
-        // Get all votes for this election
-        $votesQuery = DB::table('votes')
-            ->where('votes.election_id', $electionId);
+        // Get all votes for this election using Eloquent to respect isolation
+        $votesQuery = Vote::where('votes.election_id', $electionId);
 
         // Apply filters based on voter's student data
         if ($filterType !== 'all' && $filterValue) {
@@ -107,15 +106,13 @@ class ReportController extends Controller
         $totalVotes = $filteredVoteIds->count();
 
         // Unique voters
-        $uniqueVoterIds = DB::table('votes')
-            ->whereIn('id', $filteredVoteIds)
+        $uniqueVoterIds = Vote::whereIn('id', $filteredVoteIds)
             ->distinct()
             ->pluck('voter_id');
         $totalParticipants = $uniqueVoterIds->count();
 
         // Get total eligible students (those who have user accounts)
-        $eligibleStudentsQuery = DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        $eligibleStudentsQuery = Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->where('users.usertype', 'student');
         
         if ($filterType !== 'all' && $filterValue) {
@@ -134,8 +131,7 @@ class ReportController extends Controller
 
         // Calculate filtered votes for each candidate
         $candidates->each(function ($candidate) use ($filteredVoteIds) {
-            $voteCount = DB::table('votes')
-                ->whereIn('id', $filteredVoteIds)
+            $voteCount = Vote::whereIn('id', $filteredVoteIds)
                 ->where('candidate_id', $candidate->id)
                 ->count();
             
@@ -173,16 +169,14 @@ class ReportController extends Controller
         $participationBreakdown = $this->getParticipationBreakdown($electionId, $filterType, $filterValue);
 
         // Get gender breakdown of voters
-        $maleVoters = DB::table('votes')
-            ->join('users', 'votes.voter_id', '=', 'users.id')
+        $maleVoters = Vote::join('users', 'votes.voter_id', '=', 'users.id')
             ->join('students', 'users.email', '=', 'students.student_id_number')
             ->whereIn('votes.id', $filteredVoteIds)
             ->where('students.gender', 'Male')
             ->distinct('votes.voter_id')
             ->count('votes.voter_id');
 
-        $femaleVoters = DB::table('votes')
-            ->join('users', 'votes.voter_id', '=', 'users.id')
+        $femaleVoters = Vote::join('users', 'votes.voter_id', '=', 'users.id')
             ->join('students', 'users.email', '=', 'students.student_id_number')
             ->whereIn('votes.id', $filteredVoteIds)
             ->where('students.gender', 'Female')
@@ -213,8 +207,7 @@ class ReportController extends Controller
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
 
         // By Course
-        $byCourse = DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        $byCourse = Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.course')
             ->select('students.course', DB::raw('count(*) as count'))
@@ -223,8 +216,7 @@ class ReportController extends Controller
             ->get();
 
         // By Year Level
-        $byYearlevel = DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        $byYearlevel = Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.yearlevel')
             ->select('students.yearlevel', DB::raw('count(*) as count'))
@@ -233,8 +225,7 @@ class ReportController extends Controller
             ->get();
 
         // By Section
-        $bySection = DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        $bySection = Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.section')
             ->select('students.section', DB::raw('count(*) as count'))
@@ -256,8 +247,7 @@ class ReportController extends Controller
     {
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
         
-        return DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        return Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.course')
             ->distinct()
@@ -273,8 +263,7 @@ class ReportController extends Controller
     {
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
         
-        return DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        return Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.yearlevel')
             ->distinct()
@@ -290,8 +279,7 @@ class ReportController extends Controller
     {
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
         
-        return DB::table('students')
-            ->join('users', 'students.student_id_number', '=', 'users.email')
+        return Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.section')
             ->distinct()

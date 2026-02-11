@@ -17,8 +17,8 @@ class ElectionController extends Controller
     {
         // Update statuses for ALL elections first using direct DB queries for reliability
         try {
-            // Fetch all elections directly from DB to avoid any caching
-            $allElectionData = DB::table('elections')->get();
+            // Fetch all elections using Eloquent to respect organization isolation
+            $allElectionData = Election::all();
 
             foreach ($allElectionData as $electionRow) {
                 $electionArray = (array) $electionRow;
@@ -47,8 +47,7 @@ class ElectionController extends Controller
 
                 // Always update if status changed or is empty
                 if ($electionArray['status'] !== $calculatedStatus || empty($electionArray['status'])) {
-                    DB::table('elections')
-                        ->where('id', $electionArray['id'])
+                    Election::where('id', $electionArray['id'])
                         ->update(['status' => $calculatedStatus, 'updated_at' => now()]);
 
                     \Log::info("Election #{$electionArray['id']} status updated: {$electionArray['status']} -> {$calculatedStatus}");
@@ -79,14 +78,13 @@ class ElectionController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Get statistics for ALL elections (after updating statuses)
-        // Use DB::table for direct query to avoid any model caching issues
+        // Get statistics for elections (respecting global scope)
         $stats = [
-            'total' => \DB::table('elections')->count(),
-            'upcoming' => \DB::table('elections')->where('status', 'upcoming')->count(),
-            'ongoing' => \DB::table('elections')->where('status', 'ongoing')->count(),
-            'completed' => \DB::table('elections')->where('status', 'completed')->count(),
-            'cancelled' => \DB::table('elections')->where('status', 'cancelled')->count(),
+            'total' => Election::count(),
+            'upcoming' => Election::where('status', 'upcoming')->count(),
+            'ongoing' => Election::where('status', 'ongoing')->count(),
+            'completed' => Election::where('status', 'completed')->count(),
+            'cancelled' => Election::where('status', 'cancelled')->count(),
         ];
 
         $organizations = \App\Models\Organization::where('is_active', true)->orderBy('name', 'asc')->get();
@@ -583,14 +581,13 @@ class ElectionController extends Controller
 
             $election->update(['status' => $validated['status']]);
 
-            // Return updated stats along with success message
-            // Use DB::table for direct query to avoid any model caching issues
+            // Return updated stats (respecting global scope)
             $stats = [
-                'total' => \DB::table('elections')->count(),
-                'upcoming' => \DB::table('elections')->where('status', 'upcoming')->count(),
-                'ongoing' => \DB::table('elections')->where('status', 'ongoing')->count(),
-                'completed' => \DB::table('elections')->where('status', 'completed')->count(),
-                'cancelled' => \DB::table('elections')->where('status', 'cancelled')->count(),
+                'total' => Election::count(),
+                'upcoming' => Election::where('status', 'upcoming')->count(),
+                'ongoing' => Election::where('status', 'ongoing')->count(),
+                'completed' => Election::where('status', 'completed')->count(),
+                'cancelled' => Election::where('status', 'cancelled')->count(),
             ];
 
             return response()->json([
@@ -611,10 +608,10 @@ class ElectionController extends Controller
      */
     public function getStats()
     {
-        // Update statuses for ALL elections first - CRITICAL for accurate stats
+        // Update statuses for elections - CRITICAL for accurate stats
         try {
-            // Use fresh query to avoid caching - get raw data from database
-            $allElections = \DB::table('elections')->get();
+            // Use Eloquent to respect organization isolation
+            $allElections = Election::all();
             $updatedCount = 0;
 
             foreach ($allElections as $electionRow) {
@@ -669,13 +666,12 @@ class ElectionController extends Controller
         // Refresh the model cache to ensure we get the latest data
         \DB::getQueryLog();
 
-        // Get fresh counts after updating all statuses - use fresh query to ensure accuracy
-        // Use DB::table for direct query to avoid any model caching issues
+        // Get fresh counts after updating stats - respect global scope
         $stats = [
-            'total' => \DB::table('elections')->count(),
-            'upcoming' => \DB::table('elections')->where('status', 'upcoming')->count(),
-            'ongoing' => \DB::table('elections')->where('status', 'ongoing')->count(),
-            'completed' => \DB::table('elections')->where('status', 'completed')->count(),
+            'total' => Election::count(),
+            'upcoming' => Election::where('status', 'upcoming')->count(),
+            'ongoing' => Election::where('status', 'ongoing')->count(),
+            'completed' => Election::where('status', 'completed')->count(),
         ];
 
         \Log::info("getStats: Returning stats - Total: {$stats['total']}, Upcoming: {$stats['upcoming']}, Ongoing: {$stats['ongoing']}, Completed: {$stats['completed']}");

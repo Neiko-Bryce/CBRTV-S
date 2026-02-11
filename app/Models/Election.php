@@ -4,8 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\BelongsToOrganization;
+
 class Election extends Model
 {
+    use BelongsToOrganization;
     /**
      * The attributes that are mass assignable.
      *
