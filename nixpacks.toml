@@ -13,8 +13,10 @@ cmds = [
 ]
 
 [phases.build]
-# Frontend build runs on every deploy so public/build/ is always up to date (landing page, admin, student UI).
+# Frontend build runs on every deploy so public/build/ is always up to date.
+# Added a cleanup step to ensure no stale assets interfere with the build.
 cmds = [
+    "rm -rf public/build",
     "npm run build",
     "chmod +x start.sh"
 ]

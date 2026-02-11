@@ -1,0 +1,16 @@
+node_modules
+vendor
+.git
+storage/logs/*.log
+storage/framework/sessions/*
+storage/framework/views/*.php
+storage/framework/cache/data/*
+public/storage
+public/build
+.env
+.env.production
+.phpunit.result.cache
+.vscode
+.idea
+*.bak
+*.tmp
