@@ -32,8 +32,20 @@ return new class extends Migration
         }
 
         // 2. Data Migration: Populate school_id
-        // Try to find the "Main School" that was created in the previous migration
+        // Find or create the "Main School" record
+        $mainOrg = DB::table('organizations')->where('slug', 'main-school')->first();
         $mainSchool = DB::table('schools')->where('slug', 'main-school')->first();
+        
+        if (!$mainSchool && $mainOrg) {
+            $schoolId = DB::table('schools')->insertGetId([
+                'name' => $mainOrg->name,
+                'slug' => $mainOrg->slug,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $mainSchool = (object)['id' => $schoolId];
+        }
         
         if ($mainSchool) {
             // For organizations, link them to the main school if they don't have one
@@ -41,13 +53,24 @@ return new class extends Migration
 
             // For other tables, we can now trace via organization_id
             foreach (['candidates', 'positions', 'elections', 'partylists', 'students', 'votes'] as $tableName) {
-                DB::table($tableName)
-                    ->join('organizations', "{$tableName}.organization_id", '=', 'organizations.id')
-                    ->whereNull("{$tableName}.school_id")
-                    ->update(["{$tableName}.school_id" => DB::raw('organizations.school_id')]);
+                // Postgres-compatible update via subquery
+                DB::table($tableName)->whereNull('school_id')->update([
+                    'school_id' => DB::table('organizations')
+                        ->whereColumn('organizations.id', "{$tableName}.organization_id")
+                        ->select('school_id')
+                        ->limit(1)
+                ]);
                 
                 // Fallback for any records still null (shouldn't happen if they have valid org_id)
                 DB::table($tableName)->whereNull('school_id')->update(['school_id' => $mainSchool->id]);
+            }
+
+            // Also ensure users associated with the Main Org get the School ID
+            if ($mainOrg) {
+                DB::table('users')
+                    ->where('organization_id', $mainOrg->id)
+                    ->whereNull('school_id')
+                    ->update(['school_id' => $mainSchool->id]);
             }
         }
     }

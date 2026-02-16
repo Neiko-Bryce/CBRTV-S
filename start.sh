@@ -18,6 +18,9 @@ mkdir -p storage/framework/sessions storage/framework/views storage/framework/ca
 
 # Run migrations with retries (DB may not be ready immediately).
 # We MUST fail if migrations fail to prevent app from running with broken schema.
+echo "Current migration status:"
+php artisan migrate:status
+
 echo "Running database migrations..."
 MIGRATE_OK=0
 for attempt in 1 2 3; do

@@ -30,24 +30,6 @@ return new class extends Migration
                 $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');
             }
         });
-
-        // 3. Migrate existing "Main School" org data to schools table
-        $mainSchoolOrg = DB::table('organizations')->where('slug', 'main-school')->first();
-        if ($mainSchoolOrg) {
-            $schoolId = DB::table('schools')->insertGetId([
-                'name' => $mainSchoolOrg->name,
-                'slug' => $mainSchoolOrg->slug,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // Link all admin users that were associated with "Main School" org to the new school
-            DB::table('users')
-                ->where('usertype', 'admin')
-                ->where('organization_id', $mainSchoolOrg->id)
-                ->update(['school_id' => $schoolId]);
-        }
     }
 
     /**
