@@ -55,7 +55,17 @@ class PositionController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        Position::create($validated);
+        $validated['is_active'] = $request->has('is_active');
+
+        $position = Position::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Position created successfully.',
+                'position' => $position
+            ]);
+        }
 
         return redirect()->route('admin.positions.index', ['organization' => $request->organization_id])
             ->with('success', 'Position created successfully.');
@@ -87,7 +97,17 @@ class PositionController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $validated['is_active'] = $request->has('is_active');
+
         $position->update($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Position updated successfully.',
+                'position' => $position->fresh()
+            ]);
+        }
 
         return redirect()->route('admin.positions.index', ['organization' => $request->organization_id])
             ->with('success', 'Position updated successfully.');

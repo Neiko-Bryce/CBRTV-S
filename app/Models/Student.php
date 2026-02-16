@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\BelongsToOrganization;
+use App\Traits\BelongsToSchool;
 
 class Student extends Model
 {
-    use HasFactory, BelongsToOrganization;
+    use HasFactory, BelongsToOrganization, BelongsToSchool;
 
     /**
      * The attributes that are mass assignable.
@@ -17,6 +18,7 @@ class Student extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'school_id',
         'organization_id',
         'student_id_number',
         'campus',

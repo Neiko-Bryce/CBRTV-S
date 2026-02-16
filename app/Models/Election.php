@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\BelongsToOrganization;
+use App\Traits\BelongsToSchool;
 
 class Election extends Model
 {
-    use BelongsToOrganization;
+    use BelongsToOrganization, BelongsToSchool;
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
+        'school_id',
         'election_id',
         'election_name',
         'type_of_election',

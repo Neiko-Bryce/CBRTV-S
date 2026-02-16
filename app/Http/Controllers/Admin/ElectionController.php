@@ -7,6 +7,7 @@ use App\Models\Election;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ElectionController extends Controller
 {
@@ -107,7 +108,14 @@ class ElectionController extends Controller
     {
         try {
             $validated = $request->validate([
-                'election_id' => 'nullable|string|max:255|unique:elections',
+                'election_id' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                    Rule::unique('elections', 'election_id')->where(function ($query) {
+                        return $query->where('school_id', auth()->user()->school_id);
+                    })
+                ],
                 'election_name' => 'required|string|max:255',
                 'organization_id' => 'required|exists:organizations,id',
                 'type_of_election' => 'nullable|string|max:255', // Keep for backward compatibility
@@ -121,7 +129,7 @@ class ElectionController extends Controller
 
             // Set type_of_election from organization name if not provided
             if (empty($validated['type_of_election']) && ! empty($validated['organization_id'])) {
-                $organization = \App\Models\Organization::find($validated['organization_id']);
+                $organization = \App\Models\Organization::withoutGlobalScopes()->find($validated['organization_id']);
                 if ($organization) {
                     $validated['type_of_election'] = $organization->name;
                 }
@@ -267,7 +275,8 @@ class ElectionController extends Controller
 
             $validated = $request->validate([
                 'election_name' => 'required|string|max:255',
-                'type_of_election' => 'required|string|max:255',
+                'organization_id' => 'required|exists:organizations,id',
+                'type_of_election' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'venue' => 'nullable|string|max:255',
                 'election_date' => 'required|date',
@@ -303,7 +312,14 @@ class ElectionController extends Controller
                 // If status is not manually set and date didn't change, calculate it
                 $validated['status'] = $this->calculateStatus($validated);
             }
-            // If status is manually set to something else (not cancelled), keep it
+
+            // Set type_of_election from organization name if not provided (for updates)
+            if (empty($validated['type_of_election']) && ! empty($validated['organization_id'])) {
+                $organization = \App\Models\Organization::withoutGlobalScopes()->find($validated['organization_id']);
+                if ($organization) {
+                    $validated['type_of_election'] = $organization->name;
+                }
+            }
 
             $election->update($validated);
 

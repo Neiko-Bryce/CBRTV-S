@@ -8,11 +8,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 use App\Traits\BelongsToOrganization;
+use App\Traits\BelongsToSchool;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, BelongsToOrganization;
+    use HasFactory, Notifiable, BelongsToOrganization, BelongsToSchool;
 
     /**
      * The attributes that are mass assignable.
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'password',
         'usertype',
         'organization_id',
+        'school_id',
         'is_super_admin',
         'password_regenerated_count',
     ];
@@ -67,5 +69,13 @@ class User extends Authenticatable
     public function passwordRegenerationHistory()
     {
         return $this->hasMany(\App\Models\PasswordRegenerationHistory::class);
+    }
+
+    /**
+     * Get the school associated with the user.
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

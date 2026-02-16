@@ -11,6 +11,7 @@ class LandingPageSetting extends Model
 {
     protected $fillable = [
         'organization_id',
+        'school_id',
         'section',
         'key',
         'value',
@@ -27,20 +28,27 @@ class LandingPageSetting extends Model
      */
     public static function getValue(string $section, string $key, $default = null)
     {
-        // Search for school-specific override first, then global
-        // Check order: Auth User Org -> Session Org (for guests) -> Global (null)
+        // Check order: Auth User Org -> Session Org -> Auth School -> Session School -> Global (null)
         $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
+        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
 
         $setting = static::where('section', $section)
             ->where('key', $key)
-            ->when($organizationId, function ($query, $orgId) {
-                $query->where(function ($q) use ($orgId) {
-                    $q->where('organization_id', $orgId)
-                      ->orWhereNull('organization_id');
-                })->orderBy('organization_id', 'DESC');
-            }, function ($query) {
-                $query->whereNull('organization_id');
+            ->where(function ($query) use ($organizationId, $schoolId) {
+                $query->whereNull('organization_id')
+                      ->whereNull('school_id');
+                
+                if ($schoolId) {
+                    $query->orWhere(function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId)->whereNull('organization_id');
+                    });
+                }
+                
+                if ($organizationId) {
+                    $query->orWhere('organization_id', $organizationId);
+                }
             })
+            ->orderByRaw('organization_id DESC, school_id DESC')
             ->first();
 
         return $setting ? $setting->value : $default;
@@ -52,17 +60,25 @@ class LandingPageSetting extends Model
     public static function getExtra(string $section, string $key, $default = null)
     {
         $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
+        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
 
         $setting = static::where('section', $section)
             ->where('key', $key)
-            ->when($organizationId, function ($query, $orgId) {
-                $query->where(function ($q) use ($orgId) {
-                    $q->where('organization_id', $orgId)
-                      ->orWhereNull('organization_id');
-                })->orderBy('organization_id', 'DESC');
-            }, function ($query) {
-                $query->whereNull('organization_id');
+            ->where(function ($query) use ($organizationId, $schoolId) {
+                $query->whereNull('organization_id')
+                      ->whereNull('school_id');
+                
+                if ($schoolId) {
+                    $query->orWhere(function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId)->whereNull('organization_id');
+                    });
+                }
+                
+                if ($organizationId) {
+                    $query->orWhere('organization_id', $organizationId);
+                }
             })
+            ->orderByRaw('organization_id DESC, school_id DESC')
             ->first();
 
         return $setting ? $setting->extra : $default;
@@ -77,16 +93,20 @@ class LandingPageSetting extends Model
         if (!$user) return null;
 
         $isGlobalSection = in_array($section, ['about', 'team', 'features']);
+        
+        // orgId: only if not a global section
+        $orgId = $isGlobalSection ? null : $user->organization_id;
+        
+        // schoolId: always set for non-super-admins, or if a super-admin wants to scope to a school
+        $schoolId = $user->is_super_admin ? null : $user->school_id;
 
-        // Only Super Admins can edit global sections (where organization_id is NULL)
-        if ($isGlobalSection && !$user->is_super_admin) {
-            abort(403, 'Only Super Admins can edit system-wide sections.');
+        // If it's a global section and user is not super_admin, it MUST have a school_id
+        if ($isGlobalSection && !$user->is_super_admin && !$schoolId) {
+            abort(403, 'Unauthorized to edit global settings without school scope.');
         }
 
-        $orgId = $isGlobalSection ? null : $user->organization_id;
-
         return static::updateOrCreate(
-            ['section' => $section, 'key' => $key, 'organization_id' => $orgId],
+            ['section' => $section, 'key' => $key, 'organization_id' => $orgId, 'school_id' => $schoolId],
             ['value' => $value, 'extra' => $extra]
         );
     }
@@ -97,18 +117,26 @@ class LandingPageSetting extends Model
     public static function getSection(string $section)
     {
         $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
+        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
 
         return static::where('section', $section)
-            ->when($organizationId, function ($query, $orgId) {
-                $query->where(function ($q) use ($orgId) {
-                    $q->where('organization_id', $orgId)
-                      ->orWhereNull('organization_id');
-                })->orderBy('organization_id', 'DESC');
-            }, function ($query) {
-                $query->whereNull('organization_id');
+            ->where(function ($query) use ($organizationId, $schoolId) {
+                $query->whereNull('organization_id')
+                      ->whereNull('school_id');
+                
+                if ($schoolId) {
+                    $query->orWhere(function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId)->whereNull('organization_id');
+                    });
+                }
+                
+                if ($organizationId) {
+                    $query->orWhere('organization_id', $organizationId);
+                }
             })
+            ->orderByRaw('organization_id DESC, school_id DESC')
             ->get()
-            ->unique('key') // Keep the first match (school override > global)
+            ->unique('key')
             ->pluck('value', 'key')
             ->toArray();
     }
@@ -119,18 +147,26 @@ class LandingPageSetting extends Model
     public static function getSectionWithExtras(string $section)
     {
         $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
+        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
 
         return static::where('section', $section)
-            ->when($organizationId, function ($query, $orgId) {
-                $query->where(function ($q) use ($orgId) {
-                    $q->where('organization_id', $orgId)
-                      ->orWhereNull('organization_id');
-                })->orderBy('organization_id', 'DESC');
-            }, function ($query) {
-                $query->whereNull('organization_id');
+            ->where(function ($query) use ($organizationId, $schoolId) {
+                $query->whereNull('organization_id')
+                      ->whereNull('school_id');
+                
+                if ($schoolId) {
+                    $query->orWhere(function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId)->whereNull('organization_id');
+                    });
+                }
+                
+                if ($organizationId) {
+                    $query->orWhere('organization_id', $organizationId);
+                }
             })
+            ->orderByRaw('organization_id DESC, school_id DESC')
             ->get()
-            ->unique('key') // Keep school override first
+            ->unique('key')
             ->keyBy('key')
             ->map(function ($item) {
                 return [

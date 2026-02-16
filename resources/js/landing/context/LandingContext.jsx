@@ -5,6 +5,7 @@ const LandingContext = createContext();
 export function LandingProvider({ children }) {
     const [settings, setSettings] = useState({
         organization: null,
+        school: null,
         about: {},
         features: {},
     });
@@ -17,6 +18,7 @@ export function LandingProvider({ children }) {
                 const data = await response.json();
                 setSettings({
                     organization: data.organization,
+                    school: data.school,
                     about: data.about || {},
                     features: data.features || {},
                 });

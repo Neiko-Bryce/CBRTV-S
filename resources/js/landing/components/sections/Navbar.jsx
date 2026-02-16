@@ -12,7 +12,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-    const { organization } = useLanding();
+    const { organization, school } = useLanding();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -24,7 +24,8 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const orgName = organization?.name || 'CpsuVotewisely.com';
+    // Preference order: Organization Name -> School Name -> Site Default
+    const orgName = organization?.name || school?.name || 'CpsuVotewisely.com';
     const logoUrl = organization?.logo ? `/storage/${organization.logo}` : null;
 
     return (

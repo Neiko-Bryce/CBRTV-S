@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class OrganizationController extends Controller
 {
@@ -41,7 +42,14 @@ class OrganizationController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:organizations,code',
+            'code' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('organizations', 'code')->where(function ($query) {
+                    return $query->where('school_id', auth()->user()->school_id);
+                })
+            ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -71,7 +79,14 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:organizations,code,'.$id,
+            'code' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('organizations', 'code')->where(function ($query) {
+                    return $query->where('school_id', auth()->user()->school_id);
+                })->ignore($id)
+            ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);

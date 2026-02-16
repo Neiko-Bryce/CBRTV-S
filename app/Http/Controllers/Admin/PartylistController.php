@@ -61,7 +61,17 @@ class PartylistController extends Controller
         $election = Election::findOrFail($validated['election_id']);
         $validated['organization_id'] = $election->organization_id;
 
-        Partylist::create($validated);
+        $validated['is_active'] = $request->has('is_active') || $request->is_active === '1';
+
+        $partylist = Partylist::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Partylist created successfully.',
+                'partylist' => $partylist
+            ]);
+        }
 
         return redirect()->route('admin.partylists.index', ['election' => $request->election_id])
             ->with('success', 'Partylist created successfully.');
@@ -94,7 +104,17 @@ class PartylistController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $validated['is_active'] = $request->has('is_active') || $request->is_active === '1';
+
         $partylist->update($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Partylist updated successfully.',
+                'partylist' => $partylist->fresh()
+            ]);
+        }
 
         return redirect()->route('admin.partylists.index', ['election' => $request->election_id])
             ->with('success', 'Partylist updated successfully.');

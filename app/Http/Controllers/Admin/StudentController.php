@@ -7,6 +7,7 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class StudentController extends Controller
@@ -76,7 +77,14 @@ class StudentController extends Controller
     {
         try {
             $validated = $request->validate([
-                'student_id_number' => 'required|string|max:255|unique:students',
+                'student_id_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('students', 'student_id_number')->where(function ($query) {
+                        return $query->where('school_id', auth()->user()->school_id);
+                    })
+                ],
                 'campus' => 'required|string|max:255',
                 'lname' => 'required|string|max:255',
                 'fname' => 'nullable|string|max:255',
@@ -149,7 +157,14 @@ class StudentController extends Controller
     {
         try {
             $validated = $request->validate([
-                'student_id_number' => 'required|string|max:255|unique:students,student_id_number,'.$student->id,
+                'student_id_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('students', 'student_id_number')->where(function ($query) {
+                        return $query->where('school_id', auth()->user()->school_id);
+                    })->ignore($student->id)
+                ],
                 'campus' => 'required|string|max:255',
                 'lname' => 'required|string|max:255',
                 'fname' => 'nullable|string|max:255',
@@ -663,6 +678,18 @@ class StudentController extends Controller
             $studentsToInsert = [];
             $studentIdsInBatch = [];
             $organizationId = auth()->user()->organization_id;
+            $schoolId = auth()->user()->school_id;
+
+            if (! $schoolId) {
+                Log::error('Import failed: Admin user has no school_id');
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is not associated with a school. Please contact a Super Admin.',
+                    'imported' => 0,
+                    'skipped' => 0,
+                ], 403);
+            }
 
             if (! $organizationId) {
                 Log::error('Import failed: Admin user has no organization_id');
@@ -969,6 +996,7 @@ class StudentController extends Controller
                     $data = [
                         'student_id_number' => $studentId,
                         'organization_id' => $organizationId,
+                        'school_id' => $schoolId,
                         'campus' => $campus,
                         'lname' => $lname,
                         'fname' => ($fname !== null && $fname !== '') ? $fname : null,

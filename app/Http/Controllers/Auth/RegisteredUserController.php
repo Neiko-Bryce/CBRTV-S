@@ -72,19 +72,25 @@ class RegisteredUserController extends Controller
         ]);
 
         $organizationId = null;
+        $schoolId = null;
 
-        // If registering as admin, create a new organization
+        // If registering as admin, create a new School (not Organization)
         if ($validated['usertype'] === 'admin') {
-            $org = Organization::create([
+            $school = \App\Models\School::create([
                 'name' => $validated['school_name'],
                 'slug' => Str::slug($validated['school_name']),
                 'is_active' => true,
             ]);
-            $organizationId = $org->id;
+            $schoolId = $school->id;
         } else {
-            // If registering as student, use the organization from session (if available)
-            // This is stored when the student visits /s/{slug}
+            // If registering as student, use the organization from session
             $organizationId = $request->session()->get('organization_id') ?: $request->session()->get('org_id');
+            
+            // Also try to get school_id from organization if possible
+            if ($organizationId) {
+                $org = Organization::find($organizationId);
+                $schoolId = $org?->school_id;
+            }
         }
 
         $user = User::create([
@@ -93,6 +99,7 @@ class RegisteredUserController extends Controller
             'password' => $validated['password'],
             'usertype' => $validated['usertype'],
             'organization_id' => $organizationId,
+            'school_id' => $schoolId,
             'is_super_admin' => false,
         ]);
 

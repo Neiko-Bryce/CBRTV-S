@@ -947,7 +947,7 @@
 
                 <div class="form-group" id="schoolNameGroup"
                     style="{{ old('usertype') == 'admin' ? '' : 'display: none;' }}">
-                    <label for="school_name" class="form-label">School / Organization Name</label>
+                    <label for="school_name" class="form-label">School Name</label>
                     <div class="input-container">
                         <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -955,7 +955,7 @@
                             </path>
                         </svg>
                         <input type="text" id="school_name" name="school_name" value="{{ old('school_name') }}"
-                            class="form-input" placeholder="Enter school or organization name">
+                            class="form-input" placeholder="Enter your school name">
                     </div>
                 </div>
 

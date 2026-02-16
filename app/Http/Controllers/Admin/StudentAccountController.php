@@ -169,6 +169,7 @@ class StudentAccountController extends Controller
             'password' => Hash::make($request->password),
             'usertype' => 'student',
             'organization_id' => $student->organization_id,
+            'school_id' => $student->school_id,
         ]);
 
         return response()->json([

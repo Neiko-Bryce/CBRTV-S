@@ -18,12 +18,19 @@ Route::prefix('api')->group(function () {
         $featuresSettings = \App\Models\LandingPageSetting::getSectionWithExtras('features');
 
         $orgId = Auth::check() ? Auth::user()->organization_id : session('org_id');
+        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
+        
         $organization = $orgId ? \App\Models\Organization::find($orgId) : null;
+        $school = $schoolId ? \App\Models\School::find($schoolId) : null;
 
         return response()->json([
             'organization' => $organization ? [
                 'name' => $organization->name,
                 'logo' => $organization->logo_path,
+            ] : null,
+            'school' => $school ? [
+                'name' => $school->name,
+                'logo' => null, // Add logo column to schools later if needed
             ] : null,
             'about' => $aboutSettings,
             'features' => $featuresSettings,
@@ -89,10 +96,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('student-management/{userId}/password-history', [\App\Http\Controllers\Admin\StudentAccountController::class, 'getPasswordHistory'])->name('student-management.password-history');
     Route::delete('student-management/{userId}/delete', [\App\Http\Controllers\Admin\StudentAccountController::class, 'deleteAccount'])->name('student-management.delete');
 
-    // Organizations Management (Super Admin Only)
-    Route::middleware(['super_admin'])->group(function () {
-        Route::resource('organizations', \App\Http\Controllers\Admin\OrganizationController::class);
-    });
+    // Organizations Management
+    Route::resource('organizations', \App\Http\Controllers\Admin\OrganizationController::class);
 
     // Positions Management
     Route::get('positions', [\App\Http\Controllers\Admin\PositionController::class, 'index'])->name('positions.index');
@@ -126,8 +131,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/{electionId}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
 
-    // Landing Page Management (Super Admin Only)
+    // Landing Page & Schools Management (Super Admin Only)
     Route::middleware(['super_admin'])->group(function () {
+        Route::resource('schools', \App\Http\Controllers\Admin\SchoolController::class);
         Route::get('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('landing-page.index');
         Route::post('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing-page.update');
         Route::get('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
@@ -149,14 +155,19 @@ Route::middleware(['auth', 'student'])->group(function () {
     Route::get('/student/votes-history', [\App\Http\Controllers\Student\DashboardController::class, 'votesHistory'])->name('student.votes-history');
 });
 
-Route::get('/s/{slug}', function ($slug) {
-    $organization = \App\Models\Organization::where('slug', $slug)->firstOrFail();
-    
-    // Store organization ID in session so guest students see school-specific content
-    session(['org_id' => $organization->id]);
-    
-    return view('welcome', ['organization' => $organization]);
-})->name('school.portal');
-
 // Breeze authentication routes (login, register, password reset, email verification)
 require __DIR__.'/auth.php';
+
+// School-specific landing page (catch-all route at the bottom)
+Route::get('/{slug}', function ($slug) {
+    $school = \App\Models\School::where('slug', $slug)->first();
+    
+    if ($school) {
+        // Store school ID in session so guest students see school-specific content
+        session(['school_id' => $school->id]);
+        return view('welcome', ['school' => $school]);
+    }
+
+    // If it's not a school slug, let it fall through or abort
+    abort(404);
+})->name('school.portal');

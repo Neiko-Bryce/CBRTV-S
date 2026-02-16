@@ -42,9 +42,10 @@ trait BelongsToOrganization
                     // Regular admins/students only see data from their own organization
                     if ($user->organization_id) {
                         $builder->where($builder->getQuery()->from.'.organization_id', $user->organization_id);
-                    } else {
-                        $builder->whereNull($builder->getQuery()->from.'.organization_id');
                     }
+                    // If user has no organization_id, we don't apply a filter here.
+                    // This allows school-level admins to see all organizations' data,
+                    // while BelongsToSchool still restricts them to their school.
                 }
             } finally {
                 static::$isScoping = false;

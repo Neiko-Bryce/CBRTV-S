@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\BelongsToOrganization;
+use App\Traits\BelongsToSchool;
 
 class Position extends Model
 {
-    use BelongsToOrganization;
+    use BelongsToOrganization, BelongsToSchool;
     protected $fillable = [
+        'school_id',
         'organization_id',
         'name',
         'description',

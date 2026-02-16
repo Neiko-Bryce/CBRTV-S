@@ -205,10 +205,16 @@ class CandidateController extends Controller
         $election = Election::findOrFail($validated['election_id']);
         $validated['organization_id'] = $election->organization_id;
 
-        Candidate::create($validated);
+        $validated['is_active'] = $request->has('is_active') || $request->is_active === '1';
 
-        if ($request->wantsJson()) {
-            return response()->json(['message' => 'Candidate created successfully.']);
+        $candidate = Candidate::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Candidate created successfully.',
+                'candidate' => $candidate
+            ]);
         }
 
         return redirect()->route('admin.candidates.index', ['election' => $request->election_id])
@@ -354,10 +360,16 @@ class CandidateController extends Controller
             $validated['photo'] = $photoPath;
         }
 
+        $validated['is_active'] = $request->has('is_active') || $request->is_active === '1';
+
         $candidate->update($validated);
 
-        if ($request->wantsJson()) {
-            return response()->json(['message' => 'Candidate updated successfully.']);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Candidate updated successfully.',
+                'candidate' => $candidate->fresh()
+            ]);
         }
 
         return redirect()->route('admin.candidates.index', ['election' => $request->election_id])

@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\BelongsToOrganization;
+use App\Traits\BelongsToSchool;
 
 class Partylist extends Model
 {
-    use BelongsToOrganization;
+    use BelongsToOrganization, BelongsToSchool;
     protected $fillable = [
+        'school_id',
         'organization_id',
         'election_id',
         'name',
