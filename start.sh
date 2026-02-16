@@ -32,12 +32,18 @@ for attempt in 1 2 3; do
 done
 
 if [ "$MIGRATE_OK" -eq 0 ]; then
-  echo "CRITICAL ERROR: Migrations failed after 3 attempts. Deployment cannot proceed."
+  echo "CRITICAL ERROR: Migrations failed after 3 attempts."
+  echo "Checking migration status for diagnostics..."
+  php artisan migrate:status || echo "Could not fetch migration status"
+  echo "Deployment cannot proceed."
   exit 1
 fi
 
-echo "Initializing landing page database table..."
-php -r "require 'vendor/autoload.php'; \$app = require_once 'bootstrap/app.php'; \$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); require 'database/init-landing-page-table.php';" || echo "WARNING: Database initialization script failed"
+echo "Optimizing application..."
+php artisan optimize
+
+echo "Cleaning up legacy initialization scripts..."
+# The landing_page_settings table is now handled by migrations
 
 echo "Linking storage (public/storage -> storage/app/public)..."
 php artisan storage:link 2>/dev/null || true
