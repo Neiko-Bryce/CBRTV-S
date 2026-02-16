@@ -28,6 +28,8 @@ for attempt in 1 2 3; do
   if php artisan migrate --force --verbose; then
     MIGRATE_OK=1
     echo "✓ Migrations completed successfully"
+    echo "Running database seeders..."
+    php artisan db:seed --force || echo "WARNING: Seeding failed (perhaps data already exists)"
     break
   fi
   echo "Migration attempt $attempt failed, retrying in 5s..."
