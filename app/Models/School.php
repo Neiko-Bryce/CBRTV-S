@@ -18,6 +18,14 @@ class School extends Model
     ];
 
     /**
+     * Get the schools organizations.
+     */
+    public function organizations()
+    {
+        return $this->hasMany(Organization::class);
+    }
+
+    /**
      * Get the users (admins) associated with this school.
      */
     public function users()

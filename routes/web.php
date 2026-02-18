@@ -131,13 +131,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/{electionId}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
 
-    // Landing Page & Schools Management (Super Admin Only)
+    // Landing Page Management (Super Admin Only)
     Route::middleware(['super_admin'])->group(function () {
-        Route::resource('schools', \App\Http\Controllers\Admin\SchoolController::class);
         Route::get('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('landing-page.index');
         Route::post('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing-page.update');
         Route::get('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
+        
+        // School Management (Write Operations)
+        Route::post('schools', [\App\Http\Controllers\Admin\SchoolController::class, 'store'])->name('schools.store');
+        Route::put('schools/{school}', [\App\Http\Controllers\Admin\SchoolController::class, 'update'])->name('schools.update');
+        Route::delete('schools/{school}', [\App\Http\Controllers\Admin\SchoolController::class, 'destroy'])->name('schools.destroy');
     });
+
+    // School Management (Read Operations - All Admins)
+    Route::get('schools', [\App\Http\Controllers\Admin\SchoolController::class, 'index'])->name('schools.index');
+    Route::get('schools/{school}', [\App\Http\Controllers\Admin\SchoolController::class, 'show'])->name('schools.show');
 
     // Admin Profile
     Route::get('profile', [\App\Http\Controllers\Admin\ProfileController::class, 'edit'])->name('profile.edit');
