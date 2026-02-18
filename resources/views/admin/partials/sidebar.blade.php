@@ -111,19 +111,19 @@
                         </div>
                         <span class="text-sm font-medium">Candidates</span>
                     </a>
-                    <a href="{{ route('admin.organizations.index') }}"
-                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.organizations.*') ? 'active' : '' }}">
-                        <div
-                            class="w-2 h-2 rounded-full {{ request()->routeIs('admin.organizations.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
-                        </div>
-                        <span class="text-sm font-medium">Organizations</span>
-                    </a>
                     <a href="{{ route('admin.partylists.index') }}"
                         class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.partylists.*') ? 'active' : '' }}">
                         <div
                             class="w-2 h-2 rounded-full {{ request()->routeIs('admin.partylists.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
                         </div>
                         <span class="text-sm font-medium">Partylist</span>
+                    </a>
+                    <a href="{{ route('admin.organizations.index') }}"
+                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.organizations.*') ? 'active' : '' }}">
+                        <div
+                            class="w-2 h-2 rounded-full {{ request()->routeIs('admin.organizations.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
+                        </div>
+                        <span class="text-sm font-medium">Organizations</span>
                     </a>
                     <a href="{{ route('admin.positions.index') }}"
                         class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.positions.*') ? 'active' : '' }}">
