@@ -13,36 +13,32 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Super Admin Account
-        $saEmail = env('SUPER_ADMIN_EMAIL', 'superadmin@vosewisly.com');
-        $saPassword = env('SUPER_ADMIN_PASSWORD', 'neiko@superadmin12345');
-
-        if (!User::where('email', $saEmail)->exists()) {
-            User::create([
+        // 1. Super Admin Account (Full Privileges)
+        // updateOrCreate ensures the account exists and has the correct role 
+        // without creating duplicates or deleting other users.
+        User::updateOrCreate(
+            ['email' => 'superadmin@vosewisly.com'],
+            [
                 'name' => 'Super Administrator',
-                'email' => $saEmail,
-                'password' => Hash::make($saPassword),
+                'password' => Hash::make('neiko@superadmin12345'),
                 'usertype' => 'admin',
                 'is_super_admin' => true,
                 'email_verified_at' => now(),
-            ]);
-            $this->command->info("Super Admin account ({$saEmail}) created.");
-        }
+            ]
+        );
+        $this->command->info("Super Admin account synced.");
 
-        // 2. Regular Admin Account
-        $adminEmail = 'admin@gmail.com';
-        $adminPassword = 'neiko@admin12345';
-
-        if (!User::where('email', $adminEmail)->exists()) {
-            User::create([
+        // 2. Regular Admin Account (Read-Only to Schools/Landing Page)
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
                 'name' => 'Neiko Bryce',
-                'email' => $adminEmail,
-                'password' => Hash::make($adminPassword),
+                'password' => Hash::make('neiko@admin12345'),
                 'usertype' => 'admin',
                 'is_super_admin' => false,
                 'email_verified_at' => now(),
-            ]);
-            $this->command->info("Regular Admin account ({$adminEmail}) created.");
-        }
+            ]
+        );
+        $this->command->info("Regular Admin account synced.");
     }
 }

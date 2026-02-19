@@ -670,7 +670,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                     style="background: var(--card-bg); border: 1px solid var(--border-color); display: none;">
                                     <div class="px-4 py-3 border-b" style="border-color: var(--border-color);">
                                         <div class="flex items-center justify-between gap-2">
-                                            <p class="text-sm font-semibold truncate"
+                                            <p class="text-sm font-semibold truncate min-w-0"
                                                 style="color: var(--text-primary);">
                                                 {{ auth()->user()->name }}
                                             </p>
