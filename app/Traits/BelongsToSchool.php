@@ -26,19 +26,33 @@ trait BelongsToSchool
             static::$isSchoolScoping = true;
 
             try {
-                if (Auth::check()) {
+                $isAdminPath = request()->is('admin*');
+
+                if ($isAdminPath && Auth::check()) {
                     $user = Auth::user();
                     
-                    // Super Admins see everything
+                    // Super Admins see everything in Admin Dashboard only
                     if ($user->is_super_admin) {
                         return;
                     }
 
-                    // Regular admins only see data from their own school
+                    // Regular admins only see data from their own school in Dashboard
                     if ($user->school_id) {
                         $builder->where($builder->getQuery()->from.'.school_id', $user->school_id);
                     } else {
-                        // If user has no school_id, they shouldn't see anything school-specific
+                        $builder->whereNull($builder->getQuery()->from.'.school_id');
+                    }
+                } else {
+                    // PUBLIC PORTAL / VOTER SIDE / API
+                    // Prioritize request('school_id') for tab-level isolation
+                    $requestSchoolId = request('school_id');
+                    $sessionSchoolId = session('school_id');
+                    $activeSchoolId = $requestSchoolId ?: $sessionSchoolId;
+
+                    if ($activeSchoolId) {
+                        $builder->where($builder->getQuery()->from.'.school_id', $activeSchoolId);
+                    } else {
+                        // Global site - only show global data (no school_id)
                         $builder->whereNull($builder->getQuery()->from.'.school_id');
                     }
                 }

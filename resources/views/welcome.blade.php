@@ -33,6 +33,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+    <script>
+        window.SCHOOL_CONTEXT = {
+            id: {{ isset($school) ? $school->id : 'null' }},
+            slug: '{{ isset($school) ? $school->slug : '' }}'
+        };
+    </script>
+
     <!-- Confetti for results celebration (loaded before app so window.confetti is available) -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
     <!-- Vite Assets -->

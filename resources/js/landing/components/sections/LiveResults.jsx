@@ -14,7 +14,9 @@ export default function LiveResults() {
 
     const fetchResults = async () => {
         try {
-            const response = await fetch('/api/live-results?t=' + Date.now(), { cache: 'no-store' });
+            const schoolId = window.SCHOOL_CONTEXT?.id;
+            const url = `/api/live-results?t=${Date.now()}${schoolId ? `&school_id=${schoolId}` : ''}`;
+            const response = await fetch(url, { cache: 'no-store' });
             const data = await response.json();
             if (data.success && Array.isArray(data.elections)) {
                 const sorted = [...data.elections].sort((a, b) => (b.id || 0) - (a.id || 0));

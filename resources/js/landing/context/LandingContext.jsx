@@ -14,7 +14,9 @@ export function LandingProvider({ children }) {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch('/api/landing-page/settings');
+                const schoolId = window.SCHOOL_CONTEXT?.id;
+                const url = `/api/landing-page/settings${schoolId ? `?school_id=${schoolId}` : ''}`;
+                const response = await fetch(url);
                 const data = await response.json();
                 setSettings({
                     organization: data.organization,

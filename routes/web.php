@@ -4,7 +4,9 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    session()->forget('school_id');
+    return response()->view('welcome')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
 });
 
 // Public API for live election results (no auth required)
@@ -17,8 +19,9 @@ Route::prefix('api')->group(function () {
         $aboutSettings = \App\Models\LandingPageSetting::getSectionWithExtras('about');
         $featuresSettings = \App\Models\LandingPageSetting::getSectionWithExtras('features');
 
-        $orgId = Auth::check() ? Auth::user()->organization_id : session('org_id');
-        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
+        // PUBLIC API: Prioritize request over session over Auth::user() so portal view is always correct (tab-level isolation)
+        $schoolId = request('school_id') ?: (session('school_id') ?: (Auth::check() ? Auth::user()->school_id : null));
+        $orgId = request('organization_id') ?: (session('org_id') ?: (Auth::check() ? Auth::user()->organization_id : null));
         
         $organization = $orgId ? \App\Models\Organization::find($orgId) : null;
         $school = $schoolId ? \App\Models\School::find($schoolId) : null;
@@ -131,14 +134,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/{electionId}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
 
-    // Landing Page Management (Read Operations - All Admins)
+    // Landing Page Management (All Admins can manage their own scoped sections)
     Route::get('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('landing-page.index');
+    Route::post('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing-page.update');
+    Route::post('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
 
-    // Landing Page Management (Super Admin Only - Write Operations)
+    // Landing Page Management (Super Admin Only - System-wide Management)
     Route::middleware(['super_admin'])->group(function () {
-        Route::post('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing-page.update');
-        Route::post('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
-        
         // School Management (Write Operations)
         Route::post('schools', [\App\Http\Controllers\Admin\SchoolController::class, 'store'])->name('schools.store');
         Route::put('schools/{school}', [\App\Http\Controllers\Admin\SchoolController::class, 'update'])->name('schools.update');
@@ -175,7 +177,8 @@ Route::get('/{slug}', function ($slug) {
     if ($school) {
         // Store school ID in session so guest students see school-specific content
         session(['school_id' => $school->id]);
-        return view('welcome', ['school' => $school]);
+        return response()->view('welcome', ['school' => $school])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     // If it's not a school slug, let it fall through or abort

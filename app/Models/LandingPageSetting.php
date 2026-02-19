@@ -28,9 +28,8 @@ class LandingPageSetting extends Model
      */
     public static function getValue(string $section, string $key, $default = null)
     {
-        // Check order: Auth User Org -> Session Org -> Auth School -> Session School -> Global (null)
-        $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
-        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
+        // On public routes, sessions take precedence. In admin dashboard, Auth user takes precedence.
+        ['school_id' => $schoolId, 'organization_id' => $organizationId] = static::getContextIds();
 
         $setting = static::where('section', $section)
             ->where('key', $key)
@@ -59,8 +58,7 @@ class LandingPageSetting extends Model
      */
     public static function getExtra(string $section, string $key, $default = null)
     {
-        $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
-        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
+        ['school_id' => $schoolId, 'organization_id' => $organizationId] = static::getContextIds();
 
         $setting = static::where('section', $section)
             ->where('key', $key)
@@ -116,8 +114,7 @@ class LandingPageSetting extends Model
      */
     public static function getSection(string $section)
     {
-        $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
-        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
+        ['school_id' => $schoolId, 'organization_id' => $organizationId] = static::getContextIds();
 
         return static::where('section', $section)
             ->where(function ($query) use ($organizationId, $schoolId) {
@@ -146,8 +143,7 @@ class LandingPageSetting extends Model
      */
     public static function getSectionWithExtras(string $section)
     {
-        $organizationId = Auth::check() ? Auth::user()->organization_id : session('org_id');
-        $schoolId = Auth::check() ? Auth::user()->school_id : session('school_id');
+        ['school_id' => $schoolId, 'organization_id' => $organizationId] = static::getContextIds();
 
         return static::where('section', $section)
             ->where(function ($query) use ($organizationId, $schoolId) {
@@ -176,5 +172,25 @@ class LandingPageSetting extends Model
                 ];
             })
             ->toArray();
+    }
+
+    /**
+     * Helper to get context-aware school and organization IDs
+     */
+    private static function getContextIds()
+    {
+        $isAdminPath = request()->is('admin*');
+
+        if ($isAdminPath && Auth::check()) {
+            return [
+                'school_id' => Auth::user()->school_id,
+                'organization_id' => Auth::user()->organization_id,
+            ];
+        }
+
+        return [
+            'school_id' => request('school_id') ?: (session('school_id') ?: (Auth::check() ? Auth::user()->school_id : null)),
+            'organization_id' => request('organization_id') ?: (session('org_id') ?: (Auth::check() ? Auth::user()->organization_id : null)),
+        ];
     }
 }
