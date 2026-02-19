@@ -79,8 +79,8 @@ class AnalyticsController extends Controller
 
         // NEW: Votes by Year Level & Section (All Classes include 0 votes)
         $allClasses = Student::query()
-            ->select('yearlevel', 'section')
-            ->distinct()
+            ->select('yearlevel', 'section', DB::raw('COUNT(*) as student_count'))
+            ->groupBy('yearlevel', 'section')
             ->orderBy('yearlevel')
             ->orderBy('section')
             ->get();
@@ -88,7 +88,12 @@ class AnalyticsController extends Controller
         $voterCounts = Vote::query()
             ->join('users', 'votes.voter_id', '=', 'users.id')
             ->join('students', 'users.email', '=', 'students.student_id_number')
-            ->select('students.yearlevel', 'students.section', DB::raw('COUNT(*) as count'))
+            ->select(
+                'students.yearlevel', 
+                'students.section', 
+                DB::raw('COUNT(*) as total_votes'),
+                DB::raw('COUNT(DISTINCT votes.voter_id) as unique_voters')
+            )
             ->groupBy('students.yearlevel', 'students.section')
             ->get()
             ->groupBy(function($item) {
@@ -98,6 +103,7 @@ class AnalyticsController extends Controller
         $votesByYearLevel = $allClasses->map(function ($item) use ($voterCounts) {
             $year = $item->yearlevel ?? 'Unknown';
             $section = $item->section ?? 'N/A';
+            $totalInClass = $item->student_count ?? 0;
             $key = $year . '-' . $section;
             
             $yearLabel = is_numeric($year) ? match ((int) $year) {
@@ -108,9 +114,13 @@ class AnalyticsController extends Controller
                 default => $year . 'th Year'
             } : $year;
 
+            $stats = $voterCounts->has($key) ? $voterCounts->get($key)->first() : null;
+
             return [
                 'yearlevel' => $yearLabel . ' - ' . $section,
-                'count' => $voterCounts->has($key) ? $voterCounts->get($key)->first()->count : 0,
+                'count' => $stats ? $stats->total_votes : 0,
+                'voter_count' => $stats ? $stats->unique_voters : 0,
+                'student_count' => $totalInClass,
             ];
         })->values();
 

@@ -113,19 +113,21 @@
         <div class="card rounded-xl p-6 shadow-sm">
             <h3 class="text-lg font-bold text-primary mb-6">Votes by Year & Section</h3>
             @php
-                $totalYearVotes = $votesByYearLevel->sum('count');
+                $totalUniqueVoters = $votesByYearLevel->sum('voter_count');
                 $colors = ['#166534', '#22c55e', '#facc15', '#eab308', '#84cc16', '#14b8a6'];
                 $gradientParts = [];
                 $currentPercent = 0;
                 $legendItems = [];
 
                 foreach ($votesByYearLevel as $index => $yearData) {
-                    $percent = $totalYearVotes > 0 ? ($yearData['count'] / $totalYearVotes) * 100 : 0;
+                    $percent = $totalUniqueVoters > 0 ? ($yearData['voter_count'] / $totalUniqueVoters) * 100 : 0;
                     $color = $colors[$index % count($colors)];
                     $gradientParts[] = "{$color} {$currentPercent}% " . ($currentPercent + $percent) . '%';
                     $legendItems[] = [
                         'label' => $yearData['yearlevel'],
-                        'count' => $yearData['count'],
+                        'voter_count' => $yearData['voter_count'],
+                        'total_votes' => $yearData['count'],
+                        'student_count' => $yearData['student_count'] ?? 0,
                         'percent' => round($percent, 1),
                         'color' => $color,
                     ];
@@ -134,7 +136,7 @@
                 $gradient = implode(', ', $gradientParts);
             @endphp
 
-            @if ($totalYearVotes > 0)
+            @if ($totalUniqueVoters > 0)
                 <div class="flex flex-col md:flex-row items-center gap-8">
                     <!-- Pie Chart -->
                     <div class="relative">
@@ -143,8 +145,9 @@
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div class="w-24 h-24 rounded-full flex flex-col items-center justify-center"
                                 style="background: var(--bg-primary);">
-                                <span class="text-2xl font-bold text-primary">{{ number_format($totalYearVotes) }}</span>
-                                <span class="text-xs text-secondary">Total Votes</span>
+                                <span
+                                    class="text-2xl font-bold text-primary">{{ number_format($votesByYearLevel->sum('count')) }}</span>
+                                <span class="text-xs text-secondary text-center">Total Votes</span>
                             </div>
                         </div>
                     </div>
@@ -157,8 +160,11 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-primary truncate">{{ $item['label'] }}</p>
-                                    <p class="text-xs text-secondary">{{ number_format($item['count']) }} votes
-                                        ({{ $item['percent'] }}%)
+                                    <p class="text-xs text-secondary">{{ number_format($item['voter_count']) }} voters /
+                                        {{ number_format($item['student_count']) }} students ({{ $item['percent'] }}%)
+                                    </p>
+                                    <p class="text-[10px] text-secondary opacity-60">
+                                        {{ number_format($item['total_votes']) }} total votes
                                     </p>
                                 </div>
                             </div>

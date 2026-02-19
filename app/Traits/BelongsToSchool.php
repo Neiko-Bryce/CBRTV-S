@@ -58,7 +58,15 @@ trait BelongsToSchool
                     $activeSchoolId = $requestSchoolId ?: $sessionSchoolId;
 
                     if ($activeSchoolId) {
-                        $builder->where($builder->getQuery()->from.'.school_id', $activeSchoolId);
+                        // If it's a slug (contains non-numeric), resolve it
+                        if (!is_numeric($activeSchoolId)) {
+                            $school = \App\Models\School::where('slug', $activeSchoolId)->first();
+                            $activeSchoolId = $school ? $school->id : null;
+                        }
+                        
+                        if ($activeSchoolId) {
+                            $builder->where($builder->getQuery()->from.'.school_id', $activeSchoolId);
+                        }
                     }
                     // If no activeSchoolId (root page), we don't apply any filter,
                     // allowing all elections to show (as it was before).
