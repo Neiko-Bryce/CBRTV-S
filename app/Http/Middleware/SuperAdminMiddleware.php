@@ -17,6 +17,11 @@ class SuperAdminMiddleware
             return redirect()->route('login');
         }
 
+        // Allow read-only access (GET/HEAD/OPTIONS) for any admin
+        if (auth()->user()->usertype === 'admin' && in_array($request->method(), ['GET', 'HEAD', 'OPTIONS'])) {
+            return $next($request);
+        }
+
         if (! auth()->user()->is_super_admin) {
             // If it's an AJAX request, return JSON
             if ($request->ajax() || $request->wantsJson()) {

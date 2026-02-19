@@ -205,33 +205,20 @@
                     x-transition:leave-end="opacity-0 transform scale-95" @click.outside="open = false"
                     class="mt-1 ml-4 space-y-1" style="display: none;">
 
-                    @if (Auth::user()->is_super_admin)
-                        <a href="{{ route('admin.schools.index') }}"
-                            class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.schools.*') ? 'active' : '' }}">
-                            <div
-                                class="w-2 h-2 rounded-full {{ request()->routeIs('admin.schools.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
-                            </div>
-                            <span class="text-sm font-medium">Schools</span>
-                        </a>
-                        <a href="{{ route('admin.landing-page.index') }}"
-                            class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.landing-page.*') ? 'active' : '' }}">
-                            <div
-                                class="w-2 h-2 rounded-full {{ request()->routeIs('admin.landing-page.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
-                            </div>
-                            <span class="text-sm font-medium">Landing Page</span>
-                        </a>
-                    @else
-                        <a href="javascript:void(0)" onclick="showRestrictedModal()"
-                            class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all opacity-70 grayscale-[0.5]">
-                            <div class="w-2 h-2 rounded-full bg-transparent border border-current"></div>
-                            <span class="text-sm font-medium">Schools</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="showRestrictedModal()"
-                            class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all opacity-70 grayscale-[0.5]">
-                            <div class="w-2 h-2 rounded-full bg-transparent border border-current"></div>
-                            <span class="text-sm font-medium">Landing Page</span>
-                        </a>
-                    @endif
+                    <a href="{{ route('admin.schools.index') }}"
+                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.schools.*') ? 'active' : '' }}">
+                        <div
+                            class="w-2 h-2 rounded-full {{ request()->routeIs('admin.schools.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
+                        </div>
+                        <span class="text-sm font-medium">Schools</span>
+                    </a>
+                    <a href="{{ route('admin.landing-page.index') }}"
+                        class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.landing-page.*') ? 'active' : '' }}">
+                        <div
+                            class="w-2 h-2 rounded-full {{ request()->routeIs('admin.landing-page.*') ? 'bg-current' : 'bg-transparent border border-current' }}">
+                        </div>
+                        <span class="text-sm font-medium">Landing Page</span>
+                    </a>
                     <a href="{{ route('admin.users.index') }}"
                         class="nav-link flex items-center space-x-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                         <div

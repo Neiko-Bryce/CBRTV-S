@@ -13,17 +13,24 @@
                     <p class="text-xs sm:text-sm text-secondary mt-1">Customize your landing page content</p>
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto">
-                    <a href="{{ route('admin.landing-page.reset') }}"
-                        class="px-4 py-2 border rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
-                        style="border-color: var(--border-color); color: #dc2626;"
-                        onclick="return confirm('Are you sure you want to reset all settings?')">
-                        Reset
-                    </a>
-                    <button type="submit" form="landing-page-form"
-                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
-                        style="background: var(--cpsu-green); color: white;">
-                        Save Changes
-                    </button>
+                    @if (auth()->user()->is_super_admin)
+                        <a href="{{ route('admin.landing-page.reset') }}"
+                            class="px-4 py-2 border rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                            style="border-color: var(--border-color); color: #dc2626;"
+                            onclick="return confirm('Are you sure you want to reset all settings?')">
+                            Reset
+                        </a>
+                        <button type="submit" form="landing-page-form"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                            style="background: var(--cpsu-green); color: white;">
+                            Save Changes
+                        </button>
+                    @else
+                        <div
+                            class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-medium text-secondary border border-dashed border-gray-300">
+                            Read-Only Mode
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -44,6 +51,10 @@
         <form action="{{ route('admin.landing-page.update') }}" method="POST" enctype="multipart/form-data"
             id="landing-page-form">
             @csrf
+
+            @if (!auth()->user()->is_super_admin)
+                <fieldset disabled>
+            @endif
 
             <!-- Tabs and Content Wrapper -->
             <div class="card rounded-xl shadow-sm overflow-hidden">
@@ -120,11 +131,13 @@
                         <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                                 <h4 class="text-base font-semibold text-primary">Meet The Team</h4>
-                                <button type="button" id="add-team-member"
-                                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
-                                    style="background: var(--cpsu-green); color: white;">
-                                    Add Member
-                                </button>
+                                @if (auth()->user()->is_super_admin)
+                                    <button type="button" id="add-team-member"
+                                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                                        style="background: var(--cpsu-green); color: white;">
+                                        Add Member
+                                    </button>
+                                @endif
                             </div>
 
                             <div class="space-y-4 mb-4">
@@ -153,15 +166,18 @@
                                 @forelse($teamMembers as $index => $member)
                                     <div class="team-member-item rounded-xl p-4 relative group"
                                         style="background: var(--bg-tertiary);">
-                                        <button type="button"
-                                            class="remove-team-member absolute top-2 right-2 p-1.5 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                            style="background: rgba(220, 38, 38, 0.1); color: #dc2626;" title="Remove">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
+                                        @if (auth()->user()->is_super_admin)
+                                            <button type="button"
+                                                class="remove-team-member absolute top-2 right-2 p-1.5 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                style="background: rgba(220, 38, 38, 0.1); color: #dc2626;"
+                                                title="Remove">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        @endif
 
                                         <!-- Photo -->
                                         <div class="text-center mb-3">
@@ -264,11 +280,13 @@
                         <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
                             <div class="flex items-center justify-between mb-4">
                                 <h4 class="text-base font-semibold text-primary">Feature Items</h4>
-                                <button type="button" id="add-feature"
-                                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                    style="background: var(--cpsu-green); color: white;">
-                                    Add Feature
-                                </button>
+                                @if (auth()->user()->is_super_admin)
+                                    <button type="button" id="add-feature"
+                                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                        style="background: var(--cpsu-green); color: white;">
+                                        Add Feature
+                                    </button>
+                                @endif
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="features-items-container">
@@ -295,15 +313,18 @@
                                 @foreach ($featuresItems as $index => $feature)
                                     <div class="feature-item rounded-xl p-4 relative"
                                         style="background: var(--bg-tertiary);">
-                                        <button type="button"
-                                            class="remove-feature absolute top-2 right-2 p-1.5 rounded-lg transition-colors"
-                                            style="background: rgba(220, 38, 38, 0.1); color: #dc2626;" title="Remove">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
+                                        @if (auth()->user()->is_super_admin)
+                                            <button type="button"
+                                                class="remove-feature absolute top-2 right-2 p-1.5 rounded-lg transition-colors"
+                                                style="background: rgba(220, 38, 38, 0.1); color: #dc2626;"
+                                                title="Remove">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        @endif
                                         <div class="space-y-2 pr-8">
                                             <input type="text" name="features_items[{{ $index }}][title]"
                                                 value="{{ $feature['title'] ?? '' }}"
@@ -322,6 +343,9 @@
                     </div>
                 </div>
             </div>
+            @if (!auth()->user()->is_super_admin)
+                </fieldset>
+            @endif
         </form>
     </div>
 
