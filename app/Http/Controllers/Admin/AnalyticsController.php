@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Election;
+use App\Models\Student;
 use App\Models\User;
 use App\Models\Vote;
 use Carbon\Carbon;
@@ -76,20 +77,43 @@ class AnalyticsController extends Controller
                 ];
             });
 
-        // NEW: Votes by Year Level
-        $votesByYearLevel = Vote::query()
+        // NEW: Votes by Year Level & Section (All Classes include 0 votes)
+        $allClasses = Student::query()
+            ->select('yearlevel', 'section')
+            ->distinct()
+            ->orderBy('yearlevel')
+            ->orderBy('section')
+            ->get();
+
+        $voterCounts = Vote::query()
             ->join('users', 'votes.voter_id', '=', 'users.id')
             ->join('students', 'users.email', '=', 'students.student_id_number')
-            ->select('students.yearlevel', DB::raw('COUNT(*) as count'))
-            ->groupBy('students.yearlevel')
-            ->orderBy('students.yearlevel')
+            ->select('students.yearlevel', 'students.section', DB::raw('COUNT(*) as count'))
+            ->groupBy('students.yearlevel', 'students.section')
             ->get()
-            ->map(function ($item) {
-                return [
-                    'yearlevel' => $item->yearlevel ?? 'Unknown',
-                    'count' => $item->count,
-                ];
+            ->groupBy(function($item) {
+                return $item->yearlevel . '-' . $item->section;
             });
+
+        $votesByYearLevel = $allClasses->map(function ($item) use ($voterCounts) {
+            $year = $item->yearlevel ?? 'Unknown';
+            $section = $item->section ?? 'N/A';
+            $key = $year . '-' . $section;
+            
+            $yearLabel = is_numeric($year) ? match ((int) $year) {
+                1 => '1st Year',
+                2 => '2nd Year',
+                3 => '3rd Year',
+                4 => '4th Year',
+                default => $year . 'th Year'
+            } : $year;
+
+            return [
+                'yearlevel' => $yearLabel . ' - ' . $section,
+                'count' => $voterCounts->has($key) ? $voterCounts->get($key)->first()->count : 0,
+            ];
+        })->values();
+
         $maxVotesByYear = $votesByYearLevel->max('count') ?: 1;
 
         // NEW: Peak Voting Hours (24-hour breakdown)

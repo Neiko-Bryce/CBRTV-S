@@ -109,9 +109,9 @@
             </div>
         </div>
 
-        <!-- NEW: Votes by Year Level (Pie Chart) -->
+        <!-- NEW: Votes by Year & Section (Pie Chart) -->
         <div class="card rounded-xl p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-primary mb-6">Votes by Year Level</h3>
+            <h3 class="text-lg font-bold text-primary mb-6">Votes by Year & Section</h3>
             @php
                 $totalYearVotes = $votesByYearLevel->sum('count');
                 $colors = ['#166534', '#22c55e', '#facc15', '#eab308', '#84cc16', '#14b8a6'];
