@@ -28,7 +28,11 @@ class AdminSeeder extends Seeder
         );
         $this->command->info("Super Admin account synced.");
 
-        // 2. Regular Admin Account (Read-Only to Schools/Landing Page)
+        // 2. Regular Admin Account (Scoped to a specific School)
+        // Ensure a school exists to assign them to
+        $school = \App\Models\School::first();
+        $schoolId = $school ? $school->id : null;
+
         User::updateOrCreate(
             ['email' => 'admin@gmail.com'],
             [
@@ -36,9 +40,10 @@ class AdminSeeder extends Seeder
                 'password' => Hash::make('neiko@admin12345'),
                 'usertype' => 'admin',
                 'is_super_admin' => false,
+                'school_id' => $schoolId,
                 'email_verified_at' => now(),
             ]
         );
-        $this->command->info("Regular Admin account synced.");
+        $this->command->info("Regular Admin account synced (School ID: " . ($schoolId ?? 'NONE') . ").");
     }
 }

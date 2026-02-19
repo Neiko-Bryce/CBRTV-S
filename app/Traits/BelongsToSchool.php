@@ -78,8 +78,31 @@ trait BelongsToSchool
 
         // Automatically set school_id when creating a new record
         static::creating(function ($model) {
-            if (Auth::check() && ! $model->school_id) {
-                $model->school_id = Auth::user()->school_id;
+            if (Auth::check()) {
+                $user = Auth::user();
+                
+                // If model already has a school_id (set manually in controller), respect it
+                if ($model->school_id) {
+                    return;
+                }
+
+                // Normal path: Use the admin's assigned school
+                if ($user->school_id) {
+                    $model->school_id = $user->school_id;
+                    return;
+                }
+
+                // Super Admin path (user->school_id is null): 
+                // Inherit from organization or election if applicable
+                if ($user->is_super_admin) {
+                    if (isset($model->organization_id) && $model->organization_id) {
+                        $org = \App\Models\Organization::find($model->organization_id);
+                        if ($org) $model->school_id = $org->school_id;
+                    } elseif (isset($model->election_id) && $model->election_id) {
+                        $election = \App\Models\Election::find($model->election_id);
+                        if ($election) $model->school_id = $election->school_id;
+                    }
+                }
             }
         });
     }
