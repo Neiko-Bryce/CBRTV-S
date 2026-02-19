@@ -59,10 +59,9 @@ trait BelongsToSchool
 
                     if ($activeSchoolId) {
                         $builder->where($builder->getQuery()->from.'.school_id', $activeSchoolId);
-                    } else {
-                        // Global site - only show global data (no school_id)
-                        $builder->whereNull($builder->getQuery()->from.'.school_id');
                     }
+                    // If no activeSchoolId (root page), we don't apply any filter,
+                    // allowing all elections to show (as it was before).
                 }
             } finally {
                 static::$isSchoolScoping = false;
