@@ -47,6 +47,7 @@ trait BelongsToSchool
                     
                     // EXCEPTION: Always allow global lookup for Users and Students on public routes 
                     // This is essential for Login to work across different portal links.
+                    $model = $builder->getModel();
                     if ($model instanceof \App\Models\User || $model instanceof \App\Models\Student) {
                         return;
                     }
