@@ -13,25 +13,36 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        $email = env('SUPER_ADMIN_EMAIL', 'superadmin@vosewisly.com');
-        $password = env('SUPER_ADMIN_PASSWORD', 'neiko@superadmin12345');
+        // 1. Super Admin Account
+        $saEmail = env('SUPER_ADMIN_EMAIL', 'superadmin@vosewisly.com');
+        $saPassword = env('SUPER_ADMIN_PASSWORD', 'neiko@superadmin12345');
 
-        // Check if admin already exists
-        if (User::where('email', $email)->exists()) {
-            $this->command->info("Super Admin user ({$email}) already exists, skipping...");
-
-            return;
+        if (!User::where('email', $saEmail)->exists()) {
+            User::create([
+                'name' => 'Super Administrator',
+                'email' => $saEmail,
+                'password' => Hash::make($saPassword),
+                'usertype' => 'admin',
+                'is_super_admin' => true,
+                'email_verified_at' => now(),
+            ]);
+            $this->command->info("Super Admin account ({$saEmail}) created.");
         }
 
-        User::create([
-            'name' => 'Super Administrator',
-            'email' => $email,
-            'password' => Hash::make($password),
-            'usertype' => 'admin',
-            'is_super_admin' => true,
-            'email_verified_at' => now(),
-        ]);
+        // 2. Regular Admin Account
+        $adminEmail = 'admin@gmail.com';
+        $adminPassword = 'neiko@admin12345';
 
-        $this->command->info('Super Admin user created successfully!');
+        if (!User::where('email', $adminEmail)->exists()) {
+            User::create([
+                'name' => 'Neiko Bryce',
+                'email' => $adminEmail,
+                'password' => Hash::make($adminPassword),
+                'usertype' => 'admin',
+                'is_super_admin' => false,
+                'email_verified_at' => now(),
+            ]);
+            $this->command->info("Regular Admin account ({$adminEmail}) created.");
+        }
     }
 }
