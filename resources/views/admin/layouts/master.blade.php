@@ -637,27 +637,22 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                 </svg>
                             </button>
 
-                            <!-- Notifications -->
-                            <button class="relative header-btn p-2 rounded-lg" title="Notifications">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                    </path>
-                                </svg>
-                                <span class="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse"
-                                    style="background: var(--cpsu-gold);"></span>
-                            </button>
 
                             <!-- User Profile Dropdown -->
                             <div class="relative" x-data="{ open: false }">
                                 <button @click="open = !open" @click.away="open = false"
-                                    class="flex items-center space-x-2 p-1.5 rounded-lg transition-colors hover:bg-[var(--hover-bg)]">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-sm"
+                                    class="flex items-center space-x-2 p-1.5 rounded-lg transition-colors hover:bg-[var(--hover-bg)] relative">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-sm relative"
                                         style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
                                         <span
                                             class="text-white font-semibold text-xs">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                                        @if (auth()->user()->is_super_admin)
+                                            <div class="absolute top-0 right-0 w-2 h-2 rounded-full shadow-sm"
+                                                style="background-color: #facc15; z-index: 10;"></div>
+                                        @endif
                                     </div>
-                                    <svg class="w-4 h-4 hidden md:block" style="color: var(--text-secondary);"
+                                    <svg class="w-4 h-4 hidden md:block transition-transform duration-200"
+                                        :class="{ 'rotate-180': open }" style="color: var(--text-secondary);"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7"></path>
@@ -674,8 +669,18 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                     class="absolute right-0 mt-2 w-56 rounded-lg shadow-xl py-2 z-50"
                                     style="background: var(--card-bg); border: 1px solid var(--border-color); display: none;">
                                     <div class="px-4 py-3 border-b" style="border-color: var(--border-color);">
-                                        <p class="text-sm font-semibold" style="color: var(--text-primary);">
-                                            {{ auth()->user()->name }}</p>
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-sm font-semibold truncate"
+                                                style="color: var(--text-primary);">
+                                                {{ auth()->user()->name }}
+                                            </p>
+                                            @if (auth()->user()->is_super_admin)
+                                                <span
+                                                    class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-yellow-400 text-green-900">
+                                                    Super Admin
+                                                </span>
+                                            @endif
+                                        </div>
                                         <p class="text-xs truncate" style="color: var(--text-secondary);">
                                             {{ auth()->user()->email }}</p>
                                     </div>

@@ -137,7 +137,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Landing Page Management (Super Admin Only - Write Operations)
     Route::middleware(['super_admin'])->group(function () {
         Route::post('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing-page.update');
-        Route::get('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
+        Route::post('landing-page/reset', [\App\Http\Controllers\Admin\LandingPageController::class, 'reset'])->name('landing-page.reset');
         
         // School Management (Write Operations)
         Route::post('schools', [\App\Http\Controllers\Admin\SchoolController::class, 'store'])->name('schools.store');

@@ -14,12 +14,15 @@
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     @if (auth()->user()->is_super_admin)
-                        <a href="{{ route('admin.landing-page.reset') }}"
-                            class="px-4 py-2 border rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
-                            style="border-color: var(--border-color); color: #dc2626;"
-                            onclick="return confirm('Are you sure you want to reset all settings?')">
-                            Reset
-                        </a>
+                        <form action="{{ route('admin.landing-page.reset') }}" method="POST" class="inline"
+                            onsubmit="return confirm('Are you sure you want to reset all settings?')">
+                            @csrf
+                            <button type="submit"
+                                class="px-4 py-2 border rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                                style="border-color: var(--border-color); color: #dc2626;">
+                                Reset
+                            </button>
+                        </form>
                         <button type="submit" form="landing-page-form"
                             class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
                             style="background: var(--cpsu-green); color: white;">
