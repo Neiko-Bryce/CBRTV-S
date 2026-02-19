@@ -32,7 +32,7 @@ class LiveResultsController extends Controller
         try {
             // Only elections that admin has turned on for landing page display; latest first
             $elections = Election::where('show_live_results', true)
-                ->whereIn('status', ['ongoing', 'completed'])
+                ->whereIn('status', ['upcoming', 'ongoing', 'completed'])
                 ->with(['organization'])
                 ->orderBy('election_date', 'desc')
                 ->orderBy('id', 'desc')
@@ -147,7 +147,19 @@ class LiveResultsController extends Controller
                 'total_voters' => Vote::where('election_id', $election->id)->distinct('voter_id')->count(),
             ];
 
-            if ($effectiveStatus === 'ongoing') {
+            if ($effectiveStatus === 'upcoming') {
+                // For upcoming elections, show time until election starts
+                if ($startDateTime) {
+                    $timeUntilStart = $now->diff($startDateTime);
+                    $resultData['starts_at'] = $startDateTime->format('M d, Y g:i A');
+                    $resultData['starts_in_seconds'] = $now->diffInSeconds($startDateTime, false);
+                    $resultData['time_remaining'] = [
+                        'hours' => $timeUntilStart->h + ($timeUntilStart->d * 24),
+                        'minutes' => $timeUntilStart->i,
+                        'seconds' => $timeUntilStart->s,
+                    ];
+                }
+            } elseif ($effectiveStatus === 'ongoing') {
                 // For ongoing elections, show time until election ends
                 if ($endDateTime) {
                     $timeUntilEnd = $now->diff($endDateTime);
