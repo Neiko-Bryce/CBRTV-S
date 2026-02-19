@@ -56,6 +56,7 @@ class PositionController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['school_id'] = auth()->user()->school_id;
 
         try {
             DB::beginTransaction();
@@ -118,6 +119,7 @@ class PositionController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['school_id'] = auth()->user()->school_id;
 
         try {
             DB::beginTransaction();

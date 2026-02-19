@@ -36,6 +36,12 @@ trait BelongsToSchool
                         return;
                     }
 
+                    // RESCUE MODE: If an admin has no school_id yet (e.g. after a reset), 
+                    // allow them to see everything so they can fix/assign data.
+                    if (!$user->school_id) {
+                        return;
+                    }
+
                     // Regular admins only see data from their own school OR Global records (NULL)
                     $tableName = $builder->getQuery()->from;
                     $builder->where(function ($q) use ($user, $tableName) {
