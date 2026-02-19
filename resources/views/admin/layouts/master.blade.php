@@ -669,14 +669,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                     class="absolute right-0 mt-2 w-56 rounded-lg shadow-xl py-2 z-50"
                                     style="background: var(--card-bg); border: 1px solid var(--border-color); display: none;">
                                     <div class="px-4 py-3 border-b" style="border-color: var(--border-color);">
-                                        <div class="flex items-center justify-between">
+                                        <div class="flex items-center justify-between gap-2">
                                             <p class="text-sm font-semibold truncate"
                                                 style="color: var(--text-primary);">
                                                 {{ auth()->user()->name }}
                                             </p>
                                             @if (auth()->user()->is_super_admin)
                                                 <span
-                                                    class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-yellow-400 text-green-900">
+                                                    class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-yellow-400 text-green-900 whitespace-nowrap flex-shrink-0">
                                                     Super Admin
                                                 </span>
                                             @endif
