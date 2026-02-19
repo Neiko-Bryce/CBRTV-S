@@ -34,8 +34,8 @@ trait BelongsToOrganization
                         return;
                     }
 
-                    // Super Admins bypass the filter to see everything
-                    if ($user->is_super_admin) {
+                    // All Admins bypass the organization filter to see everything in their school
+                    if ($user->is_super_admin || $user->usertype === 'admin') {
                         return;
                     }
 
