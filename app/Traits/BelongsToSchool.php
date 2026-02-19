@@ -36,12 +36,12 @@ trait BelongsToSchool
                         return;
                     }
 
-                    // Regular admins only see data from their own school in Dashboard
-                    if ($user->school_id) {
-                        $builder->where($builder->getQuery()->from.'.school_id', $user->school_id);
-                    } else {
-                        $builder->whereNull($builder->getQuery()->from.'.school_id');
-                    }
+                    // Regular admins only see data from their own school OR Global records (NULL)
+                    $tableName = $builder->getQuery()->from;
+                    $builder->where(function ($q) use ($user, $tableName) {
+                        $q->where($tableName.'.school_id', $user->school_id)
+                          ->orWhereNull($tableName.'.school_id');
+                    });
                 } else {
                     // PUBLIC PORTAL / VOTER SIDE / API
                     
