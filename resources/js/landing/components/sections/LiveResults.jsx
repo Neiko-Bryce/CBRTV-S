@@ -56,6 +56,7 @@ export default function LiveResults() {
         return () => observer.disconnect();
     }, []);
 
+    const upcomingElections = elections.filter(e => e.status === 'upcoming');
     const ongoingElections = elections.filter(e => e.status === 'ongoing');
     const completedElections = elections.filter(e => e.status === 'completed');
     const hasElections = elections.length > 0;
@@ -169,6 +170,60 @@ export default function LiveResults() {
                     {/* Elections content – when admin displays elections; same dark green card, inner panels like reference */}
                     {!loading && !error && hasElections && (
                         <div className="relative p-6 sm:p-8 lg:p-10 xl:p-12 space-y-8">
+                            {/* Upcoming Elections */}
+                            {upcomingElections.map((election, electionIndex) => (
+                                <motion.div
+                                    key={'upcoming-' + election.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: electionIndex * 0.1 }}
+                                    className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 border border-white/10 shadow-lg"
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-400/30 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full text-uppercase">
+                                                    Scheduled
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
+                                                {election.election_name}
+                                            </h3>
+                                            {election.organization && (
+                                                <p className="text-white/70 text-sm">{election.organization}</p>
+                                            )}
+                                            {election.starts_at && (
+                                                <p className="text-white/60 text-xs mt-1">
+                                                    Starts: {election.starts_at}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex-shrink-0">
+                                            {election.time_remaining && (
+                                                <div className="bg-white/5 rounded-xl p-3 border border-white/10 text-center">
+                                                    <p className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">Starts In</p>
+                                                    <div className="flex gap-2">
+                                                        <div className="text-white">
+                                                            <span className="text-lg font-bold tabular-nums">{election.time_remaining.hours}</span>
+                                                            <span className="text-[10px] ml-1 opacity-50">H</span>
+                                                        </div>
+                                                        <div className="text-white">
+                                                            <span className="text-lg font-bold tabular-nums">{election.time_remaining.minutes}</span>
+                                                            <span className="text-[10px] ml-1 opacity-50">M</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="text-center py-6 text-white/50 italic text-sm">
+                                        Voters are preparing. Check back soon!
+                                    </div>
+                                </motion.div>
+                            ))}
+
                             {/* Ongoing Elections First */}
                             {ongoingElections.map((election, electionIndex) => (
                                 <motion.div
