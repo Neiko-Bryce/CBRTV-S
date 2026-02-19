@@ -44,6 +44,13 @@ trait BelongsToSchool
                     }
                 } else {
                     // PUBLIC PORTAL / VOTER SIDE / API
+                    
+                    // EXCEPTION: Always allow global lookup for Users and Students on public routes 
+                    // This is essential for Login to work across different portal links.
+                    if ($model instanceof \App\Models\User || $model instanceof \App\Models\Student) {
+                        return;
+                    }
+
                     // Prioritize request('school_id') for tab-level isolation
                     $requestSchoolId = request('school_id');
                     $sessionSchoolId = session('school_id');
