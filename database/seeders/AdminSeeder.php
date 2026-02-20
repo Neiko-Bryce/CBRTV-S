@@ -29,8 +29,8 @@ class AdminSeeder extends Seeder
         $this->command->info("Super Admin account synced.");
 
         // 2. Regular Admin Account (Scoped to a specific School)
-        // Ensure a school exists to assign them to
-        $school = \App\Models\School::first();
+        // Prioritize "Main Campus" for the default admin
+        $school = \App\Models\School::where('slug', 'main-campus')->first() ?: \App\Models\School::first();
         $schoolId = $school ? $school->id : null;
 
         User::updateOrCreate(

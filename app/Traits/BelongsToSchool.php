@@ -73,9 +73,14 @@ trait BelongsToSchool
                         if ($activeSchoolId) {
                             $builder->where($builder->getQuery()->from.'.school_id', $activeSchoolId);
                         }
+                    } else {
+                        // ROOT PAGE (www.cpsuvotewisely.com)
+                        // Default to showing only Main Campus data
+                        $mainCampus = \App\Models\School::where('slug', 'main-campus')->first();
+                        if ($mainCampus) {
+                            $builder->where($builder->getQuery()->from.'.school_id', $mainCampus->id);
+                        }
                     }
-                    // If no activeSchoolId (root page), we don't apply any filter,
-                    // allowing all elections to show (as it was before).
                 }
             } finally {
                 static::$isSchoolScoping = false;

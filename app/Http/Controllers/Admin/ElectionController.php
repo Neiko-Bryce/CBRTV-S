@@ -135,6 +135,8 @@ class ElectionController extends Controller
                 }
             }
 
+            $validated['school_id'] = auth()->user()->school_id;
+
             // Strong validation: Cannot create election in the past
             $nowPH = Carbon::now('Asia/Manila');
             $electionDate = Carbon::parse($validated['election_date'], 'Asia/Manila');
@@ -320,6 +322,9 @@ class ElectionController extends Controller
                     $validated['type_of_election'] = $organization->name;
                 }
             }
+
+            // Ensure school_id remains consistent with the admin's school
+            $validated['school_id'] = auth()->user()->school_id;
 
             $election->update($validated);
 
