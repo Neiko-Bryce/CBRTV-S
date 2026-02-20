@@ -110,33 +110,49 @@
                     </thead>
                     <tbody>
                         @forelse($schools as $school)
-                            <tr class="table-row transition-colors border-b" style="border-color: var(--border-color);">
+                            <tr id="school-row-{{ $school->id }}" class="table-row transition-colors border-b"
+                                style="border-color: var(--border-color);">
                                 <td class="px-4 py-4">
-                                    <div class="text-sm font-semibold text-primary">{{ $school->name }}</div>
+                                    <div id="school-name-{{ $school->id }}" class="text-sm font-semibold text-primary">
+                                        {{ $school->name }}</div>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <div class="text-sm text-cpsu-green font-medium">/{{ $school->slug }}</div>
+                                    <div id="school-slug-{{ $school->id }}" class="text-sm text-cpsu-green font-medium">
+                                        /{{ $school->slug }}</div>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <div class="text-sm text-primary">{{ $school->location ?? 'Not specified' }}</div>
+                                    <div id="school-location-{{ $school->id }}" class="text-sm text-primary">
+                                        {{ $school->location ?? 'Not specified' }}</div>
                                 </td>
                                 <td class="px-4 py-4 text-center">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $school->is_active ? 'text-white' : 'text-gray-600' }}"
-                                        style="{{ $school->is_active ? 'background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);' : 'background: rgba(0, 0, 0, 0.1);' }}">
-                                        {{ $school->is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    <div id="school-status-{{ $school->id }}">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $school->is_active ? 'text-white' : 'text-gray-600' }}"
+                                            style="{{ $school->is_active ? 'background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);' : 'background: rgba(0, 0, 0, 0.1);' }}">
+                                            {{ $school->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-4 text-center actions-cell">
                                     <div class="flex items-center justify-center space-x-2">
-                                        <a href="/{{ $school->slug }}" target="_blank"
+                                        <button type="button" onclick="viewSchool({{ $school->id }})"
                                             class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
-                                            style="color: var(--cpsu-green);" title="View Landing Page">
+                                            style="color: var(--cpsu-green);" title="View Details">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                        <a id="school-link-{{ $school->id }}" href="/{{ $school->slug }}"
+                                            target="_blank"
+                                            class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
+                                            style="color: var(--text-secondary);" title="Visit Portal">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                                 </path>
                                             </svg>
                                         </a>
@@ -194,6 +210,68 @@
         </div>
     </div>
 
+    <!-- View Modal -->
+    <div id="viewSchoolModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="text-xl font-semibold text-primary">School Details</h2>
+                <span class="close" onclick="closeViewModal()">&times;</span>
+            </div>
+            <div class="modal-body space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-xs font-semibold text-secondary uppercase tracking-wider mb-1">School Name</p>
+                        <p id="view-name"
+                            class="text-sm font-medium text-primary bg-secondary p-3 rounded-lg border border-transparent"
+                            style="border-color: var(--border-color);"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-secondary uppercase tracking-wider mb-1">Status</p>
+                        <div id="view-status-badge" class="inline-flex mt-1"></div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-secondary uppercase tracking-wider mb-1">Portal Slug</p>
+                        <p id="view-slug"
+                            class="text-sm font-medium text-cpsu-green bg-secondary p-3 rounded-lg border border-transparent"
+                            style="border-color: var(--border-color);"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-secondary uppercase tracking-wider mb-1">Location</p>
+                        <p id="view-location"
+                            class="text-sm font-medium text-primary bg-secondary p-3 rounded-lg border border-transparent"
+                            style="border-color: var(--border-color);"></p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-secondary uppercase tracking-wider mb-1">Direct Portal URL</p>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="view-url" readonly
+                            class="flex-1 text-sm bg-secondary p-3 rounded-lg border border-transparent cursor-default"
+                            style="border-color: var(--border-color); color: var(--text-primary);">
+                        <button type="button" onclick="copyPortalUrl()"
+                            class="p-3 bg-cpsu-green text-white rounded-lg hover:bg-cpsu-green-dark transition-colors"
+                            title="Copy URL">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeViewModal()"
+                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style="background-color: var(--bg-tertiary); color: var(--text-primary);">Close</button>
+                @if (auth()->user()->is_super_admin)
+                    <button type="button" id="view-edit-btn"
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-white btn-cpsu-primary">Edit School</button>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Create/Edit Modal -->
     <div id="schoolModal" class="modal">
         <div class="modal-content">
@@ -209,8 +287,9 @@
                         <label class="block text-sm font-medium text-primary mb-2">School Name <span
                                 class="text-red-500">*</span></label>
                         <input type="text" name="name" id="name" required
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent transition-all"
                             style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="error-name"></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-primary mb-2">Portal Slug (Direct URL)</label>
@@ -218,20 +297,22 @@
                             <span
                                 class="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm"
                                 style="border-color: var(--border-color); background-color: var(--bg-tertiary);">
-                                votewisely.com/
+                                {{ url('/') }}/
                             </span>
                             <input type="text" name="slug" id="slug"
-                                class="flex-1 px-3 py-2 border rounded-r-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
+                                class="flex-1 px-3 py-2 border rounded-r-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent transition-all"
                                 style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"
                                 placeholder="e.g. cpsu-main">
                         </div>
+                        <p class="text-xs text-red-500 mt-1 hidden" id="error-slug"></p>
                         <p class="text-xs text-secondary mt-1 italic">Leave empty to auto-generate from name</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-primary mb-2">Location</label>
                         <input type="text" name="location" id="location"
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent transition-all"
                             style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="error-location"></p>
                     </div>
                     <div>
                         <label class="flex items-center">
@@ -245,64 +326,178 @@
                     <button type="button" onclick="closeModal()"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         style="background-color: var(--bg-tertiary); color: var(--text-primary);">Cancel</button>
-                    <button type="submit"
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-white btn-cpsu-primary">Save</button>
+                    <button type="submit" id="saveButton"
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-white btn-cpsu-primary flex items-center space-x-2">
+                        <span id="saveButtonText">Save School</span>
+                        <svg id="saveSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3 class="text-lg font-semibold text-primary">Confirm Delete</h3>
-                <span class="close" onclick="closeDeleteModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                        style="background: rgba(220, 38, 38, 0.1);">
-                        <svg class="w-6 h-6" style="color: #dc2626;" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                            </path>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-primary">Are you sure you want to delete this school?</p>
-                        <p class="text-sm text-secondary mt-1" id="deleteItemName"></p>
-                        <p class="text-xs mt-2" style="color: #dc2626;">This action cannot be undone.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" onclick="closeDeleteModal()"
-                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                    style="background-color: var(--bg-tertiary); color: var(--text-primary);">Cancel</button>
-                <button type="button" onclick="confirmDelete()"
-                    class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
-                    style="background: #dc2626;">Delete School</button>
-            </div>
-        </div>
-    </div>
+
+
+
 
     @push('scripts')
         <script>
             let currentSchoolId = null;
             let currentDeleteId = null;
 
+            function showNotification(message, type = 'success') {
+                const existingNotifications = document.querySelectorAll('.notification-toast');
+                existingNotifications.forEach(n => n.remove());
+
+                const notification = document.createElement('div');
+                notification.className = `notification-toast fixed top-4 right-4 z-[9999] p-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[300px] ${
+                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                } text-white`;
+
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                notification.style.transition = 'all 0.3s ease-out';
+
+                const icon = type === 'success' ?
+                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
+                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+
+                notification.innerHTML = `
+                    <div class="flex-shrink-0">${icon}</div>
+                    <div class="flex-1">
+                        <p class="font-medium">${message}</p>
+                    </div>
+                `;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                    notification.style.opacity = '1';
+                }, 10);
+
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }, 4000);
+            }
+
+            function updateSchoolRowInTable(school) {
+                const row = document.getElementById(`school-row-${school.id}`);
+                if (!row) return;
+
+                const nameEl = document.getElementById(`school-name-${school.id}`);
+                const slugEl = document.getElementById(`school-slug-${school.id}`);
+                const locationEl = document.getElementById(`school-location-${school.id}`);
+                const statusEl = document.getElementById(`school-status-${school.id}`);
+                const linkEl = document.getElementById(`school-link-${school.id}`);
+
+                if (nameEl) nameEl.textContent = school.name;
+                if (slugEl) slugEl.textContent = `/${school.slug}`;
+                if (locationEl) locationEl.textContent = school.location || 'Not specified';
+                if (linkEl) linkEl.href = `/` + school.slug;
+
+                if (statusEl) {
+                    if (school.is_active) {
+                        statusEl.innerHTML = `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                                style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                                Active
+                            </span>`;
+                    } else {
+                        statusEl.innerHTML = `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-gray-600"
+                                style="background: rgba(0, 0, 0, 0.1);">
+                                Inactive
+                            </span>`;
+                    }
+                }
+
+                // Add a brief highlight effect
+                row.style.transition = 'background-color 0.5s';
+                const originalBg = row.style.backgroundColor;
+                row.style.backgroundColor = 'rgba(22, 101, 52, 0.1)';
+                setTimeout(() => {
+                    row.style.backgroundColor = originalBg;
+                }, 1000);
+            }
+
+            function clearErrors() {
+                document.querySelectorAll('[id^="error-"]').forEach(el => {
+                    el.textContent = '';
+                    el.classList.add('hidden');
+                });
+                document.querySelectorAll('#schoolForm input').forEach(input => {
+                    input.style.borderColor = 'var(--border-color)';
+                });
+            }
+
             function openCreateModal() {
                 currentSchoolId = null;
+                clearErrors();
                 document.getElementById('modalTitle').textContent = 'Add New School';
                 document.getElementById('schoolForm').action = '{{ route('admin.schools.store') }}';
                 document.getElementById('formMethod').innerHTML = '';
-                document.getElementById('name').value = '';
-                document.getElementById('slug').value = '';
-                document.getElementById('location').value = '';
+                document.getElementById('schoolForm').reset();
                 document.getElementById('is_active').checked = true;
                 document.getElementById('schoolModal').classList.add('active');
+            }
+
+            function viewSchool(id) {
+                fetch(`/admin/schools/${id}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('view-name').textContent = data.name;
+                        document.getElementById('view-slug').textContent = `/${data.slug}`;
+                        document.getElementById('view-location').textContent = data.location || 'Not specified';
+                        document.getElementById('view-url').value = `{{ url('/') }}/${data.slug}`;
+
+                        const badge = document.getElementById('view-status-badge');
+                        if (data.is_active) {
+                            badge.innerHTML =
+                                '<span class="px-2.5 py-0.5 rounded-full text-xs font-medium text-white" style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">Active</span>';
+                        } else {
+                            badge.innerHTML =
+                                '<span class="px-2.5 py-0.5 rounded-full text-xs font-medium text-gray-600 bg-gray-100">Inactive</span>';
+                        }
+
+                        @if (auth()->user()->is_super_admin)
+                            document.getElementById('view-edit-btn').onclick = () => {
+                                closeViewModal();
+                                editSchool(id);
+                            };
+                        @endif
+
+                        document.getElementById('viewSchoolModal').classList.add('active');
+                    });
+            }
+
+            function closeViewModal() {
+                document.getElementById('viewSchoolModal').classList.remove('active');
+            }
+
+            function copyPortalUrl() {
+                const urlInput = document.getElementById('view-url');
+                urlInput.select();
+                document.execCommand('copy');
+                showNotification('Portal URL copied to clipboard!');
             }
 
             function editSchool(id) {
@@ -315,6 +510,7 @@
                     .then(res => res.json())
                     .then(data => {
                         currentSchoolId = id;
+                        clearErrors();
                         document.getElementById('modalTitle').textContent = 'Edit School';
                         document.getElementById('schoolForm').action = `/admin/schools/${id}`;
                         document.getElementById('formMethod').innerHTML = '@method('PUT')';
@@ -327,18 +523,33 @@
             }
 
             function openDeleteModal(id, name) {
-                currentDeleteId = id;
-                document.getElementById('deleteItemName').textContent = `School: ${name}`;
-                document.getElementById('deleteModal').classList.add('active');
+                Swal.fire({
+                    title: 'Confirm Delete',
+                    text: `Are you sure you want to delete "${name}"? This action cannot be undone and will fail if there are active users or organizations.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, delete it!',
+                    background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
+                    color: document.documentElement.classList.contains('dark') ? '#f1f5f9' : '#1e293b'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        currentDeleteId = id;
+                        confirmDelete();
+                    }
+                });
             }
 
             function closeDeleteModal() {
-                currentDeleteId = null;
-                document.getElementById('deleteModal').classList.remove('active');
+                // No longer needed with SweetAlert
             }
 
             function confirmDelete() {
                 if (!currentDeleteId) return;
+
+                Swal.showLoading();
+
                 fetch(`/admin/schools/${currentDeleteId}`, {
                         method: 'DELETE',
                         headers: {
@@ -347,14 +558,30 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        closeDeleteModal();
-                        if (data.success) {
-                            location.reload();
+                    .then(res => res.json().then(data => ({
+                        status: res.status,
+                        data
+                    })))
+                    .then(({
+                        status,
+                        data
+                    }) => {
+                        if (status === 200 && data.success) {
+                            closeDeleteModal();
+                            const row = document.getElementById(`school-row-${currentDeleteId}`);
+                            if (row) {
+                                row.style.transition = 'all 0.5s';
+                                row.style.opacity = '0';
+                                row.style.transform = 'translateX(20px)';
+                                setTimeout(() => row.remove(), 500);
+                            }
+                            showNotification(data.message);
                         } else {
-                            alert(data.message || 'Error deleting school');
+                            showNotification(data.message || 'Error deleting school', 'error');
                         }
+                    })
+                    .catch(err => {
+                        showNotification('A network error occurred', 'error');
                     });
             }
 
@@ -364,6 +591,16 @@
 
             document.getElementById('schoolForm').addEventListener('submit', function(e) {
                 e.preventDefault();
+                clearErrors();
+
+                const saveBtn = document.getElementById('saveButton');
+                const saveSpinner = document.getElementById('saveSpinner');
+                const saveText = document.getElementById('saveButtonText');
+
+                saveBtn.disabled = true;
+                saveSpinner.classList.remove('hidden');
+                saveText.classList.add('hidden');
+
                 const formData = new FormData(this);
                 const method = currentSchoolId ? 'PUT' : 'POST';
 
@@ -377,22 +614,66 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.errors) {
-                            alert(Object.values(data.errors).flat().join('\n'));
+                    .then(res => res.json().then(data => ({
+                        status: res.status,
+                        data
+                    })))
+                    .then(({
+                        status,
+                        data
+                    }) => {
+                        if (status === 422) { // Validation error
+                            saveBtn.disabled = false;
+                            saveSpinner.classList.add('hidden');
+                            saveText.classList.remove('hidden');
+
+                            Object.keys(data.errors).forEach(key => {
+                                const errorEl = document.getElementById(`error-${key}`);
+                                if (errorEl) {
+                                    errorEl.textContent = data.errors[key][0];
+                                    errorEl.classList.remove('hidden');
+                                    const input = document.getElementById(key);
+                                    if (input) input.style.borderColor = '#dc2626';
+                                }
+                            });
+                            showNotification('Please fix the validation errors.', 'error');
+                        } else if (data.success) {
+                            closeModal();
+                            showNotification(data.message);
+                            if (currentSchoolId && data.school) {
+                                updateSchoolRowInTable(data.school);
+                            } else {
+                                setTimeout(() => location.reload(), 1000);
+                            }
                         } else {
-                            location.reload();
+                            throw new Error(data.message || 'Unknown error');
                         }
                     })
                     .catch(err => {
-                        location.reload(); // Likely success redirect if not JSON
+                        saveBtn.disabled = false;
+                        saveSpinner.classList.add('hidden');
+                        saveText.classList.remove('hidden');
+                        showNotification(err.message || 'Something went wrong.', 'error');
                     });
+            });
+
+            // Auto-generate slug from name
+            document.getElementById('name').addEventListener('input', function() {
+                if (!currentSchoolId && this.value) {
+                    const slugInput = document.getElementById('slug');
+                    // Simple slugify
+                    slugInput.value = this.value
+                        .toLowerCase()
+                        .replace(/[^\w\s-]/g, '')
+                        .replace(/[\s_-]+/g, '-')
+                        .replace(/^-+|-+$/g, '');
+                }
             });
 
             window.onclick = function(event) {
                 if (event.target.id === 'schoolModal') closeModal();
                 if (event.target.id === 'deleteModal') closeDeleteModal();
+                if (event.target.id === 'viewSchoolModal') closeViewModal();
             };
         </script>
     @endpush

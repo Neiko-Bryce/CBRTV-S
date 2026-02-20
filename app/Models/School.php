@@ -8,7 +8,9 @@ class School extends Model
 {
     protected $fillable = [
         'name',
+        'email',
         'slug',
+        'logo_path',
         'location',
         'is_active',
     ];

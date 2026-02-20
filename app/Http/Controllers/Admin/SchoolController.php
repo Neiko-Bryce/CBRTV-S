@@ -40,6 +40,15 @@ class SchoolController extends Controller
      */
     public function store(Request $request)
     {
+        // Role check
+        if (! auth()->user()->is_super_admin) {
+            $msg = 'Unauthorized. Only Super Admins can create schools.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 403);
+            }
+            return redirect()->route('admin.schools.index')->with('error', $msg);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:schools,slug',
@@ -51,7 +60,20 @@ class SchoolController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        School::create($validated);
+        // Final check to ensure slug is set
+        if (empty($validated['slug'])) {
+             $validated['slug'] = 'school-' . uniqid();
+        }
+
+        $school = School::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'School created successfully.',
+                'school' => $school
+            ]);
+        }
 
         return redirect()->route('admin.schools.index')
             ->with('success', 'School created successfully.');
@@ -63,7 +85,12 @@ class SchoolController extends Controller
     public function show($id)
     {
         $school = School::findOrFail($id);
-        return response()->json($school);
+        
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json($school);
+        }
+        
+        return view('admin.schools.show', compact('school'));
     }
 
     /**
@@ -73,6 +100,15 @@ class SchoolController extends Controller
     {
         $school = School::findOrFail($id);
 
+        // Role check
+        if (! auth()->user()->is_super_admin) {
+            $msg = 'Unauthorized. Only Super Admins can update schools.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 403);
+            }
+            return redirect()->route('admin.schools.index')->with('error', $msg);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:schools,slug,'.$id,
@@ -80,7 +116,18 @@ class SchoolController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // If is_active is not present in the request (e.g. checkbox unchecked), it should be false
+        $validated['is_active'] = $request->has('is_active');
+
         $school->update($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'School updated successfully.',
+                'school' => $school
+            ]);
+        }
 
         return redirect()->route('admin.schools.index')
             ->with('success', 'School updated successfully.');
@@ -93,9 +140,26 @@ class SchoolController extends Controller
     {
         $school = School::findOrFail($id);
 
-        // Check for users or other dependencies if necessary
+        // Role check
+        if (! auth()->user()->is_super_admin) {
+            $msg = 'Unauthorized. Only Super Admins can delete schools.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 403);
+            }
+            return redirect()->route('admin.schools.index')->with('error', $msg);
+        }
+
+        // Check for users or other dependencies
         if ($school->users()->count() > 0) {
             $msg = 'Cannot delete school with existing admin accounts.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->route('admin.schools.index')->with('error', $msg);
+        }
+
+        if ($school->organizations()->count() > 0) {
+            $msg = 'Cannot delete school with existing organizations.';
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
@@ -107,6 +171,7 @@ class SchoolController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'School deleted successfully.']);
         }
+        
         return redirect()->route('admin.schools.index')
             ->with('success', 'School deleted successfully.');
     }
