@@ -30,8 +30,9 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 0 15mm;
+            padding: 20mm 15mm;
             background: white;
+            position: relative;
         }
 
         /* Letterhead */
@@ -499,10 +500,10 @@
             </div>
         </div>
 
-        <!-- Results by position -->
         @foreach ($reportData['resultsByPosition'] as $group)
             <div class="position-block">
-                <div class="position-head">{{ $group['position_name'] }}</div>
+                <div class="position-head">{{ $group['position_name'] }} (Slots: {{ $group['number_of_slots'] }})
+                </div>
                 <table class="results-table">
                     <thead>
                         <tr>
@@ -514,12 +515,16 @@
                     </thead>
                     <tbody>
                         @foreach ($group['candidates'] as $index => $candidate)
-                            <tr class="{{ $index === 0 ? 'winner' : '' }}">
+                            @php
+                                $isWinner = $index < $group['number_of_slots'] && $candidate->filtered_votes > 0;
+                            @endphp
+                            <tr class="{{ $isWinner ? 'winner' : '' }}">
                                 <td class="col-rank">{{ $index + 1 }}</td>
                                 <td>
                                     {{ $candidate->candidate_name }}
-                                    @if ($index === 0)
-                                        <span class="winner-tag">(Elected)</span>
+                                    @if ($isWinner)
+                                        <span class="winner-tag"
+                                            style="font-weight: bold; color: #000;">(ELECTED)</span>
                                     @endif
                                 </td>
                                 <td>{{ $candidate->partylist->name ?? 'Independent' }}</td>

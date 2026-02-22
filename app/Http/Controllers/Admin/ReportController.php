@@ -129,13 +129,14 @@ class ReportController extends Controller
             ->with(['position', 'partylist', 'student'])
             ->get();
 
-        // Calculate filtered votes for each candidate
-        $candidates->each(function ($candidate) use ($filteredVoteIds) {
-            $voteCount = Vote::whereIn('id', $filteredVoteIds)
-                ->where('candidate_id', $candidate->id)
-                ->count();
-            
-            $candidate->filtered_votes = $voteCount;
+        // Calculate filtered votes for all candidates in one query to avoid N+1 issues
+        $voteCounts = Vote::whereIn('id', $filteredVoteIds)
+            ->select('candidate_id', DB::raw('count(*) as count'))
+            ->groupBy('candidate_id')
+            ->pluck('count', 'candidate_id');
+        
+        $candidates->each(function ($candidate) use ($voteCounts) {
+            $candidate->filtered_votes = $voteCounts->get($candidate->id, 0);
         });
 
         // Group by position ID to access position metadata for sorting

@@ -52,15 +52,22 @@ class AnalyticsController extends Controller
 
         $maxVotesInPeriod = $last7Days ? max(array_column($last7Days, 'count')) : 0;
 
-        // Elections with vote statistics (all elections, for breakdown)
-        $electionsWithStats = Election::with('organization')
+        // Elections with vote statistics
+        $electionsWithStatsData = Election::with('organization')
             ->withCount('votes')
             ->orderByDesc('election_date')
             ->orderByDesc('id')
-            ->get()
-            ->map(function ($election) use ($totalStudents) {
+            ->get();
+
+        // Fetch unique voters for all relevant elections in one query
+        $uniqueVotersByElection = Vote::whereIn('election_id', $electionsWithStatsData->pluck('id'))
+            ->select('election_id', DB::raw('COUNT(DISTINCT voter_id) as count'))
+            ->groupBy('election_id')
+            ->pluck('count', 'election_id');
+
+        $electionsWithStats = $electionsWithStatsData->map(function ($election) use ($totalStudents, $uniqueVotersByElection) {
                 $votesCount = $election->votes_count;
-                $uniqueInElection = Vote::where('election_id', $election->id)->distinct('voter_id')->count('voter_id');
+                $uniqueInElection = $uniqueVotersByElection->get($election->id, 0);
                 $participation = $totalStudents > 0
                     ? round(($uniqueInElection / $totalStudents) * 100, 1)
                     : 0;

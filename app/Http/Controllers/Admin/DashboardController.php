@@ -108,30 +108,20 @@ class DashboardController extends Controller
         try {
             $allElections = Election::all();
             foreach ($allElections as $election) {
-                // Don't auto-update if status is manually set to cancelled
-                // BUT always allow update to completed (election ended)
                 if ($election->status === 'cancelled') {
-                    // Still check if election has ended - completed takes precedence
                     $calculatedStatus = $this->calculateStatus($election->toArray());
-                    if ($calculatedStatus === 'completed') {
-                        // Election ended, update to completed even if cancelled
+                    if ($calculatedStatus === 'completed' && $election->status !== 'completed') {
                         $election->update(['status' => 'completed']);
                     }
-
-                    continue; // Skip further auto-update for manually set statuses
+                    continue;
                 }
 
-                // Convert any old "rescheduled" status to "upcoming"
-                if ($election->status === 'rescheduled') {
+                if ($election->status === 'rescheduled' && $election->status !== 'upcoming') {
                     $election->update(['status' => 'upcoming']);
                 }
 
                 $calculatedStatus = $this->calculateStatus($election->toArray());
-                // Always update if status changed
                 if ($election->status !== $calculatedStatus) {
-                    $election->update(['status' => $calculatedStatus]);
-                } elseif (empty($election->status) || $election->status === null) {
-                    // Set status if it's null
                     $election->update(['status' => $calculatedStatus]);
                 }
             }

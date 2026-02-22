@@ -22,16 +22,20 @@ class DashboardController extends Controller
     {
         $allElections = Election::with('organization')->orderBy('election_date', 'asc')->orderBy('timestarted', 'asc')->get();
 
-        // Build list from calculated status only (upcoming/ongoing). Persist status to DB for admin consistency.
+        // Build list from calculated status only (upcoming/ongoing).
         $elections = collect();
         foreach ($allElections as $election) {
             if (strtolower((string) ($election->status ?? '')) === 'cancelled') {
                 continue;
             }
             try {
+                // Calculate status in-memory for the view
                 $calculatedStatus = strtolower($this->calculateStatus($election));
                 $election->setAttribute('status', $calculatedStatus);
-                $election->update(['status' => $calculatedStatus]);
+                
+                // Do NOT update in DB here to avoid lock contention during high traffic
+                // Persistence should be handled by an admin action or background task
+                
                 if (in_array($calculatedStatus, ['upcoming', 'ongoing'], true)) {
                     $elections->push($election);
                 }
