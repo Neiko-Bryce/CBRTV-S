@@ -154,7 +154,8 @@ class LiveResultsController extends Controller
                     $resultData['starts_at'] = $startDateTime->format('M d, Y g:i A');
                     $resultData['starts_in_seconds'] = $now->diffInSeconds($startDateTime, false);
                     $resultData['time_remaining'] = [
-                        'hours' => $timeUntilStart->h + ($timeUntilStart->d * 24),
+                        'days' => $timeUntilStart->d,
+                        'hours' => $timeUntilStart->h,
                         'minutes' => $timeUntilStart->i,
                         'seconds' => $timeUntilStart->s,
                     ];
@@ -166,7 +167,8 @@ class LiveResultsController extends Controller
                     $resultData['ends_at'] = $endDateTime->format('M d, Y g:i A');
                     $resultData['ends_in_seconds'] = $now->diffInSeconds($endDateTime, false);
                     $resultData['time_remaining'] = [
-                        'hours' => $timeUntilEnd->h + ($timeUntilEnd->d * 24),
+                        'days' => $timeUntilEnd->d,
+                        'hours' => $timeUntilEnd->h,
                         'minutes' => $timeUntilEnd->i,
                         'seconds' => $timeUntilEnd->s,
                     ];
@@ -183,7 +185,8 @@ class LiveResultsController extends Controller
                     $resultData['expires_at'] = $expiresAt->format('M d, Y g:i A');
                     $resultData['expires_in_seconds'] = $now->diffInSeconds($expiresAt, false);
                     $resultData['time_remaining'] = [
-                        'hours' => $timeRemaining->h + ($timeRemaining->d * 24),
+                        'days' => $timeRemaining->d,
+                        'hours' => $timeRemaining->h,
                         'minutes' => $timeRemaining->i,
                         'seconds' => $timeRemaining->s,
                     ];

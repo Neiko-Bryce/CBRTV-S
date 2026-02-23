@@ -204,6 +204,12 @@ export default function LiveResults() {
                                                 <div className="bg-white/5 rounded-xl p-3 border border-white/10 text-center">
                                                     <p className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">Starts In</p>
                                                     <div className="flex gap-2">
+                                                        {election.time_remaining.days > 0 && (
+                                                            <div className="text-white border-r border-white/10 pr-2">
+                                                                <span className="text-lg font-bold tabular-nums">{election.time_remaining.days}</span>
+                                                                <span className="text-[10px] ml-1 opacity-50">D</span>
+                                                            </div>
+                                                        )}
                                                         <div className="text-white">
                                                             <span className="text-lg font-bold tabular-nums">{election.time_remaining.hours}</span>
                                                             <span className="text-[10px] ml-1 opacity-50">H</span>
@@ -219,7 +225,7 @@ export default function LiveResults() {
                                     </div>
 
                                     <div className="text-center py-6 text-white/50 italic text-sm">
-                                        Voters are preparing. Check back soon!
+                                        Voting has not started yet. The election will officially open at the scheduled start time. Please return then.
                                     </div>
                                 </motion.div>
                             ))}
