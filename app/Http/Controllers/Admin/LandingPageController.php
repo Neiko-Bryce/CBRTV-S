@@ -39,6 +39,7 @@ class LandingPageController extends Controller
             'team_members.*.name' => 'nullable|string|max:255',
             'team_members.*.role' => 'nullable|string|max:255',
             'team_members.*.bio' => 'nullable|string',
+            'team_members.*.url' => 'nullable|url|max:255',
             'team_members.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'features_title' => 'nullable|string|max:255',
             'features_subtitle' => 'nullable|string|max:255',
@@ -105,6 +106,7 @@ class LandingPageController extends Controller
                     'name' => $member['name'] ?? '',
                     'role' => $member['role'] ?? '',
                     'bio' => $member['bio'] ?? '',
+                    'url' => $member['url'] ?? '',
                     'image' => $imagePath,
                 ];
             }

@@ -115,19 +115,49 @@
 
                         <!-- Benefits -->
                         <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
-                            <h4 class="text-base font-semibold text-primary mb-4">Key Benefits</h4>
-                            @php
-                                $benefits = $aboutSettings['benefits']['extra'] ?? [
-                                    'Instant vote counting with live result updates',
-                                    'Complete audit trail for every election',
-                                    'Mobile-friendly voting from any device',
-                                ];
-                            @endphp
-                            <textarea name="about_benefits[]" rows="5"
-                                class="w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors font-mono"
-                                style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"
-                                placeholder="Enter benefits, one per line">{{ is_array($benefits) ? implode("\n", $benefits) : '' }}</textarea>
-                            <p class="text-xs text-secondary mt-2">Enter one benefit per line</p>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                                <h4 class="text-base font-semibold text-primary">Key Benefits</h4>
+                                @if (auth()->user()->is_super_admin)
+                                    <button type="button" id="add-benefit"
+                                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                                        style="background: var(--cpsu-green); color: white;">
+                                        Add Benefit
+                                    </button>
+                                @endif
+                            </div>
+
+                            <div class="space-y-3" id="benefits-container">
+                                @php
+                                    $benefits = $aboutSettings['benefits']['extra'] ?? [
+                                        'Instant vote counting with live result updates',
+                                        'Complete audit trail for every election',
+                                        'Mobile-friendly voting from any device',
+                                    ];
+                                @endphp
+                                @foreach ($benefits as $index => $benefit)
+                                    <div class="benefit-item flex gap-2 group">
+                                        <div class="relative flex-1">
+                                            <input type="text" name="about_benefits[]" value="{{ $benefit }}"
+                                                class="w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
+                                                style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"
+                                                placeholder="Enter benefit description">
+                                        </div>
+                                        @if (auth()->user()->is_super_admin)
+                                            <button type="button"
+                                                class="remove-benefit p-2 rounded-lg transition-colors flex-shrink-0"
+                                                style="background: rgba(220, 38, 38, 0.1); color: #dc2626;" title="Remove">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-secondary mt-3">Click "Add Benefit" to add new points to display on the
+                                landing page.</p>
                         </div>
 
                         <!-- Team Section -->
@@ -230,6 +260,11 @@
                                                 class="w-full px-3 py-2 rounded-lg border text-sm text-center transition-colors"
                                                 style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-secondary);"
                                                 placeholder="Short bio">{{ $member['bio'] ?? '' }}</textarea>
+                                            <input type="text" name="team_members[{{ $index }}][url]"
+                                                value="{{ $member['url'] ?? '' }}"
+                                                class="w-full px-3 py-2 rounded-lg border text-sm text-center transition-colors"
+                                                style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-secondary);"
+                                                placeholder="URL (e.g., https://...)">
                                         </div>
                                     </div>
                                 @empty
@@ -420,6 +455,10 @@
                         class="w-full px-3 py-2 rounded-lg border text-sm text-center transition-colors"
                         style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-secondary);"
                         placeholder="Short bio"></textarea>
+                    <input type="text" name="team_members[${index}][url]"
+                        class="w-full px-3 py-2 rounded-lg border text-sm text-center transition-colors"
+                        style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-secondary);"
+                        placeholder="URL (e.g., https://...)">
                 </div>
             </div>
         `;
@@ -472,6 +511,28 @@
                 container.insertAdjacentHTML('beforeend', html);
             });
 
+            // Add benefit
+            document.getElementById('add-benefit').addEventListener('click', function() {
+                const container = document.getElementById('benefits-container');
+                const html = `
+                    <div class="benefit-item flex gap-2 group">
+                        <div class="relative flex-1">
+                            <input type="text" name="about_benefits[]"
+                                class="w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
+                                style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"
+                                placeholder="Enter benefit description">
+                        </div>
+                        <button type="button" class="remove-benefit p-2 rounded-lg transition-colors flex-shrink-0"
+                            style="background: rgba(220, 38, 38, 0.1); color: #dc2626;" title="Remove">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
             // Remove handlers
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.remove-team-member')) {
@@ -479,6 +540,9 @@
                 }
                 if (e.target.closest('.remove-feature')) {
                     e.target.closest('.feature-item').remove();
+                }
+                if (e.target.closest('.remove-benefit')) {
+                    e.target.closest('.benefit-item').remove();
                 }
             });
         </script>

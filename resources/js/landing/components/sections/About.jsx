@@ -138,7 +138,13 @@ export default function About() {
                                     </div>
 
                                     <h4 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-green-600 transition-colors">
-                                        {member.name || 'Team Member'}
+                                        {member.url ? (
+                                            <a href={member.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                {member.name || 'Team Member'}
+                                            </a>
+                                        ) : (
+                                            member.name || 'Team Member'
+                                        )}
                                     </h4>
                                     {member.role && (
                                         <p className="text-sm font-semibold text-green-600 mb-2">
