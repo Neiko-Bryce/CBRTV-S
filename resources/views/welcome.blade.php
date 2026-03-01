@@ -5,19 +5,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description"
-        content="CivicVote - Professional Cloud-Based Real-Time Voting System. Secure, transparent, and efficient digital voting platform for schools, universities, and community organizations.">
+        content="CpsuVotewisely - Cloud-Based Real-Time Voting System. A secure and transparent digital voting platform for CPSU student council elections.">
     <meta name="keywords"
-        content="voting system, digital voting, online elections, student council, secure voting, real-time results">
-    <meta name="author" content="CivicVote">
+        content="voting system, digital voting, online elections, student council, secure voting, real-time results, CPSU">
+    <meta name="author" content="CpsuVotewisely">
 
-    <!-- Open Graph / Social Media -->
+    <!-- Open Graph / Social Media (WhatsApp, Facebook, Messenger) -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="CivicVote - Cloud-Based Real-Time Voting System">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="CpsuVotewisely - Cloud-Based Real-Time Voting System">
     <meta property="og:description"
-        content="Secure, transparent, and efficient digital voting platform for schools, universities, and community organizations.">
+        content="A secure and transparent digital voting platform for CPSU student council elections. Experience democracy with complete transparency and instant results.">
     <meta property="og:image" content="{{ asset('images/og-image.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="CpsuVotewisely">
 
-    <title>VoteWisely - Cloud-Based Real-Time Voting System</title>
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CpsuVotewisely - Cloud-Based Real-Time Voting System">
+    <meta name="twitter:description"
+        content="A secure and transparent digital voting platform for CPSU student council elections.">
+    <meta name="twitter:image" content="{{ asset('images/og-image.png') }}">
+
+    <title>CpsuVotewisely - Cloud-Based Real-Time Voting System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon – green square + white ballot (same as landing) -->
