@@ -16,7 +16,7 @@
     <meta property="og:title" content="CpsuVotewisely - Cloud-Based Real-Time Voting System">
     <meta property="og:description"
         content="A secure and transparent digital voting platform for CPSU student council elections. Experience democracy with complete transparency and instant results.">
-    <meta property="og:image" content="{{ asset('favicon.png') }}">
+    <meta property="og:image" content="{{ asset('og-logo.png') }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="CpsuVotewisely">
@@ -26,7 +26,7 @@
     <meta name="twitter:title" content="CpsuVotewisely - Cloud-Based Real-Time Voting System">
     <meta name="twitter:description"
         content="A secure and transparent digital voting platform for CPSU student council elections.">
-    <meta name="twitter:image" content="{{ asset('favicon.png') }}">
+    <meta name="twitter:image" content="{{ asset('og-logo.png') }}">
 
     <title>CpsuVotewisely - Cloud-Based Real-Time Voting System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
