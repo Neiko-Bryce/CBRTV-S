@@ -67,7 +67,7 @@ class PositionController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Position created successfully.',
-                    'position' => $position
+                    'position' => $position,
                 ]);
             }
 
@@ -75,20 +75,20 @@ class PositionController extends Controller
                 ->with('success', 'Position created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('Position Creation Error: ' . $e->getMessage(), [
+            \Illuminate\Support\Facades\Log::error('Position Creation Error: '.$e->getMessage(), [
                 'user_id' => auth()->id(),
                 'input' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create position: ' . $e->getMessage(),
+                    'message' => 'Failed to create position: '.$e->getMessage(),
                 ], 500);
             }
 
-            return back()->withInput()->with('error', 'Failed to create position: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create position: '.$e->getMessage());
         }
     }
 
@@ -130,7 +130,7 @@ class PositionController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Position updated successfully.',
-                    'position' => $position->fresh()
+                    'position' => $position->fresh(),
                 ]);
             }
 
@@ -138,21 +138,21 @@ class PositionController extends Controller
                 ->with('success', 'Position updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('Position Update Error: ' . $e->getMessage(), [
+            \Illuminate\Support\Facades\Log::error('Position Update Error: '.$e->getMessage(), [
                 'user_id' => auth()->id(),
                 'position_id' => $id,
                 'input' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update position: ' . $e->getMessage(),
+                    'message' => 'Failed to update position: '.$e->getMessage(),
                 ], 500);
             }
 
-            return back()->withInput()->with('error', 'Failed to update position: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update position: '.$e->getMessage());
         }
     }
 
@@ -168,6 +168,7 @@ class PositionController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Cannot delete position with existing candidates.'], 422);
             }
+
             return redirect()->route('admin.positions.index')
                 ->with('error', 'Cannot delete position with existing candidates.');
         }
@@ -177,6 +178,7 @@ class PositionController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Position deleted successfully.']);
         }
+
         return redirect()->route('admin.positions.index')
             ->with('success', 'Position deleted successfully.');
     }

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -12,14 +12,62 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Organizations: slug and code should be unique per school
-        if (Schema::hasTable('organizations')) {
-            // Drop both constraint and index to be absolutely sure
-            try { DB::statement('ALTER TABLE organizations DROP CONSTRAINT IF EXISTS organizations_slug_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('ALTER TABLE organizations DROP CONSTRAINT IF EXISTS organizations_code_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('DROP INDEX IF EXISTS organizations_slug_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('DROP INDEX IF EXISTS organizations_code_unique CASCADE'); } catch (\Exception $e) {}
+        if (DB::getDriverName() === 'pgsql') {
+            // 1. Organizations: slug and code should be unique per school
+            if (Schema::hasTable('organizations')) {
+                // Drop both constraint and index to be absolutely sure
+                try {
+                    DB::statement('ALTER TABLE organizations DROP CONSTRAINT IF EXISTS organizations_slug_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('ALTER TABLE organizations DROP CONSTRAINT IF EXISTS organizations_code_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('DROP INDEX IF EXISTS organizations_slug_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('DROP INDEX IF EXISTS organizations_code_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+            }
 
+            // 2. Elections: election_id should be unique per school
+            if (Schema::hasTable('elections')) {
+                try {
+                    DB::statement('ALTER TABLE elections DROP CONSTRAINT IF EXISTS elections_election_id_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('DROP INDEX IF EXISTS elections_election_id_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+            }
+
+            // 3. Students: student_id_number should be unique per school
+            if (Schema::hasTable('students')) {
+                try {
+                    DB::statement('ALTER TABLE students DROP CONSTRAINT IF EXISTS students_student_id_number_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('ALTER TABLE students DROP CONSTRAINT IF EXISTS students_organization_id_student_id_number_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('DROP INDEX IF EXISTS students_student_id_number_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+                try {
+                    DB::statement('DROP INDEX IF EXISTS students_organization_id_student_id_number_unique CASCADE');
+                } catch (\Exception $e) {
+                }
+            }
+        }
+
+        if (Schema::hasTable('organizations')) {
             Schema::table('organizations', function (Blueprint $table) {
                 // Remove these columns if they were previously unique-indexed by Laravel's standard drop
                 // (though we already tried with raw SQL)
@@ -28,23 +76,13 @@ return new class extends Migration
             });
         }
 
-        // 2. Elections: election_id should be unique per school
         if (Schema::hasTable('elections')) {
-            try { DB::statement('ALTER TABLE elections DROP CONSTRAINT IF EXISTS elections_election_id_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('DROP INDEX IF EXISTS elections_election_id_unique CASCADE'); } catch (\Exception $e) {}
-
             Schema::table('elections', function (Blueprint $table) {
                 $table->unique(['election_id', 'school_id'], 'elections_election_id_school_id_unique');
             });
         }
 
-        // 3. Students: student_id_number should be unique per school
         if (Schema::hasTable('students')) {
-            try { DB::statement('ALTER TABLE students DROP CONSTRAINT IF EXISTS students_student_id_number_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('ALTER TABLE students DROP CONSTRAINT IF EXISTS students_organization_id_student_id_number_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('DROP INDEX IF EXISTS students_student_id_number_unique CASCADE'); } catch (\Exception $e) {}
-            try { DB::statement('DROP INDEX IF EXISTS students_organization_id_student_id_number_unique CASCADE'); } catch (\Exception $e) {}
-
             Schema::table('students', function (Blueprint $table) {
                 $table->unique(['student_id_number', 'school_id'], 'students_student_id_number_school_id_unique');
             });

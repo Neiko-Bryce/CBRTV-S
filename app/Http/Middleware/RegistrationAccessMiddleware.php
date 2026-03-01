@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 class RegistrationAccessMiddleware
 {
     private const SESSION_KEY = 'registration_access_until';
+
     private const TTL_MINUTES = 15;
 
     /**
@@ -28,6 +29,7 @@ class RegistrationAccessMiddleware
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Registration is not available. Enter the access code on the landing page first.'], 403);
         }
+
         return redirect()->route('register.access');
     }
 }

@@ -18,12 +18,12 @@ class ReportController extends Controller
     public function index()
     {
         $elections = Election::orderBy('election_date', 'desc')->get();
-        
+
         // Get unique filter values from students table
         $courses = Student::distinct()->whereNotNull('course')->pluck('course')->sort()->values();
         $yearlevels = Student::distinct()->whereNotNull('yearlevel')->pluck('yearlevel')->sort()->values();
         $sections = Student::distinct()->whereNotNull('section')->pluck('section')->sort()->values();
-        
+
         return view('admin.reports.index', compact('elections', 'courses', 'yearlevels', 'sections'));
     }
 
@@ -43,10 +43,10 @@ class ReportController extends Controller
         $filterValue = $request->filter_value;
 
         $election = Election::with('organization')->findOrFail($electionId);
-        
+
         // Get report data
         $reportData = $this->getReportData($electionId, $filterType, $filterValue);
-        
+
         // Get filter options for the selected election's voters
         $courses = $this->getVoterCourses($electionId);
         $yearlevels = $this->getVoterYearLevels($electionId);
@@ -96,7 +96,7 @@ class ReportController extends Controller
         if ($filterType !== 'all' && $filterValue) {
             $votesQuery->join('users', 'votes.voter_id', '=', 'users.id')
                 ->join('students', 'users.email', '=', 'students.student_id_number')
-                ->where('students.' . $filterType, $filterValue);
+                ->where('students.'.$filterType, $filterValue);
         }
 
         // Get filtered vote IDs
@@ -114,13 +114,13 @@ class ReportController extends Controller
         // Get total eligible students (those who have user accounts)
         $eligibleStudentsQuery = Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->where('users.usertype', 'student');
-        
+
         if ($filterType !== 'all' && $filterValue) {
-            $eligibleStudentsQuery->where('students.' . $filterType, $filterValue);
+            $eligibleStudentsQuery->where('students.'.$filterType, $filterValue);
         }
-        
+
         $totalEligible = $eligibleStudentsQuery->count();
-        
+
         // Participation rate
         $participationRate = $totalEligible > 0 ? round(($totalParticipants / $totalEligible) * 100, 1) : 0;
 
@@ -134,14 +134,14 @@ class ReportController extends Controller
             ->select('candidate_id', DB::raw('count(*) as count'))
             ->groupBy('candidate_id')
             ->pluck('count', 'candidate_id');
-        
+
         $candidates->each(function ($candidate) use ($voteCounts) {
             $candidate->filtered_votes = $voteCounts->get($candidate->id, 0);
         });
 
         // Group by position ID to access position metadata for sorting
         $candidatesByPosition = $candidates->groupBy('position_id');
-        
+
         $resultsByPosition = [];
 
         foreach ($candidatesByPosition as $positionId => $group) {
@@ -157,7 +157,7 @@ class ReportController extends Controller
                 'position_name' => $positionName,
                 'position_order' => $positionOrder,
                 'number_of_slots' => $numberOfSlots,
-                'candidates' => $sortedCandidates
+                'candidates' => $sortedCandidates,
             ];
         }
 
@@ -247,7 +247,7 @@ class ReportController extends Controller
     private function getVoterCourses($electionId)
     {
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
-        
+
         return Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.course')
@@ -263,7 +263,7 @@ class ReportController extends Controller
     private function getVoterYearLevels($electionId)
     {
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
-        
+
         return Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.yearlevel')
@@ -279,7 +279,7 @@ class ReportController extends Controller
     private function getVoterSections($electionId)
     {
         $voterIds = Vote::where('election_id', $electionId)->distinct()->pluck('voter_id');
-        
+
         return Student::join('users', 'students.student_id_number', '=', 'users.email')
             ->whereIn('users.id', $voterIds)
             ->whereNotNull('students.section')

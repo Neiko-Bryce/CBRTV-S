@@ -52,7 +52,7 @@ class StudentAccountController extends Controller
 
         $isPostgres = DB::connection()->getDriverName() === 'pgsql';
         $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
-        $term = '%' . $q . '%';
+        $term = '%'.$q.'%';
 
         $students = Student::where(function ($query) use ($term, $likeOperator, $isPostgres) {
             $query->where('student_id_number', $likeOperator, $term)
@@ -70,7 +70,8 @@ class StudentAccountController extends Controller
             ->get(['student_id_number', 'fname', 'mname', 'lname', 'ext']);
 
         $suggestions = $students->map(function ($s) {
-            $fullName = trim(($s->fname ?? '') . ' ' . ($s->mname ?? '') . ' ' . ($s->lname ?? '') . ' ' . ($s->ext ?? ''));
+            $fullName = trim(($s->fname ?? '').' '.($s->mname ?? '').' '.($s->lname ?? '').' '.($s->ext ?? ''));
+
             return [
                 'student_id_number' => $s->student_id_number,
                 'full_name' => $fullName ?: 'N/A',

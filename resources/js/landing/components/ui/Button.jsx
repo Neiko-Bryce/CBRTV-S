@@ -31,6 +31,16 @@ export default function Button({
     const baseClass = 'inline-flex items-center justify-center gap-1.5 sm:gap-2 font-semibold rounded-lg sm:rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-gov-green-500/20 min-h-[44px] touch-manipulation active:scale-[0.98] hover:scale-[1.02]';
     const resolvedClass = [baseClass, VARIANTS[variant] || VARIANTS.primary, SIZES[size] || SIZES.md, className].filter(Boolean).join(' ');
 
+    if (props.href) {
+        return (
+            <a className={resolvedClass} {...props}>
+                {Icon && iconPosition === 'left' && <Icon className={ICON_SIZES[size] || ICON_SIZES.md} />}
+                {children}
+                {Icon && iconPosition === 'right' && <Icon className={ICON_SIZES[size] || ICON_SIZES.md} />}
+            </a>
+        );
+    }
+
     return (
         <button type="button" className={resolvedClass} {...props}>
             {Icon && iconPosition === 'left' && <Icon className={ICON_SIZES[size] || ICON_SIZES.md} />}

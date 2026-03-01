@@ -83,7 +83,7 @@ class StudentController extends Controller
                     'max:255',
                     Rule::unique('students', 'student_id_number')->where(function ($query) {
                         return $query->where('school_id', auth()->user()->school_id);
-                    })
+                    }),
                 ],
                 'campus' => 'required|string|max:255',
                 'lname' => 'required|string|max:255',
@@ -163,7 +163,7 @@ class StudentController extends Controller
                     'max:255',
                     Rule::unique('students', 'student_id_number')->where(function ($query) {
                         return $query->where('school_id', auth()->user()->school_id);
-                    })->ignore($student->id)
+                    })->ignore($student->id),
                 ],
                 'campus' => 'required|string|max:255',
                 'lname' => 'required|string|max:255',

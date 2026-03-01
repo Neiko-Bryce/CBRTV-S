@@ -27,7 +27,7 @@ class SuperAdminMiddleware
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only Super Admins can edit system-wide sections.'
+                    'message' => 'Only Super Admins can edit system-wide sections.',
                 ], 403);
             }
 

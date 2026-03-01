@@ -66,23 +66,24 @@ class AnalyticsController extends Controller
             ->pluck('count', 'election_id');
 
         $electionsWithStats = $electionsWithStatsData->map(function ($election) use ($totalStudents, $uniqueVotersByElection) {
-                $votesCount = $election->votes_count;
-                $uniqueInElection = $uniqueVotersByElection->get($election->id, 0);
-                $participation = $totalStudents > 0
-                    ? round(($uniqueInElection / $totalStudents) * 100, 1)
-                    : 0;
-                return (object) [
-                    'id' => $election->id,
-                    'election_name' => $election->election_name,
-                    'organization' => $election->organization,
-                    'type_of_election' => $election->type_of_election,
-                    'status' => $election->status,
-                    'votes_count' => $votesCount,
-                    'unique_voters' => $uniqueInElection,
-                    'participation_percent' => $participation,
-                    'election_date' => $election->election_date,
-                ];
-            });
+            $votesCount = $election->votes_count;
+            $uniqueInElection = $uniqueVotersByElection->get($election->id, 0);
+            $participation = $totalStudents > 0
+                ? round(($uniqueInElection / $totalStudents) * 100, 1)
+                : 0;
+
+            return (object) [
+                'id' => $election->id,
+                'election_name' => $election->election_name,
+                'organization' => $election->organization,
+                'type_of_election' => $election->type_of_election,
+                'status' => $election->status,
+                'votes_count' => $votesCount,
+                'unique_voters' => $uniqueInElection,
+                'participation_percent' => $participation,
+                'election_date' => $election->election_date,
+            ];
+        });
 
         // NEW: Votes by Year Level & Section (All Classes include 0 votes)
         $allClasses = Student::query()
@@ -96,35 +97,35 @@ class AnalyticsController extends Controller
             ->join('users', 'votes.voter_id', '=', 'users.id')
             ->join('students', 'users.email', '=', 'students.student_id_number')
             ->select(
-                'students.yearlevel', 
-                'students.section', 
+                'students.yearlevel',
+                'students.section',
                 DB::raw('COUNT(*) as total_votes'),
                 DB::raw('COUNT(DISTINCT votes.voter_id) as unique_voters')
             )
             ->groupBy('students.yearlevel', 'students.section')
             ->get()
-            ->groupBy(function($item) {
-                return $item->yearlevel . '-' . $item->section;
+            ->groupBy(function ($item) {
+                return $item->yearlevel.'-'.$item->section;
             });
 
         $votesByYearLevel = $allClasses->map(function ($item) use ($voterCounts) {
             $year = $item->yearlevel ?? 'Unknown';
             $section = $item->section ?? 'N/A';
             $totalInClass = $item->student_count ?? 0;
-            $key = $year . '-' . $section;
-            
+            $key = $year.'-'.$section;
+
             $yearLabel = is_numeric($year) ? match ((int) $year) {
                 1 => '1st Year',
                 2 => '2nd Year',
                 3 => '3rd Year',
                 4 => '4th Year',
-                default => $year . 'th Year'
+                default => $year.'th Year'
             } : $year;
 
             $stats = $voterCounts->has($key) ? $voterCounts->get($key)->first() : null;
 
             return [
-                'yearlevel' => $yearLabel . ' - ' . $section,
+                'yearlevel' => $yearLabel.' - '.$section,
                 'count' => $stats ? $stats->total_votes : 0,
                 'voter_count' => $stats ? $stats->unique_voters : 0,
                 'student_count' => $totalInClass,
@@ -136,8 +137,8 @@ class AnalyticsController extends Controller
         // NEW: Peak Voting Hours (24-hour breakdown)
         $isPostgres = DB::connection()->getDriverName() === 'pgsql';
         $hourExtract = $isPostgres
-            ? DB::raw("EXTRACT(HOUR FROM created_at) as hour")
-            : DB::raw("HOUR(created_at) as hour");
+            ? DB::raw('EXTRACT(HOUR FROM created_at) as hour')
+            : DB::raw('HOUR(created_at) as hour');
 
         $votesByHour = Vote::query()
             ->select($hourExtract, DB::raw('COUNT(*) as count'))
@@ -170,6 +171,7 @@ class AnalyticsController extends Controller
                 $participation = $totalStudents > 0
                     ? round(($uniqueInElection / $totalStudents) * 100, 1)
                     : 0;
+
                 return [
                     'name' => $election->election_name,
                     'date' => $election->election_date,

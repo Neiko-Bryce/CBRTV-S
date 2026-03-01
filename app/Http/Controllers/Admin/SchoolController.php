@@ -46,6 +46,7 @@ class SchoolController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 403);
             }
+
             return redirect()->route('admin.schools.index')->with('error', $msg);
         }
 
@@ -62,7 +63,7 @@ class SchoolController extends Controller
 
         // Final check to ensure slug is set
         if (empty($validated['slug'])) {
-             $validated['slug'] = 'school-' . uniqid();
+            $validated['slug'] = 'school-'.uniqid();
         }
 
         $school = School::create($validated);
@@ -71,7 +72,7 @@ class SchoolController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'School created successfully.',
-                'school' => $school
+                'school' => $school,
             ]);
         }
 
@@ -85,11 +86,11 @@ class SchoolController extends Controller
     public function show($id)
     {
         $school = School::findOrFail($id);
-        
+
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json($school);
         }
-        
+
         return view('admin.schools.show', compact('school'));
     }
 
@@ -106,6 +107,7 @@ class SchoolController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 403);
             }
+
             return redirect()->route('admin.schools.index')->with('error', $msg);
         }
 
@@ -125,7 +127,7 @@ class SchoolController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'School updated successfully.',
-                'school' => $school
+                'school' => $school,
             ]);
         }
 
@@ -146,6 +148,7 @@ class SchoolController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 403);
             }
+
             return redirect()->route('admin.schools.index')->with('error', $msg);
         }
 
@@ -155,6 +158,7 @@ class SchoolController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return redirect()->route('admin.schools.index')->with('error', $msg);
         }
 
@@ -163,6 +167,7 @@ class SchoolController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
+
             return redirect()->route('admin.schools.index')->with('error', $msg);
         }
 
@@ -171,7 +176,7 @@ class SchoolController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'School deleted successfully.']);
         }
-        
+
         return redirect()->route('admin.schools.index')
             ->with('success', 'School deleted successfully.');
     }

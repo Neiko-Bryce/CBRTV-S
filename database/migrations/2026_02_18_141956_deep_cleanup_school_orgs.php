@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,21 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // This migration uses ILIKE which is PostgreSQL-specific — skip on SQLite
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         // Use ILIKE for Postgres case-insensitive matching
         $schoolOrgs = DB::table('organizations')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('name', 'ILIKE', '%Sipalay%')
-                  ->orWhere('name', 'ILIKE', '%Campus%')
-                  ->orWhere('name', 'ILIKE', '%Main School%')
-                  ->orWhere('name', 'ILIKE', '%Main Campus%')
-                  ->orWhere('slug', 'ILIKE', '%sipalay%');
+                    ->orWhere('name', 'ILIKE', '%Campus%')
+                    ->orWhere('name', 'ILIKE', '%Main School%')
+                    ->orWhere('name', 'ILIKE', '%Main Campus%')
+                    ->orWhere('slug', 'ILIKE', '%sipalay%');
             })
             ->get();
 
         foreach ($schoolOrgs as $org) {
             // Find a matching School record to move any orphaned data to
             $school = DB::table('schools')
-                ->where('name', 'ILIKE', '%' . explode(' ', $org->name)[0] . '%')
+                ->where('name', 'ILIKE', '%'.explode(' ', $org->name)[0].'%')
                 ->first();
 
             if ($school) {
@@ -41,7 +46,7 @@ return new class extends Migration
                         if (Schema::hasTable($table)) {
                             DB::table($table)->where('organization_id', $org->id)->update([
                                 'organization_id' => $ssg->id,
-                                'school_id' => $school->id
+                                'school_id' => $school->id,
                             ]);
                         }
                     }

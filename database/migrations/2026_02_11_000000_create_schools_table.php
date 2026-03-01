@@ -3,8 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -25,7 +23,7 @@ return new class extends Migration
 
         // 2. Add school_id to users table
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'school_id')) {
+            if (! Schema::hasColumn('users', 'school_id')) {
                 $table->unsignedBigInteger('school_id')->nullable()->after('organization_id');
                 $table->foreign('school_id')->references('id')->on('schools')->onDelete('set null');
             }

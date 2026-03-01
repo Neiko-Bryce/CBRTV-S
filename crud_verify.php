@@ -1,10 +1,9 @@
 <?php
 
+use App\Models\Election;
 use App\Models\Organization;
 use App\Models\School;
 use App\Models\User;
-use App\Models\Election;
-use Illuminate\Support\Facades\DB;
 
 // This script will attempt to create, read, and delete records to verify CRUD
 try {
@@ -12,37 +11,37 @@ try {
 
     // 1. Get a School
     $school = School::first();
-    if (!$school) {
-        throw new Exception("No school found in database.");
+    if (! $school) {
+        throw new Exception('No school found in database.');
     }
-    echo "Using School: " . $school->name . " (ID: " . $school->id . ")\n";
+    echo 'Using School: '.$school->name.' (ID: '.$school->id.")\n";
 
     // 2. Create an Organization
-    $orgName = "Test Org " . time();
+    $orgName = 'Test Org '.time();
     $org = Organization::create([
         'school_id' => $school->id,
         'name' => $orgName,
-        'is_active' => true
+        'is_active' => true,
     ]);
-    echo "Organization Created: " . $org->name . " (ID: " . $org->id . ")\n";
+    echo 'Organization Created: '.$org->name.' (ID: '.$org->id.")\n";
 
     // 3. Read the Organization
     $foundOrg = Organization::find($org->id);
-    if (!$foundOrg || $foundOrg->name !== $orgName) {
-        throw new Exception("Failed to read created organization.");
+    if (! $foundOrg || $foundOrg->name !== $orgName) {
+        throw new Exception('Failed to read created organization.');
     }
     echo "Organization Read Verified.\n";
 
     // 4. Update the Organization
-    $newOrgName = $orgName . " Updated";
+    $newOrgName = $orgName.' Updated';
     $foundOrg->update(['name' => $newOrgName]);
     if ($foundOrg->fresh()->name !== $newOrgName) {
-        throw new Exception("Failed to update organization.");
+        throw new Exception('Failed to update organization.');
     }
     echo "Organization Update Verified.\n";
 
     // 5. Create an Election for this Org
-    $electionName = "Test Election " . time();
+    $electionName = 'Test Election '.time();
     $election = Election::create([
         'school_id' => $school->id,
         'organization_id' => $org->id,
@@ -50,14 +49,14 @@ try {
         'type_of_election' => $org->name,
         'election_date' => now()->addDays(5)->format('Y-m-d'),
         'timestarted' => '08:00',
-        'time_ended' => '17:00'
+        'time_ended' => '17:00',
     ]);
-    echo "Election Created: " . $election->election_name . " (ID: " . $election->id . ")\n";
+    echo 'Election Created: '.$election->election_name.' (ID: '.$election->id.")\n";
 
     // 6. Read the Election
     $foundElection = Election::find($election->id);
-    if (!$foundElection || $foundElection->election_name !== $electionName) {
-        throw new Exception("Failed to read created election.");
+    if (! $foundElection || $foundElection->election_name !== $electionName) {
+        throw new Exception('Failed to read created election.');
     }
     echo "Election Read Verified.\n";
 
@@ -67,7 +66,7 @@ try {
     $org2 = Organization::create([
         'school_id' => $school->id,
         'name' => 'Scoping Test Org',
-        'is_active' => true
+        'is_active' => true,
     ]);
     $election2 = Election::create([
         'school_id' => $school->id,
@@ -76,7 +75,7 @@ try {
         'type_of_election' => $org2->name,
         'election_date' => now()->addDays(10)->format('Y-m-d'),
         'timestarted' => '09:00',
-        'time_ended' => '18:00'
+        'time_ended' => '18:00',
     ]);
 
     // Simulate a user from Org 1
@@ -88,9 +87,11 @@ try {
         // Note: Global scopes might be tricky in cli if not handled correctly by the trait.
         // The trait BelongsToOrganization.php uses static::addGlobalScope.
         // Let's see if it works.
-        echo "Found " . $electionsForUser1->count() . " elections for Org 1 user.\n";
-        foreach($electionsForUser1 as $e) echo " - Election ID: " . $e->id . " Org ID: " . $e->organization_id . "\n";
-        
+        echo 'Found '.$electionsForUser1->count()." elections for Org 1 user.\n";
+        foreach ($electionsForUser1 as $e) {
+            echo ' - Election ID: '.$e->id.' Org ID: '.$e->organization_id."\n";
+        }
+
         // If it finds both, scoping might be bypassed in console.
         // BelongsToOrganization hook: if (static::$isScoping || app()->runningInConsole()) { return; }
         // AH! app()->runningInConsole() BYPASSES scoping.
@@ -101,7 +102,7 @@ try {
     // --- SCOPING TEST END ---
 
     // 8. Create a Student
-    $studentIdNum = "TEST-" . time();
+    $studentIdNum = 'TEST-'.time();
     $student = \App\Models\Student::create([
         'school_id' => $school->id,
         'organization_id' => $org->id,
@@ -111,21 +112,21 @@ try {
         'lname' => 'Student',
         'course' => 'BSIT',
         'yearlevel' => '1',
-        'section' => 'A'
+        'section' => 'A',
     ]);
-    echo "Student Created: " . $student->student_id_number . " (ID: " . $student->id . ")\n";
+    echo 'Student Created: '.$student->student_id_number.' (ID: '.$student->id.")\n";
 
     // 9. Read the Student
     $foundStudent = \App\Models\Student::find($student->id);
-    if (!$foundStudent || $foundStudent->student_id_number !== $studentIdNum) {
-        throw new Exception("Failed to read created student.");
+    if (! $foundStudent || $foundStudent->student_id_number !== $studentIdNum) {
+        throw new Exception('Failed to read created student.');
     }
     echo "Student Read Verified.\n";
 
     // 10. Update the Student
     $student->update(['fname' => 'Updated']);
     if ($student->fresh()->fname !== 'Updated') {
-        throw new Exception("Failed to update student.");
+        throw new Exception('Failed to update student.');
     }
     echo "Student Update Verified.\n";
 
@@ -136,9 +137,9 @@ try {
         'name' => 'President',
         'number_of_slots' => 1,
         'order' => 1,
-        'is_active' => true
+        'is_active' => true,
     ]);
-    echo "Position Created: " . $position->name . " (ID: " . $position->id . ")\n";
+    echo 'Position Created: '.$position->name.' (ID: '.$position->id.")\n";
 
     // 13. Create a Candidate
     $candidate = \App\Models\Candidate::create([
@@ -148,14 +149,14 @@ try {
         'position_id' => $position->id,
         'student_id' => $student->id,
         'candidate_name' => 'John Doe',
-        'is_active' => true
+        'is_active' => true,
     ]);
-    echo "Candidate Created: " . $candidate->candidate_name . " (ID: " . $candidate->id . ")\n";
+    echo 'Candidate Created: '.$candidate->candidate_name.' (ID: '.$candidate->id.")\n";
 
     // 14. Update Candidate
     $candidate->update(['biography' => 'Test Bio']);
     if ($candidate->fresh()->biography !== 'Test Bio') {
-        throw new Exception("Failed to update candidate.");
+        throw new Exception('Failed to update candidate.');
     }
     echo "Candidate Update Verified.\n";
 
@@ -180,6 +181,6 @@ try {
     echo "\nCRUD Deep Verification SUCCESSFUL for all major modules.\n";
 
 } catch (Exception $e) {
-    echo "\nCRUD Verification FAILED: " . $e->getMessage() . "\n";
-    echo "Trace: " . $e->getTraceAsString() . "\n";
+    echo "\nCRUD Verification FAILED: ".$e->getMessage()."\n";
+    echo 'Trace: '.$e->getTraceAsString()."\n";
 }

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,10 +15,10 @@ return new class extends Migration
         // 1. Restructure organizations table
         if (Schema::hasTable('organizations')) {
             Schema::table('organizations', function (Blueprint $table) {
-                if (!Schema::hasColumn('organizations', 'slug')) {
+                if (! Schema::hasColumn('organizations', 'slug')) {
                     $table->string('slug')->unique()->after('name')->nullable();
                 }
-                if (!Schema::hasColumn('organizations', 'logo_path')) {
+                if (! Schema::hasColumn('organizations', 'logo_path')) {
                     $table->string('logo_path')->after('description')->nullable();
                 }
             });
@@ -26,7 +26,7 @@ return new class extends Migration
 
         // 2. Add is_super_admin to users
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'is_super_admin')) {
+            if (! Schema::hasColumn('users', 'is_super_admin')) {
                 $table->boolean('is_super_admin')->default(false)->after('usertype');
             }
         });
@@ -36,7 +36,7 @@ return new class extends Migration
         $tables = ['users', 'students', 'candidates', 'positions', 'partylists', 'votes', 'landing_page_settings'];
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
-                if (!Schema::hasColumn($tableName, 'organization_id')) {
+                if (! Schema::hasColumn($tableName, 'organization_id')) {
                     $table->unsignedBigInteger('organization_id')->nullable()->after('id');
                     $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('cascade');
                 }
@@ -57,7 +57,7 @@ return new class extends Migration
         foreach ($tablesToLink as $tableName) {
             DB::table($tableName)->update(['organization_id' => $mainOrgId]);
         }
-        
+
         // Only link landing page settings that ARE NOT 'about', 'team', or 'features' (Global Content)
         DB::table('landing_page_settings')
             ->whereNotIn('section', ['about', 'team', 'features'])
@@ -66,7 +66,7 @@ return new class extends Migration
         // Promote current admin(s) to Super Admin
         DB::table('users')->where('usertype', 'admin')->update([
             'is_super_admin' => true,
-            'organization_id' => $mainOrgId
+            'organization_id' => $mainOrgId,
         ]);
     }
 
@@ -83,7 +83,7 @@ return new class extends Migration
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
                 // Drop foreign key first
-                $foreignKey = $tableName . '_organization_id_foreign';
+                $foreignKey = $tableName.'_organization_id_foreign';
                 // Check if index exists before dropping (DB specific, but safe in modern Laravel)
                 $table->dropForeign($foreignKey);
                 $table->dropColumn('organization_id');

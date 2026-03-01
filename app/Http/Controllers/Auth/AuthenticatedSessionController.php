@@ -46,8 +46,9 @@ class AuthenticatedSessionController extends Controller
             $isStudentPage = $path && (str_starts_with($path, '/student/dashboard')
                 || str_starts_with($path, '/student/vote')
                 || str_starts_with($path, '/student/votes-history'));
-            if ($isCandidatePhoto || !$isStudentPage) {
+            if ($isCandidatePhoto || ! $isStudentPage) {
                 session()->forget('url.intended');
+
                 return redirect($studentDashboard);
             }
         }

@@ -14,12 +14,12 @@ return new class extends Migration
     public function up(): void
     {
         // Skip if table doesn't exist (will be created by create_students_table)
-        if (!Schema::hasTable('students')) {
+        if (! Schema::hasTable('students')) {
             return;
         }
 
         // Ensure fname exists
-        if (!Schema::hasColumn('students', 'fname')) {
+        if (! Schema::hasColumn('students', 'fname')) {
             Schema::table('students', function (Blueprint $table) {
                 $table->string('fname')->nullable();
             });

@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -30,7 +28,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // No easy way to reverse as we don't know who was null before, 
+        // No easy way to reverse as we don't know who was null before,
         // but this is a data fix, so it's usually safe not to reverse.
     }
 };

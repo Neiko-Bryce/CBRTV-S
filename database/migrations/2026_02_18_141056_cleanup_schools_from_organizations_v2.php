@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -24,8 +24,8 @@ return new class extends Migration
                 ->where('slug', $org->slug)
                 ->orWhere('name', $org->name)
                 ->first();
-            
-            if (!$school) {
+
+            if (! $school) {
                 // If it's in the org list as a school name, it should exist in schools table
                 // If not, we skip to avoid errors
                 continue;
@@ -43,24 +43,24 @@ return new class extends Migration
                 // Look for existing organization by code or name for this school
                 $targetOrg = DB::table('organizations')
                     ->where('school_id', $school->id)
-                    ->where(function($q) use ($data) {
+                    ->where(function ($q) use ($data) {
                         $q->where('code', $data['code'])
-                          ->orWhere('name', $data['name']);
+                            ->orWhere('name', $data['name']);
                     })
                     ->first();
 
-                if (!$targetOrg) {
+                if (! $targetOrg) {
                     // Create it if it doesn't exist
                     $orgId = DB::table('organizations')->insertGetId([
                         'school_id' => $school->id,
                         'name' => $data['name'],
                         'code' => $data['code'],
-                        'slug' => \Illuminate\Support\Str::slug($data['name'] . '-' . $school->slug),
+                        'slug' => \Illuminate\Support\Str::slug($data['name'].'-'.$school->slug),
                         'is_active' => true,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
-                    $targetOrg = (object)['id' => $orgId, 'name' => $data['name'], 'code' => $data['code']];
+                    $targetOrg = (object) ['id' => $orgId, 'name' => $data['name'], 'code' => $data['code']];
                 }
                 $targetOrgs[$key] = $targetOrg;
             }
@@ -80,7 +80,7 @@ return new class extends Migration
 
                 DB::table('positions')->where('id', $position->id)->update([
                     'organization_id' => $targetOrgId,
-                    'school_id' => $school->id
+                    'school_id' => $school->id,
                 ]);
             }
 
@@ -90,7 +90,7 @@ return new class extends Migration
             foreach ($tablesToReassign as $tableName) {
                 DB::table($tableName)->where('organization_id', $org->id)->update([
                     'organization_id' => $targetOrgs['SSG']->id,
-                    'school_id' => $school->id
+                    'school_id' => $school->id,
                 ]);
             }
 
@@ -104,7 +104,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // This migration is data-corrective and difficult to reverse perfectly 
+        // This migration is data-corrective and difficult to reverse perfectly
         // without knowing exactly what was moved.
     }
 };

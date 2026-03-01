@@ -114,7 +114,7 @@ class ElectionController extends Controller
                     'max:255',
                     Rule::unique('elections', 'election_id')->where(function ($query) {
                         return $query->where('school_id', auth()->user()->school_id);
-                    })
+                    }),
                 ],
                 'election_name' => 'required|string|max:255',
                 'organization_id' => 'required|exists:organizations,id',

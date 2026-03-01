@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     session()->forget('school_id');
+
     return response()->view('welcome')
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
 });
@@ -22,7 +23,7 @@ Route::prefix('api')->group(function () {
         // PUBLIC API: Prioritize request over session over Auth::user() so portal view is always correct (tab-level isolation)
         $schoolId = request('school_id') ?: (session('school_id') ?: (Auth::check() ? Auth::user()->school_id : null));
         $orgId = request('organization_id') ?: (session('org_id') ?: (Auth::check() ? Auth::user()->organization_id : null));
-        
+
         $organization = $orgId ? \App\Models\Organization::find($orgId) : null;
         $school = $schoolId ? \App\Models\School::find($schoolId) : null;
 
@@ -158,7 +159,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('profile', [\App\Http\Controllers\Admin\ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
 // Student-only routes:
 Route::middleware(['auth', 'student'])->group(function () {
     Route::get('/student/dashboard', [\App\Http\Controllers\Student\DashboardController::class, 'index'])->name('student.dashboard');
@@ -173,10 +173,11 @@ require __DIR__.'/auth.php';
 // School-specific landing page (catch-all route at the bottom)
 Route::get('/{slug}', function ($slug) {
     $school = \App\Models\School::where('slug', $slug)->first();
-    
+
     if ($school) {
         // Store school ID in session so guest students see school-specific content
         session(['school_id' => $school->id]);
+
         return response()->view('welcome', ['school' => $school])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('positions', 'number_of_slots')) {
+        if (! Schema::hasColumn('positions', 'number_of_slots')) {
             Schema::table('positions', function (Blueprint $table) {
                 $table->integer('number_of_slots')->default(1)->after('description');
             });

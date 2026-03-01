@@ -32,10 +32,10 @@ class DashboardController extends Controller
                 // Calculate status in-memory for the view
                 $calculatedStatus = strtolower($this->calculateStatus($election));
                 $election->setAttribute('status', $calculatedStatus);
-                
+
                 // Do NOT update in DB here to avoid lock contention during high traffic
                 // Persistence should be handled by an admin action or background task
-                
+
                 if (in_array($calculatedStatus, ['upcoming', 'ongoing'], true)) {
                     $elections->push($election);
                 }
@@ -238,7 +238,7 @@ class DashboardController extends Controller
             if ($position) {
                 // If number_of_slots is null or 0, default to 1 (safety fallback)
                 $maxSlots = $position->number_of_slots > 0 ? $position->number_of_slots : 1;
-                
+
                 if ($candidates->count() > $maxSlots) {
                     return response()->json([
                         'success' => false,

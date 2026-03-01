@@ -1,11 +1,9 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 return new class extends Migration
 {
@@ -27,13 +25,13 @@ return new class extends Migration
                 'email_verified_at' => now(),
             ]
         );
-        
+
         // Ensure any other accidentally created admin with this email is a Super Admin
         DB::table('users')
             ->where('email', 'superadmin@vosewisly.com')
             ->update([
                 'is_super_admin' => true,
-                'usertype' => 'admin'
+                'usertype' => 'admin',
             ]);
     }
 

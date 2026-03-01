@@ -1,12 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use App\Models\School;
-use App\Models\User;
 use App\Models\Election;
 use App\Models\Organization;
+use App\Models\School;
+use App\Models\User;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -26,7 +24,7 @@ return new class extends Migration
 
         if ($admin) {
             $oldSchoolId = $admin->school_id;
-            
+
             // 3. Reassign admin to Main Campus
             $admin->update(['school_id' => $mainCampus->id]);
 

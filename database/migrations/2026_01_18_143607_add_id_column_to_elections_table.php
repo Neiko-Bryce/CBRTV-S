@@ -15,7 +15,7 @@ return new class extends Migration
         // The create_elections_table migration already creates id column
         // This migration is only needed if upgrading from an older version
         // Skip for fresh installs
-        if (!Schema::hasTable('elections')) {
+        if (! Schema::hasTable('elections')) {
             return;
         }
 

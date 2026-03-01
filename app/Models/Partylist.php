@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 use App\Traits\BelongsToOrganization;
 use App\Traits\BelongsToSchool;
+use Illuminate\Database\Eloquent\Model;
 
 class Partylist extends Model
 {
     use BelongsToOrganization, BelongsToSchool;
+
     protected $fillable = [
         'school_id',
         'organization_id',

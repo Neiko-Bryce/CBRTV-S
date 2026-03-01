@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,9 +10,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // This migration is a data-correction for PostgreSQL only — skip on SQLite
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         // 1. Find the SSG and CCS organizations robustly
-        $ssg = DB::table('organizations')->where('code', 'ILIKE', 'SSG')->first();
-        $ccs = DB::table('organizations')->where('code', 'ILIKE', 'CCS')->first();
+        $ssg = DB::table('organizations')->where('code', 'SSG')->first();
+        $ccs = DB::table('organizations')->where('code', 'CCS')->first();
 
         if ($ssg && $ccs) {
             // 2. Find all "President" positions currently in SSG
@@ -39,7 +43,6 @@ return new class extends Migration
                     ->update(['organization_id' => $ccs->id]);
 
                 // 3. Move all Votes associated with these candidates for maximum safety
-                // We find the candidates we just moved
                 $movedCandidateIds = DB::table('candidates')
                     ->where('position_id', $ccsPresidentId)
                     ->pluck('id');

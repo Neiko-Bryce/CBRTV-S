@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Election;
 use App\Models\Vote;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 
 class LiveResultsViewController extends Controller
 {
@@ -40,6 +40,7 @@ class LiveResultsViewController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 503);
             }
+
             return redirect()->route('admin.live-results-viewing.index')
                 ->with('error', $message);
         }
@@ -66,6 +67,7 @@ class LiveResultsViewController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 503);
             }
+
             return redirect()->route('admin.live-results-viewing.index')
                 ->with('error', $message);
         }
@@ -151,5 +153,4 @@ class LiveResultsViewController extends Controller
             ],
         ]);
     }
-
 }

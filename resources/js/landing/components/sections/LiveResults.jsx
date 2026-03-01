@@ -218,6 +218,10 @@ export default function LiveResults() {
                                                             <span className="text-lg font-bold tabular-nums">{election.time_remaining.minutes}</span>
                                                             <span className="text-[10px] ml-1 opacity-50">M</span>
                                                         </div>
+                                                        <div className="text-white">
+                                                            <span className="text-lg font-bold tabular-nums">{election.time_remaining.seconds}</span>
+                                                            <span className="text-[10px] ml-1 opacity-50">S</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}

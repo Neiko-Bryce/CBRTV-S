@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -19,12 +19,12 @@ return new class extends Migration
             'elections',
             'partylists',
             'students',
-            'votes'
+            'votes',
         ];
 
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
-                if (!Schema::hasColumn($tableName, 'school_id')) {
+                if (! Schema::hasColumn($tableName, 'school_id')) {
                     $table->unsignedBigInteger('school_id')->nullable()->after('id');
                     $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
                 }
@@ -35,8 +35,8 @@ return new class extends Migration
         // Find or create the "Main School" record
         $mainOrg = DB::table('organizations')->where('slug', 'main-school')->first();
         $mainSchool = DB::table('schools')->where('slug', 'main-school')->first();
-        
-        if (!$mainSchool && $mainOrg) {
+
+        if (! $mainSchool && $mainOrg) {
             $schoolId = DB::table('schools')->insertGetId([
                 'name' => $mainOrg->name,
                 'slug' => $mainOrg->slug,
@@ -44,9 +44,9 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $mainSchool = (object)['id' => $schoolId];
+            $mainSchool = (object) ['id' => $schoolId];
         }
-        
+
         if ($mainSchool) {
             // For organizations, link them to the main school if they don't have one
             DB::table('organizations')->whereNull('school_id')->update(['school_id' => $mainSchool->id]);
@@ -58,9 +58,9 @@ return new class extends Migration
                     'school_id' => DB::table('organizations')
                         ->whereColumn('organizations.id', "{$tableName}.organization_id")
                         ->select('school_id')
-                        ->limit(1)
+                        ->limit(1),
                 ]);
-                
+
                 // Fallback for any records still null (shouldn't happen if they have valid org_id)
                 DB::table($tableName)->whereNull('school_id')->update(['school_id' => $mainSchool->id]);
             }
@@ -87,13 +87,13 @@ return new class extends Migration
             'elections',
             'positions',
             'candidates',
-            'organizations'
+            'organizations',
         ];
 
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
                 if (Schema::hasColumn($tableName, 'school_id')) {
-                    $table->dropForeign([$tableName . '_school_id_foreign']);
+                    $table->dropForeign([$tableName.'_school_id_foreign']);
                     $table->dropColumn('school_id');
                 }
             });

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Organization;
-use Illuminate\Support\Str;
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -25,8 +25,10 @@ class RegisteredUserController extends Controller
         $until = $request->session()->get(self::SESSION_KEY);
         if (! is_numeric($until) || (int) $until <= time()) {
             $request->session()->forget(self::SESSION_KEY);
+
             return redirect()->route('register.access');
         }
+
         return null;
     }
 
@@ -85,7 +87,7 @@ class RegisteredUserController extends Controller
         } else {
             // If registering as student, use the organization from session
             $organizationId = $request->session()->get('organization_id') ?: $request->session()->get('org_id');
-            
+
             // Also try to get school_id from organization if possible
             if ($organizationId) {
                 $org = Organization::find($organizationId);

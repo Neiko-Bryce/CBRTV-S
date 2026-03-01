@@ -7,7 +7,6 @@ use App\Models\Election;
 use App\Models\User;
 use App\Models\Vote;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
@@ -113,6 +112,7 @@ class DashboardController extends Controller
                     if ($calculatedStatus === 'completed' && $election->status !== 'completed') {
                         $election->update(['status' => 'completed']);
                     }
+
                     continue;
                 }
 

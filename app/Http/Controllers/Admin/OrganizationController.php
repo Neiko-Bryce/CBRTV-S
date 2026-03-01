@@ -48,7 +48,7 @@ class OrganizationController extends Controller
                 'max:50',
                 Rule::unique('organizations', 'code')->where(function ($query) {
                     return $query->where('school_id', auth()->user()->school_id);
-                })
+                }),
             ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
@@ -85,7 +85,7 @@ class OrganizationController extends Controller
                 'max:50',
                 Rule::unique('organizations', 'code')->where(function ($query) {
                     return $query->where('school_id', auth()->user()->school_id);
-                })->ignore($id)
+                })->ignore($id),
             ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
@@ -109,6 +109,7 @@ class OrganizationController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Cannot delete organization with existing elections.'], 422);
             }
+
             return redirect()->route('admin.organizations.index')
                 ->with('error', 'Cannot delete organization with existing elections.');
         }
@@ -118,6 +119,7 @@ class OrganizationController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Organization deleted successfully.']);
         }
+
         return redirect()->route('admin.organizations.index')
             ->with('success', 'Organization deleted successfully.');
     }

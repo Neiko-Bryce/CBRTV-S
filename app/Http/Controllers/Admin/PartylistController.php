@@ -69,7 +69,7 @@ class PartylistController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Partylist created successfully.',
-                'partylist' => $partylist
+                'partylist' => $partylist,
             ]);
         }
 
@@ -112,7 +112,7 @@ class PartylistController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Partylist updated successfully.',
-                'partylist' => $partylist->fresh()
+                'partylist' => $partylist->fresh(),
             ]);
         }
 
@@ -132,6 +132,7 @@ class PartylistController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Cannot delete partylist with existing candidates.'], 422);
             }
+
             return redirect()->route('admin.partylists.index')
                 ->with('error', 'Cannot delete partylist with existing candidates.');
         }
@@ -141,6 +142,7 @@ class PartylistController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Partylist deleted successfully.']);
         }
+
         return redirect()->route('admin.partylists.index')
             ->with('success', 'Partylist deleted successfully.');
     }

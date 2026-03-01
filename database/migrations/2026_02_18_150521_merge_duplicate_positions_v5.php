@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -43,14 +42,14 @@ return new class extends Migration
                         ->where('position_id', $duplicate->id)
                         ->update([
                             'position_id' => $survivor->id,
-                            'organization_id' => $org->id // Ensure org_id is correct
+                            'organization_id' => $org->id, // Ensure org_id is correct
                         ]);
 
                     // 5. Move any associated votes for these candidates (Double Safety)
                     $movedCandidateIds = DB::table('candidates')
                         ->where('position_id', $survivor->id)
                         ->pluck('id');
-                    
+
                     if ($movedCandidateIds->isNotEmpty()) {
                         DB::table('votes')
                             ->whereIn('candidate_id', $movedCandidateIds)

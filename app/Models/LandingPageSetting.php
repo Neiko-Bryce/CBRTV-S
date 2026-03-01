@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-use App\Traits\BelongsToOrganization;
 use Illuminate\Support\Facades\Auth;
 
 class LandingPageSetting extends Model
@@ -35,14 +33,14 @@ class LandingPageSetting extends Model
             ->where('key', $key)
             ->where(function ($query) use ($organizationId, $schoolId) {
                 $query->whereNull('organization_id')
-                      ->whereNull('school_id');
-                
+                    ->whereNull('school_id');
+
                 if ($schoolId) {
                     $query->orWhere(function ($q) use ($schoolId) {
                         $q->where('school_id', $schoolId)->whereNull('organization_id');
                     });
                 }
-                
+
                 if ($organizationId) {
                     $query->orWhere('organization_id', $organizationId);
                 }
@@ -64,14 +62,14 @@ class LandingPageSetting extends Model
             ->where('key', $key)
             ->where(function ($query) use ($organizationId, $schoolId) {
                 $query->whereNull('organization_id')
-                      ->whereNull('school_id');
-                
+                    ->whereNull('school_id');
+
                 if ($schoolId) {
                     $query->orWhere(function ($q) use ($schoolId) {
                         $q->where('school_id', $schoolId)->whereNull('organization_id');
                     });
                 }
-                
+
                 if ($organizationId) {
                     $query->orWhere('organization_id', $organizationId);
                 }
@@ -88,18 +86,20 @@ class LandingPageSetting extends Model
     public static function setValue(string $section, string $key, $value, $extra = null)
     {
         $user = Auth::user();
-        if (!$user) return null;
+        if (! $user) {
+            return null;
+        }
 
         $isGlobalSection = in_array($section, ['about', 'team', 'features']);
-        
+
         // orgId: only if not a global section
         $orgId = $isGlobalSection ? null : $user->organization_id;
-        
+
         // schoolId: always set for non-super-admins, or if a super-admin wants to scope to a school
         $schoolId = $user->is_super_admin ? null : $user->school_id;
 
         // If it's a global section and user is not super_admin, it MUST have a school_id
-        if ($isGlobalSection && !$user->is_super_admin && !$schoolId) {
+        if ($isGlobalSection && ! $user->is_super_admin && ! $schoolId) {
             abort(403, 'Unauthorized to edit global settings without school scope.');
         }
 
@@ -119,14 +119,14 @@ class LandingPageSetting extends Model
         return static::where('section', $section)
             ->where(function ($query) use ($organizationId, $schoolId) {
                 $query->whereNull('organization_id')
-                      ->whereNull('school_id');
-                
+                    ->whereNull('school_id');
+
                 if ($schoolId) {
                     $query->orWhere(function ($q) use ($schoolId) {
                         $q->where('school_id', $schoolId)->whereNull('organization_id');
                     });
                 }
-                
+
                 if ($organizationId) {
                     $query->orWhere('organization_id', $organizationId);
                 }
@@ -148,14 +148,14 @@ class LandingPageSetting extends Model
         return static::where('section', $section)
             ->where(function ($query) use ($organizationId, $schoolId) {
                 $query->whereNull('organization_id')
-                      ->whereNull('school_id');
-                
+                    ->whereNull('school_id');
+
                 if ($schoolId) {
                     $query->orWhere(function ($q) use ($schoolId) {
                         $q->where('school_id', $schoolId)->whereNull('organization_id');
                     });
                 }
-                
+
                 if ($organizationId) {
                     $query->orWhere('organization_id', $organizationId);
                 }

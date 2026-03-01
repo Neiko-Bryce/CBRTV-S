@@ -213,7 +213,7 @@ class CandidateController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Candidate created successfully.',
-                'candidate' => $candidate
+                'candidate' => $candidate,
             ]);
         }
 
@@ -230,15 +230,15 @@ class CandidateController extends Controller
         if ($request->has('candidates') && is_array($request->candidates)) {
             $filteredCandidates = collect($request->candidates)
                 ->filter(function ($candidate) {
-                    return !empty($candidate['candidate_name']);
+                    return ! empty($candidate['candidate_name']);
                 })
                 ->values()
                 ->toArray();
-            
+
             $request->merge(['candidates' => $filteredCandidates]);
         }
-        
-        // Custom validation for checking duplicate/limit before proceeding? 
+
+        // Custom validation for checking duplicate/limit before proceeding?
         // We do it manually below anyway.
 
         $validated = $request->validate([
@@ -259,22 +259,23 @@ class CandidateController extends Controller
 
         // Group candidates by position and validate limits
         $candidatesByPosition = collect($validated['candidates'])->groupBy('position_id');
-        
+
         foreach ($candidatesByPosition as $positionId => $candidates) {
             $position = Position::findOrFail($positionId);
             $existingCount = Candidate::where('election_id', $electionId)
                 ->where('position_id', $positionId)
                 ->where('partylist_id', $partylistId)
                 ->count();
-            
+
             $newCount = count($candidates);
-            
+
             if (($existingCount + $newCount) > $position->number_of_slots) {
                 $errorMsg = "Party limit reached for {$position->name}! This position only allows {$position->number_of_slots} candidates per party. You already have {$existingCount} and are trying to add {$newCount} more.";
-                
+
                 if ($request->wantsJson()) {
                     return response()->json(['message' => $errorMsg, 'errors' => ['candidates' => [$errorMsg]]], 422);
                 }
+
                 return back()->withInput()->with('error', $errorMsg);
             }
         }
@@ -368,7 +369,7 @@ class CandidateController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Candidate updated successfully.',
-                'candidate' => $candidate->fresh()
+                'candidate' => $candidate->fresh(),
             ]);
         }
 
@@ -440,6 +441,7 @@ class CandidateController extends Controller
     private function placeholderPhotoResponse()
     {
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
+
         return response($svg, 200)
             ->header('Content-Type', 'image/svg+xml')
             ->header('Content-Disposition', 'inline')

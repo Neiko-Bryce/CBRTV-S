@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
 class RegistrationAccessController extends Controller
 {
     private const SESSION_KEY = 'registration_access_until';
+
     private const TTL_MINUTES = 15;
 
     public function showAccessForm(): View
@@ -30,6 +31,7 @@ class RegistrationAccessController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Invalid access code.'], 422);
             }
+
             return redirect()->route('register.access')
                 ->with('error', 'Invalid access code. You cannot access registration.')
                 ->withInput($request->only('access_code'));
@@ -43,6 +45,7 @@ class RegistrationAccessController extends Controller
                 'redirect' => route('register'),
             ]);
         }
+
         return redirect()->route('register')->with('success', 'Access granted. You can now create your account.');
     }
 }

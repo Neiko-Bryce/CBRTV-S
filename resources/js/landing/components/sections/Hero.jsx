@@ -117,16 +117,9 @@ export default function Hero() {
                                 icon={HiArrowRight}
                                 iconPosition="right"
                                 className="w-full sm:w-auto justify-center text-sm sm:text-base"
+                                href="/login"
                             >
-                                Launch Demo
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                icon={HiPlay}
-                                className="w-full sm:w-auto justify-center border-white/30 text-white hover:bg-white/10 hover:text-white text-sm sm:text-base"
-                            >
-                                Watch Overview
+                                Let's Start
                             </Button>
                         </motion.div>
 

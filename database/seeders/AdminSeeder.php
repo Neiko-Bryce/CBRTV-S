@@ -14,7 +14,7 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         // 1. Super Admin Account (Full Privileges)
-        // updateOrCreate ensures the account exists and has the correct role 
+        // updateOrCreate ensures the account exists and has the correct role
         // without creating duplicates or deleting other users.
         User::updateOrCreate(
             ['email' => 'superadmin@vosewisly.com'],
@@ -26,7 +26,7 @@ class AdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $this->command->info("Super Admin account synced.");
+        $this->command->info('Super Admin account synced.');
 
         // 2. Regular Admin Account (Scoped to a specific School)
         // Prioritize "Main Campus" for the default admin
@@ -44,6 +44,6 @@ class AdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $this->command->info("Regular Admin account synced (School ID: " . ($schoolId ?? 'NONE') . ").");
+        $this->command->info('Regular Admin account synced (School ID: '.($schoolId ?? 'NONE').').');
     }
 }
