@@ -39,13 +39,15 @@ trait BelongsToOrganization
                         return;
                     }
 
-                    // Regular admins/students only see data from their own organization
+                    // Students bypass org filter — they see all elections within their school.
+                    // BelongsToSchool already restricts them to the correct school.
+                    if ($user->usertype === 'student') {
+                        return;
+                    }
+
                     if ($user->organization_id) {
                         $builder->where($builder->getQuery()->from.'.organization_id', $user->organization_id);
                     }
-                    // If user has no organization_id, we don't apply a filter here.
-                    // This allows school-level admins to see all organizations' data,
-                    // while BelongsToSchool still restricts them to their school.
                 }
             } finally {
                 static::$isScoping = false;

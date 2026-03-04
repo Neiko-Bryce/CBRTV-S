@@ -24,7 +24,6 @@ class DashboardController extends Controller
         $user = Auth::user();
         $context = $this->resolveStudentContext($user);
         $resolvedSchoolId = $context['school_id'];
-        $resolvedOrganizationId = $context['organization_id'];
 
         $allElections = Election::withoutGlobalScopes()
             ->with('organization')
@@ -33,9 +32,6 @@ class DashboardController extends Controller
                     $inner->where('school_id', $resolvedSchoolId)
                         ->orWhereNull('school_id');
                 });
-            })
-            ->when($resolvedOrganizationId, function ($q) use ($resolvedOrganizationId) {
-                $q->where('organization_id', $resolvedOrganizationId);
             })
             ->orderBy('election_date', 'asc')
             ->orderBy('timestarted', 'asc')
@@ -96,8 +92,8 @@ class DashboardController extends Controller
                 $election->end_datetime = null;
             }
 
-            // Load candidates for all elections (but only show when ongoing)
-            $candidates = Candidate::where('election_id', $election->id)
+            $candidates = Candidate::withoutGlobalScopes()
+                ->where('election_id', $election->id)
                 ->with(['position', 'partylist', 'election.organization'])
                 ->orderBy('position_id', 'asc')
                 ->orderBy('candidate_name', 'asc')
@@ -107,8 +103,8 @@ class DashboardController extends Controller
             $election->candidatesByPosition = $candidates->groupBy('position_id')
                 ->sortBy(fn ($cands) => $cands->first()->position->order ?? 0);
 
-            // Check if user has already voted for this election
-            $userVotes = Vote::where('election_id', $election->id)
+            $userVotes = Vote::withoutGlobalScopes()
+                ->where('election_id', $election->id)
                 ->where('voter_id', Auth::id())
                 ->count();
 
@@ -123,8 +119,8 @@ class DashboardController extends Controller
      */
     public function votesHistory()
     {
-        // Get voting history for the current user
-        $votingHistory = Vote::where('voter_id', Auth::id())
+        $votingHistory = Vote::withoutGlobalScopes()
+            ->where('voter_id', Auth::id())
             ->with(['election.organization', 'candidate.position', 'candidate.partylist'])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -156,7 +152,8 @@ class DashboardController extends Controller
      */
     public function vote($electionId)
     {
-        $election = Election::with(['organization', 'candidates.position', 'candidates.partylist'])
+        $election = Election::withoutGlobalScopes()
+            ->with(['organization', 'candidates.position', 'candidates.partylist'])
             ->findOrFail($electionId);
         $this->assertElectionAccess($election);
 
@@ -167,19 +164,18 @@ class DashboardController extends Controller
                 ->with('error', 'This election is not currently active for voting.');
         }
 
-        // Get candidates grouped by position
-        $candidates = Candidate::where('election_id', $election->id)
+        $candidates = Candidate::withoutGlobalScopes()
+            ->where('election_id', $election->id)
             ->with(['position', 'partylist'])
             ->orderBy('position_id', 'asc')
             ->orderBy('candidate_name', 'asc')
             ->get();
 
-        // Group by position and sort by position order (admin-configured)
         $candidatesByPosition = $candidates->groupBy('position_id')
             ->sortBy(fn ($cands) => $cands->first()->position->order ?? 0);
 
-        // Get user's existing votes for this election
-        $userVotes = Vote::where('election_id', $election->id)
+        $userVotes = Vote::withoutGlobalScopes()
+            ->where('election_id', $election->id)
             ->where('voter_id', Auth::id())
             ->pluck('candidate_id')
             ->toArray();
@@ -222,7 +218,7 @@ class DashboardController extends Controller
      */
     public function submitVote(Request $request, $electionId)
     {
-        $election = Election::findOrFail($electionId);
+        $election = Election::withoutGlobalScopes()->findOrFail($electionId);
         $this->assertElectionAccess($election);
 
         // Check if election is ongoing
@@ -242,8 +238,8 @@ class DashboardController extends Controller
         $userId = Auth::id();
         $votes = array_values(array_unique($request->input('votes', [])));
 
-        // One-time voting per election: block any second submission
-        $alreadyVoted = Vote::where('election_id', $electionId)
+        $alreadyVoted = Vote::withoutGlobalScopes()
+            ->where('election_id', $electionId)
             ->where('voter_id', $userId)
             ->exists();
         if ($alreadyVoted) {
@@ -253,13 +249,15 @@ class DashboardController extends Controller
             ], 409);
         }
 
-        // Get all candidates being voted for
-        $candidatesToVote = Candidate::whereIn('id', $votes)
+        $candidatesToVote = Candidate::withoutGlobalScopes()
+            ->whereIn('id', $votes)
             ->where('election_id', $electionId)
             ->get();
 
-        // Get available positions and their slots
-        $positions = Position::where('organization_id', $election->organization_id)->get()->keyBy('id');
+        $positions = Position::withoutGlobalScopes()
+            ->where('organization_id', $election->organization_id)
+            ->get()
+            ->keyBy('id');
 
         // Group selected votes by position
         $votesByPosition = $candidatesToVote->groupBy('position_id');
@@ -280,10 +278,9 @@ class DashboardController extends Controller
             }
         }
 
-        // Create new votes and update vote counts
         foreach ($votes as $candidateId) {
-            // Check if vote already exists (shouldn't happen, but safety check)
-            $existingVote = Vote::where('election_id', $electionId)
+            $existingVote = Vote::withoutGlobalScopes()
+                ->where('election_id', $electionId)
                 ->where('candidate_id', $candidateId)
                 ->where('voter_id', $userId)
                 ->first();
@@ -295,8 +292,7 @@ class DashboardController extends Controller
                     'voter_id' => $userId,
                 ]);
 
-                // Update candidate vote count
-                $candidate = Candidate::find($candidateId);
+                $candidate = Candidate::withoutGlobalScopes()->find($candidateId);
                 if ($candidate) {
                     $candidate->increment('votes_count');
                 }
@@ -461,9 +457,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $context = $this->resolveStudentContext($user);
         $schoolOk = ! $context['school_id'] || ! $election->school_id || $election->school_id === $context['school_id'];
-        $orgOk = ! $context['organization_id'] || ! $election->organization_id || $election->organization_id === $context['organization_id'];
-
-        if (! $schoolOk || ! $orgOk) {
+        if (! $schoolOk) {
             abort(403, 'You are not authorized to access this election.');
         }
     }

@@ -34,31 +34,28 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
         $userType = $user->usertype ?? 'student';
 
-        // Repair missing school/org for legacy accounts (common after deployments)
-        if ($user && ! $user->school_id) {
-            $resolvedSchoolId = null;
+        // Repair missing or mismatched school/org — student record is source of truth
+        if ($user) {
+            $student = Student::withoutGlobalScopes()
+                ->where('student_id_number', $user->email)
+                ->first();
 
-            if ($user->organization_id) {
-                $org = Organization::withoutGlobalScopes()->find($user->organization_id);
+            $resolvedSchoolId = $student?->school_id;
+            $resolvedOrgId = $student?->organization_id;
+
+            // Fallback: derive school from organization if student record has no school
+            if (! $resolvedSchoolId && ($resolvedOrgId ?? $user->organization_id)) {
+                $org = Organization::withoutGlobalScopes()->find($resolvedOrgId ?? $user->organization_id);
                 if ($org && $org->school_id) {
                     $resolvedSchoolId = $org->school_id;
                 }
             }
 
-            if (! $resolvedSchoolId) {
-                $student = Student::withoutGlobalScopes()
-                    ->where('student_id_number', $user->email)
-                    ->first();
-                if ($student && $student->school_id) {
-                    $resolvedSchoolId = $student->school_id;
-                }
-                if ($student && ! $user->organization_id && $student->organization_id) {
-                    $user->organization_id = $student->organization_id;
-                }
-            }
-
-            if ($resolvedSchoolId) {
+            if ($resolvedSchoolId && $user->school_id !== $resolvedSchoolId) {
                 $user->school_id = $resolvedSchoolId;
+            }
+            if ($resolvedOrgId && $user->organization_id !== $resolvedOrgId) {
+                $user->organization_id = $resolvedOrgId;
             }
 
             if ($user->isDirty()) {
