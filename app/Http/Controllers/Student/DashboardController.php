@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Election;
 use App\Models\Position;
+use App\Models\School;
 use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,7 +21,25 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $allElections = Election::with('organization')->orderBy('election_date', 'asc')->orderBy('timestarted', 'asc')->get();
+        $user = Auth::user();
+        $context = $this->resolveStudentContext($user);
+        $resolvedSchoolId = $context['school_id'];
+        $resolvedOrganizationId = $context['organization_id'];
+
+        $allElections = Election::withoutGlobalScopes()
+            ->with('organization')
+            ->when($resolvedSchoolId, function ($q) use ($resolvedSchoolId) {
+                $q->where(function ($inner) use ($resolvedSchoolId) {
+                    $inner->where('school_id', $resolvedSchoolId)
+                        ->orWhereNull('school_id');
+                });
+            })
+            ->when($resolvedOrganizationId, function ($q) use ($resolvedOrganizationId) {
+                $q->where('organization_id', $resolvedOrganizationId);
+            })
+            ->orderBy('election_date', 'asc')
+            ->orderBy('timestarted', 'asc')
+            ->get();
 
         // Build list from calculated status only (upcoming/ongoing).
         $elections = collect();
@@ -139,6 +158,7 @@ class DashboardController extends Controller
     {
         $election = Election::with(['organization', 'candidates.position', 'candidates.partylist'])
             ->findOrFail($electionId);
+        $this->assertElectionAccess($election);
 
         // Check if election is ongoing
         $calculatedStatus = $this->calculateStatus($election);
@@ -203,6 +223,7 @@ class DashboardController extends Controller
     public function submitVote(Request $request, $electionId)
     {
         $election = Election::findOrFail($electionId);
+        $this->assertElectionAccess($election);
 
         // Check if election is ongoing
         $calculatedStatus = $this->calculateStatus($election);
@@ -378,6 +399,72 @@ class DashboardController extends Controller
             return Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$timeStr, 'Asia/Manila');
         } catch (\Exception $e) {
             return $electionDate->copy()->startOfDay();
+        }
+    }
+
+    /**
+     * Resolve the effective school/org for the logged-in student.
+     */
+    private function resolveStudentContext($user): array
+    {
+        $student = null;
+        if ($user && $user->email) {
+            $student = \App\Models\Student::withoutGlobalScopes()
+                ->where('student_id_number', $user->email)
+                ->first();
+        }
+
+        $organizationId = $student?->organization_id ?: $user?->organization_id;
+        $schoolId = $student?->school_id ?: $user?->school_id;
+        if (! $schoolId && $organizationId) {
+            $org = \App\Models\Organization::withoutGlobalScopes()->find($organizationId);
+            if ($org && $org->school_id) {
+                $schoolId = $org->school_id;
+            }
+        }
+        if (! $schoolId) {
+            $schoolId = request('school_id') ?: session('school_id');
+        }
+
+        $resolvedSchoolId = null;
+        if ($schoolId) {
+            if (is_numeric($schoolId)) {
+                $resolvedSchoolId = (int) $schoolId;
+            } else {
+                $school = School::where('slug', $schoolId)->first();
+                $resolvedSchoolId = $school?->id;
+            }
+        }
+
+        // Persist missing links for legacy accounts or mismatches with student record
+        if ($user && $resolvedSchoolId && (! $user->school_id || ($student && $student->school_id && $user->school_id !== $student->school_id))) {
+            $user->school_id = $resolvedSchoolId;
+        }
+        if ($user && $organizationId && (! $user->organization_id || ($student && $student->organization_id && $user->organization_id !== $student->organization_id))) {
+            $user->organization_id = $organizationId;
+        }
+        if ($user && $user->isDirty()) {
+            $user->save();
+        }
+
+        return [
+            'school_id' => $resolvedSchoolId,
+            'organization_id' => $organizationId,
+        ];
+    }
+
+    /**
+     * Ensure students only access elections from their school/org.
+     */
+    private function assertElectionAccess(Election $election): void
+    {
+        $user = Auth::user();
+        $context = $this->resolveStudentContext($user);
+        $schoolOk = ! $context['school_id'] || ! $election->school_id || $election->school_id === $context['school_id'];
+        $orgOk = ! $context['organization_id'] || ! $election->organization_id || $election->organization_id === $context['organization_id'];
+
+        if (! $schoolOk || ! $orgOk) {
+            abort(403, 'You are not authorized to access this election.');
         }
     }
 }
