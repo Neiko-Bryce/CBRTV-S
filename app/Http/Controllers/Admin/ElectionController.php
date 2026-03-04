@@ -22,14 +22,20 @@ class ElectionController extends Controller
             $allElectionData = Election::all();
 
             foreach ($allElectionData as $electionRow) {
-                $electionArray = (array) $electionRow;
+                $electionData = [
+                    'id' => $electionRow->id,
+                    'election_date' => $electionRow->election_date,
+                    'timestarted' => $electionRow->timestarted,
+                    'time_ended' => $electionRow->time_ended,
+                    'status' => $electionRow->status,
+                ];
 
                 // Don't auto-update if status is manually set to cancelled
-                if ($electionArray['status'] === 'cancelled') {
-                    $calculatedStatus = $this->calculateStatus($electionArray);
+                if ($electionData['status'] === 'cancelled') {
+                    $calculatedStatus = $this->calculateStatus($electionData);
                     if ($calculatedStatus === 'completed') {
                         DB::table('elections')
-                            ->where('id', $electionArray['id'])
+                            ->where('id', $electionData['id'])
                             ->update(['status' => 'completed', 'updated_at' => now()]);
                     }
 
@@ -37,21 +43,21 @@ class ElectionController extends Controller
                 }
 
                 // Convert any old "rescheduled" status to "upcoming"
-                if ($electionArray['status'] === 'rescheduled') {
+                if ($electionData['status'] === 'rescheduled') {
                     DB::table('elections')
-                        ->where('id', $electionArray['id'])
+                        ->where('id', $electionData['id'])
                         ->update(['status' => 'upcoming', 'updated_at' => now()]);
-                    $electionArray['status'] = 'upcoming';
+                    $electionData['status'] = 'upcoming';
                 }
 
-                $calculatedStatus = $this->calculateStatus($electionArray);
+                $calculatedStatus = $this->calculateStatus($electionData);
 
                 // Always update if status changed or is empty
-                if ($electionArray['status'] !== $calculatedStatus || empty($electionArray['status'])) {
-                    Election::where('id', $electionArray['id'])
+                if ($electionData['status'] !== $calculatedStatus || empty($electionData['status'])) {
+                    Election::where('id', $electionData['id'])
                         ->update(['status' => $calculatedStatus, 'updated_at' => now()]);
 
-                    \Log::info("Election #{$electionArray['id']} status updated: {$electionArray['status']} -> {$calculatedStatus}");
+                    \Log::info("Election #{$electionData['id']} status updated: {$electionData['status']} -> {$calculatedStatus}");
                 }
             }
         } catch (\Exception $e) {
