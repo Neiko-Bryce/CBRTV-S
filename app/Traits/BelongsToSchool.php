@@ -49,7 +49,7 @@ trait BelongsToSchool
                             ->orWhereNull($tableName.'.school_id');
                     });
                 } else {
-                    // PUBLIC PORTAL / VOTER SIDE / API
+                    // PUBLIC PORTAL / VOTER SIDE / API (including student side)
 
                     // EXCEPTION: Always allow global lookup for Users and Students on public routes
                     // This is essential for Login to work across different portal links.
@@ -58,10 +58,16 @@ trait BelongsToSchool
                         return;
                     }
 
-                    // Prioritize request('school_id') for tab-level isolation
+                    // Authenticated students should always use their own school_id
+                    $authSchoolId = null;
+                    if (Auth::check()) {
+                        $authSchoolId = Auth::user()?->school_id;
+                    }
+
+                    // Otherwise prioritize request('school_id') for tab-level isolation
                     $requestSchoolId = request('school_id');
                     $sessionSchoolId = session('school_id');
-                    $activeSchoolId = $requestSchoolId ?: $sessionSchoolId;
+                    $activeSchoolId = $authSchoolId ?: ($requestSchoolId ?: $sessionSchoolId);
 
                     if ($activeSchoolId) {
                         // If it's a slug (contains non-numeric), resolve it
@@ -71,14 +77,22 @@ trait BelongsToSchool
                         }
 
                         if ($activeSchoolId) {
-                            $builder->where($builder->getQuery()->from.'.school_id', $activeSchoolId);
+                            $tableName = $builder->getQuery()->from;
+                            $builder->where(function ($q) use ($tableName, $activeSchoolId) {
+                                $q->where($tableName.'.school_id', $activeSchoolId)
+                                    ->orWhereNull($tableName.'.school_id'); // allow global records
+                            });
                         }
                     } else {
                         // ROOT PAGE (www.cpsuvotewisely.com)
                         // Default to showing only Main Campus data
                         $mainCampus = \App\Models\School::where('slug', 'main-campus')->first();
                         if ($mainCampus) {
-                            $builder->where($builder->getQuery()->from.'.school_id', $mainCampus->id);
+                            $tableName = $builder->getQuery()->from;
+                            $builder->where(function ($q) use ($tableName, $mainCampus) {
+                                $q->where($tableName.'.school_id', $mainCampus->id)
+                                    ->orWhereNull($tableName.'.school_id'); // allow global records
+                            });
                         }
                     }
                 }

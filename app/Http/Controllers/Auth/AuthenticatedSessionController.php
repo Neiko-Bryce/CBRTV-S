@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Organization;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +33,38 @@ class AuthenticatedSessionController extends Controller
         // Redirect based on user type
         $user = Auth::user();
         $userType = $user->usertype ?? 'student';
+
+        // Repair missing school/org for legacy accounts (common after deployments)
+        if ($user && ! $user->school_id) {
+            $resolvedSchoolId = null;
+
+            if ($user->organization_id) {
+                $org = Organization::withoutGlobalScopes()->find($user->organization_id);
+                if ($org && $org->school_id) {
+                    $resolvedSchoolId = $org->school_id;
+                }
+            }
+
+            if (! $resolvedSchoolId) {
+                $student = Student::withoutGlobalScopes()
+                    ->where('student_id_number', $user->email)
+                    ->first();
+                if ($student && $student->school_id) {
+                    $resolvedSchoolId = $student->school_id;
+                }
+                if ($student && ! $user->organization_id && $student->organization_id) {
+                    $user->organization_id = $student->organization_id;
+                }
+            }
+
+            if ($resolvedSchoolId) {
+                $user->school_id = $resolvedSchoolId;
+            }
+
+            if ($user->isDirty()) {
+                $user->save();
+            }
+        }
 
         if ($userType === 'admin') {
             return redirect()->intended(route('admin.dashboard', absolute: false));

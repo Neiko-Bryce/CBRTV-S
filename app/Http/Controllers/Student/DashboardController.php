@@ -219,7 +219,18 @@ class DashboardController extends Controller
         ]);
 
         $userId = Auth::id();
-        $votes = $request->input('votes', []);
+        $votes = array_values(array_unique($request->input('votes', [])));
+
+        // One-time voting per election: block any second submission
+        $alreadyVoted = Vote::where('election_id', $electionId)
+            ->where('voter_id', $userId)
+            ->exists();
+        if ($alreadyVoted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already submitted your votes for this election.',
+            ], 409);
+        }
 
         // Get all candidates being voted for
         $candidatesToVote = Candidate::whereIn('id', $votes)
@@ -245,25 +256,6 @@ class DashboardController extends Controller
                         'message' => "You selected too many candidates for {$position->name}. Max allowed is {$maxSlots}.",
                     ], 422);
                 }
-            }
-        }
-
-        // Get existing votes for this election
-        $existingVotes = Vote::where('election_id', $electionId)
-            ->where('voter_id', $userId)
-            ->with('candidate')
-            ->get();
-
-        // Delete existing votes for positions that are being re-voted
-        foreach ($candidatesToVote as $candidate) {
-            $existingVote = $existingVotes->firstWhere('candidate.position_id', $candidate->position_id);
-            if ($existingVote) {
-                // Decrement vote count for old candidate
-                $oldCandidate = Candidate::find($existingVote->candidate_id);
-                if ($oldCandidate && $oldCandidate->votes_count > 0) {
-                    $oldCandidate->decrement('votes_count');
-                }
-                $existingVote->delete();
             }
         }
 

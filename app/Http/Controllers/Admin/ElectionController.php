@@ -136,6 +136,12 @@ class ElectionController extends Controller
             }
 
             $validated['school_id'] = auth()->user()->school_id;
+            if (empty($validated['school_id']) && ! empty($validated['organization_id'])) {
+                $org = \App\Models\Organization::withoutGlobalScopes()->find($validated['organization_id']);
+                if ($org && $org->school_id) {
+                    $validated['school_id'] = $org->school_id;
+                }
+            }
 
             // Strong validation: Cannot create election in the past
             $nowPH = Carbon::now('Asia/Manila');
@@ -325,6 +331,12 @@ class ElectionController extends Controller
 
             // Ensure school_id remains consistent with the admin's school
             $validated['school_id'] = auth()->user()->school_id;
+            if (empty($validated['school_id']) && ! empty($validated['organization_id'])) {
+                $org = \App\Models\Organization::withoutGlobalScopes()->find($validated['organization_id']);
+                if ($org && $org->school_id) {
+                    $validated['school_id'] = $org->school_id;
+                }
+            }
 
             $election->update($validated);
 
