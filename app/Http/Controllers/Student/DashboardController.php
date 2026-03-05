@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ArchivedVote;
 use App\Models\Candidate;
 use App\Models\Election;
 use App\Models\Position;
@@ -120,7 +121,7 @@ class DashboardController extends Controller
      */
     public function votesHistory()
     {
-        $votingHistory = Vote::withoutGlobalScopes()
+        $activeHistory = Vote::withoutGlobalScopes()
             ->where('voter_id', Auth::id())
             ->with(['election.organization', 'candidate.position', 'candidate.partylist'])
             ->orderBy('created_at', 'desc')
@@ -141,7 +142,89 @@ class DashboardController extends Controller
                     })->groupBy(function ($item) {
                         return $item['position']->id ?? 'no-position';
                     }),
+                    'is_archived' => false,
                 ];
+            })
+            ->values();
+
+        $archivedHistory = ArchivedVote::withoutGlobalScopes()
+            ->where('voter_id', Auth::id())
+            ->with(['archivedElection.organization', 'archivedCandidate.archivedPartylist'])
+            ->orderByDesc('voted_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy('archived_election_id')
+            ->map(function ($votes) {
+                $archivedElection = $votes->first()->archivedElection;
+                if (! $archivedElection) {
+                    return null;
+                }
+
+                $election = (object) [
+                    'id' => $archivedElection->original_election_id ?: $archivedElection->id,
+                    'election_name' => $archivedElection->election_name,
+                    'election_date' => $archivedElection->election_date,
+                    'venue' => $archivedElection->venue,
+                    'organization' => $archivedElection->organization,
+                ];
+
+                $candidates = $votes->map(function ($vote) {
+                    $candidate = $vote->archivedCandidate;
+                    if (! $candidate) {
+                        return null;
+                    }
+
+                    $candidateObject = (object) [
+                        'id' => $candidate->original_candidate_id ?: $candidate->id,
+                        'candidate_name' => $candidate->candidate_name,
+                        'photo' => $candidate->photo,
+                    ];
+
+                    $positionObject = (object) [
+                        'id' => $candidate->original_position_id ?: ('archived-position-'.$candidate->id),
+                        'name' => $candidate->position_name ?: 'Position',
+                    ];
+
+                    $partylistObject = null;
+                    if ($candidate->archivedPartylist) {
+                        $partylistObject = (object) [
+                            'name' => $candidate->archivedPartylist->name,
+                            'color' => $candidate->archivedPartylist->color,
+                        ];
+                    }
+
+                    return [
+                        'candidate' => $candidateObject,
+                        'position' => $positionObject,
+                        'partylist' => $partylistObject,
+                    ];
+                })
+                    ->filter()
+                    ->groupBy(function ($item) {
+                        return $item['position']->id ?? 'archived-no-position';
+                    });
+
+                return [
+                    'election' => $election,
+                    'voted_at' => $votes->first()->voted_at ?: $votes->first()->created_at,
+                    'candidates' => $candidates,
+                    'is_archived' => true,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $votingHistory = $activeHistory
+            ->concat($archivedHistory)
+            ->sortByDesc(function ($history) {
+                $votedAt = $history['voted_at'] ?? null;
+                if ($votedAt instanceof \DateTimeInterface) {
+                    return $votedAt->getTimestamp();
+                }
+
+                $timestamp = strtotime((string) $votedAt);
+
+                return $timestamp ?: 0;
             })
             ->values();
 

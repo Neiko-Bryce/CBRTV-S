@@ -148,7 +148,7 @@ class BackfillSchoolIds extends Command
             }
 
             if (! empty($updates)) {
-                $this->line("{$prefix}User #{$u->id} ({$u->email}): " . json_encode($updates));
+                $this->line("{$prefix}User #{$u->id} ({$u->email}): ".json_encode($updates));
                 if (! $dryRun) {
                     DB::table('users')->where('id', $u->id)->update($updates);
                 }

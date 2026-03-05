@@ -18,6 +18,7 @@ return new class extends Migration
 
         if (! $mainSchool || ! $mainCampus || $mainSchool->id === $mainCampus->id) {
             Log::info('ConsolidateDuplicateSchools: No duplicate to fix.');
+
             return;
         }
 
@@ -36,7 +37,7 @@ return new class extends Migration
                     Log::info("  {$table}: moved {$count} record(s) from school #{$oldId} → #{$newId}");
                 }
             } catch (\Exception $e) {
-                Log::warning("  {$table}: skipped — " . $e->getMessage());
+                Log::warning("  {$table}: skipped — ".$e->getMessage());
             }
         }
 

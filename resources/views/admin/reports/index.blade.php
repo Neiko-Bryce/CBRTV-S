@@ -17,14 +17,30 @@
                         class="px-3 sm:px-4 py-2 rounded-lg border text-sm font-medium transition-colors w-full md:w-auto min-w-0"
                         style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                         <option value="">Select an Election</option>
-                        @foreach ($elections as $election)
-                            <option value="{{ $election->id }}">
-                                {{ $election->election_name }}
-                                @if ($election->election_date)
-                                    ({{ $election->election_date->format('M d, Y') }})
-                                @endif
-                            </option>
-                        @endforeach
+                        @if ($elections->count() > 0)
+                            <optgroup label="Active Elections">
+                                @foreach ($elections as $election)
+                                    <option value="active_{{ $election->id }}">
+                                        {{ $election->election_name }}
+                                        @if ($election->election_date)
+                                            ({{ $election->election_date->format('M d, Y') }})
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+                        @if (isset($archivedElections) && $archivedElections->count() > 0)
+                            <optgroup label="Archived Elections">
+                                @foreach ($archivedElections as $election)
+                                    <option value="archived_{{ $election->id }}">
+                                        [Archived] {{ $election->election_name }}
+                                        @if ($election->election_date)
+                                            ({{ $election->election_date->format('M d, Y') }})
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
                     </select>
                 </div>
             </div>
@@ -115,6 +131,44 @@
                                 <option :value="option" x-text="option"></option>
                             </template>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div class="p-3 sm:p-4"
+                    style="border-color: var(--border-color); background: var(--bg-secondary);">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-secondary mb-1">Period Preset</label>
+                            <select x-model="datePreset" @change="applyDatePreset()"
+                                class="w-full px-3 py-2 rounded-lg text-sm"
+                                style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                                <option value="all_time">All Time</option>
+                                <option value="this_month">This Month</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="this_year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-secondary mb-1">From</label>
+                            <input type="date" x-model="dateFrom" @change="datePreset = 'custom'; loadReport()"
+                                class="w-full px-3 py-2 rounded-lg text-sm"
+                                style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-secondary mb-1">To</label>
+                            <input type="date" x-model="dateTo" @change="datePreset = 'custom'; loadReport()"
+                                class="w-full px-3 py-2 rounded-lg text-sm"
+                                style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" />
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" @click="loadReport()"
+                                class="w-full px-3 py-2 rounded-lg text-sm font-semibold text-white"
+                                style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                                Apply
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -235,9 +289,11 @@
                             <span x-text="currentElection?.election_name"></span>
                             <span class="text-secondary sm:ml-2">| Election Year: <span
                                     x-text="reportData?.electionYear"></span></span>
+                            <span class="text-secondary sm:ml-2">| Report Period: <span
+                                    x-text="reportData?.reportPeriodLabel || 'All time'"></span></span>
                         </span>
                     </div>
-                    <a :href="`{{ url('admin/reports') }}/${selectedElection}/print?filter_type=${filterType}&filter_value=${filterValue || ''}`"
+                    <a :href="getPrintUrl()"
                         target="_blank"
                         class="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 rounded-lg text-sm font-medium text-white transition-all shadow-md hover:shadow-lg btn-cpsu-primary w-full sm:w-auto flex-shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,10 +458,63 @@
                     loading: false,
                     filterType: 'all',
                     filterValue: '',
+                    datePreset: 'all_time',
+                    dateFrom: '',
+                    dateTo: '',
                     filters: {
                         courses: [],
                         yearlevels: [],
                         sections: []
+                    },
+
+                    applyDatePreset() {
+                        const today = new Date();
+                        const toIso = (date) => date.toISOString().slice(0, 10);
+
+                        if (this.datePreset === 'all_time') {
+                            this.dateFrom = '';
+                            this.dateTo = '';
+                            this.loadReport();
+                            return;
+                        }
+
+                        if (this.datePreset === 'this_month') {
+                            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                            this.dateFrom = toIso(firstDay);
+                            this.dateTo = toIso(today);
+                            this.loadReport();
+                            return;
+                        }
+
+                        if (this.datePreset === 'last_month') {
+                            const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                            const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+                            this.dateFrom = toIso(firstDay);
+                            this.dateTo = toIso(lastDay);
+                            this.loadReport();
+                            return;
+                        }
+
+                        if (this.datePreset === 'this_year') {
+                            const firstDay = new Date(today.getFullYear(), 0, 1);
+                            this.dateFrom = toIso(firstDay);
+                            this.dateTo = toIso(today);
+                            this.loadReport();
+                        }
+                    },
+
+                    getPrintUrl() {
+                        if (!this.selectedElection) {
+                            return '#';
+                        }
+                        const params = new URLSearchParams({
+                            filter_type: this.filterType,
+                            filter_value: this.filterValue || '',
+                            date_from: this.dateFrom || '',
+                            date_to: this.dateTo || ''
+                        });
+
+                        return `{{ url('admin/reports') }}/${this.selectedElection}/print?${params.toString()}`;
                     },
 
                     setFilter(type) {
@@ -446,9 +555,11 @@
                                     'Accept': 'application/json'
                                 },
                                 body: JSON.stringify({
-                                    election_id: this.selectedElection,
+                                    election_ref: this.selectedElection,
                                     filter_type: this.filterType,
-                                    filter_value: this.filterValue || null
+                                    filter_value: this.filterValue || null,
+                                    date_from: this.dateFrom || null,
+                                    date_to: this.dateTo || null
                                 })
                             });
 

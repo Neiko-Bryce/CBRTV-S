@@ -109,6 +109,16 @@
             <p class="text-sm text-secondary mt-1">Manage election records and information</p>
         </div>
         <div class="flex flex-wrap items-center gap-3 page-header-actions">
+            <a href="{{ route('admin.archived-elections.index') }}"
+                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all"
+                style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5 8h14M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M9 8V6a3 3 0 016 0v2">
+                    </path>
+                </svg>
+                <span>View Archive</span>
+            </a>
             <button type="button" onclick="openCreateModal()" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm btn-cpsu-primary btn-add">
                 <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -427,11 +437,23 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button type="button" onclick="deleteElection({{ $election->id }}, '{{ $election->election_name }}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
+                                <button type="button" onclick='deleteElection({{ $election->id }}, {!! json_encode($election->election_name) !!})' class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
                                 </button>
+                                @if(in_array($status, ['completed', 'cancelled']))
+                                    <button type="button"
+                                        onclick='archiveElection({{ $election->id }}, {!! json_encode($election->election_name) !!})'
+                                        class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
+                                        style="color: #0ea5e9;" title="Archive Election">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 8h14M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M9 8V6a3 3 0 016 0v2">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -708,10 +730,47 @@
     </div>
 </div>
 
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal" class="modal">
+    <div class="modal-content" style="max-width: 420px;">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-primary">Archive Election</h3>
+            <span class="close" onclick="closeModal('archiveModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(14, 165, 233, 0.12);">
+                    <svg class="w-6 h-6" style="color: #0ea5e9;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M9 8V6a3 3 0 016 0v2"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-primary">Archive this election now?</p>
+                    <p class="text-sm text-secondary mt-1" id="archiveElectionName"></p>
+                    <p class="text-xs mt-2 text-secondary">This moves election records to archive tables and removes them from active lists.</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('archiveModal')" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style="background-color: var(--bg-tertiary); color: var(--text-primary);" 
+                    onmouseover="this.style.backgroundColor='var(--hover-bg)'"
+                    onmouseout="this.style.backgroundColor='var(--bg-tertiary)'">
+                Cancel
+            </button>
+            <button onclick="confirmArchive()" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors" style="background: #0ea5e9;" 
+                    onmouseover="this.style.background='#0284c7'"
+                    onmouseout="this.style.background='#0ea5e9'">
+                Archive Election
+            </button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     let currentElectionId = null;
     let deleteElectionId = null;
+    let archiveElectionId = null;
     let countdownIntervals = {};
     
     // Get current Philippine time timestamp from server (updated on page load)
@@ -739,11 +798,14 @@
         if (modalId === 'electionModal') {
             resetForm();
         }
+        if (modalId === 'archiveModal') {
+            archiveElectionId = null;
+        }
     }
 
     // Close modal when clicking outside
     window.onclick = function(event) {
-        const modals = ['electionModal', 'viewModal', 'deleteModal'];
+        const modals = ['electionModal', 'viewModal', 'deleteModal', 'archiveModal'];
         modals.forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (event.target === modal) {
@@ -1012,6 +1074,45 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Failed to delete election');
+        });
+    }
+
+    function archiveElection(electionId, electionName) {
+        archiveElectionId = electionId;
+        const archiveElectionNameElement = document.getElementById('archiveElectionName');
+        if (archiveElectionNameElement) {
+            archiveElectionNameElement.textContent = `Election: ${electionName}`;
+        }
+        openModal('archiveModal');
+    }
+
+    function confirmArchive() {
+        if (!archiveElectionId) {
+            return;
+        }
+
+        fetch(`/admin/elections/${archiveElectionId}/archive`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('archiveModal');
+                showNotification(data.message || 'Election archived successfully.', 'success');
+                setTimeout(() => location.reload(), 900);
+                return;
+            }
+
+            showNotification(data.message || 'Failed to archive election.', 'error');
+        })
+        .catch(error => {
+            console.error('Archive error:', error);
+            showNotification('Failed to archive election.', 'error');
         });
     }
 
@@ -1760,7 +1861,7 @@
     // Function to fetch and update table data in real-time
     function updateTableData() {
         // Don't update if a modal is open (user is editing/viewing)
-        const modals = ['electionModal', 'viewModal', 'deleteModal'];
+        const modals = ['electionModal', 'viewModal', 'deleteModal', 'archiveModal'];
         const isModalOpen = modals.some(modalId => {
             const modal = document.getElementById(modalId);
             return modal && modal.classList.contains('active');

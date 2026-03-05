@@ -468,6 +468,10 @@
                         @endif
                     </td>
                 </tr>
+                <tr>
+                    <td class="label">Reporting Period:</td>
+                    <td>{{ $reportData['reportPeriodLabel'] ?? 'All time' }}</td>
+                </tr>
             </table>
         </div>
 

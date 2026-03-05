@@ -356,6 +356,12 @@
             @if(isset($votingHistory) && $votingHistory->count() > 0)
                 <div class="space-y-6">
                     @foreach($votingHistory as $index => $history)
+                        @php
+                            $positionCount = $history['candidates']->count();
+                            $voteCount = $history['candidates']->reduce(function ($carry, $group) {
+                                return $carry + $group->count();
+                            }, 0);
+                        @endphp
                         <div class="history-card p-5 sm:p-6 lg:p-8 relative">
                             <!-- Timeline Number -->
                             <div class="absolute top-6 left-6 w-8 h-8 bg-gradient-to-br from-gov-green-700 to-gov-green-800 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg z-10">
@@ -399,18 +405,44 @@
                                         </div>
                                         @endif
                                     </div>
-                                    <div class="flex-shrink-0">
-                                        <span class="voting-history-badge">
-                                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            Voted
-                                        </span>
+                                    <div class="w-full sm:w-auto">
+                                        <div class="flex flex-wrap gap-2 justify-start sm:justify-end">
+                                            <span class="voting-history-badge">
+                                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                                Voted
+                                            </span>
+                                            @if (!empty($history['is_archived']))
+                                                <span class="voting-history-badge" style="background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); color: #334155;">
+                                                    Archived
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                                 
                                 <!-- Candidates Voted For -->
-                                <div class="space-y-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                    <p id="votes-summary-{{ $index }}" class="text-sm text-gray-500 flex-1 min-w-0">
+                                        {{ number_format($voteCount) }} vote{{ $voteCount === 1 ? '' : 's' }} submitted across
+                                        {{ number_format($positionCount) }} position{{ $positionCount === 1 ? '' : 's' }}.
+                                        Click <strong>View Votes</strong> to expand details.
+                                    </p>
+                                    <button type="button"
+                                        class="w-full sm:w-auto sm:min-w-[140px] sm:ml-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-white shadow-md js-toggle-votes flex-shrink-0"
+                                        style="background: linear-gradient(135deg, var(--gov-green-700) 0%, var(--gov-green-800) 100%);"
+                                        data-target="votes-panel-{{ $index }}"
+                                        data-label-target="votes-toggle-label-{{ $index }}"
+                                        aria-expanded="false">
+                                        <span id="votes-toggle-label-{{ $index }}">View Votes</span>
+                                        <svg class="w-4 h-4 transition-transform js-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div id="votes-panel-{{ $index }}" class="space-y-4 hidden">
                                     <h4 class="text-base sm:text-lg font-semibold text-gray-700 flex items-center gap-2">
                                         <svg class="w-5 h-5 text-gov-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -439,6 +471,7 @@
                                                         <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden flex-shrink-0 border-2 border-gov-green-200 shadow-md">
                                                             <img src="{{ route('candidates.photo.public', ['path' => $candidate->photo]) }}" 
                                                                  alt="{{ $candidate->candidate_name }}" 
+                                                                 loading="lazy"
                                                                  class="w-full h-full object-cover"
                                                                  onerror="this.parentElement.innerHTML='<div class=\'w-full h-full bg-gradient-to-br from-gov-green-100 to-gov-green-200 flex items-center justify-center\'><svg class=\'w-6 h-6 text-gov-green-700\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\'></path></svg></div>';">
                                                         </div>
@@ -563,6 +596,36 @@
                 }
             }, 3000);
         })();
+
+        // Compact voting history cards: expand votes on demand
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButtons = document.querySelectorAll('.js-toggle-votes');
+
+            toggleButtons.forEach((button) => {
+                button.addEventListener('click', function() {
+                    const panelId = this.getAttribute('data-target');
+                    const labelId = this.getAttribute('data-label-target');
+                    const panel = document.getElementById(panelId);
+                    const label = document.getElementById(labelId);
+                    const icon = this.querySelector('.js-toggle-icon');
+
+                    if (!panel) {
+                        return;
+                    }
+
+                    const nextExpanded = this.getAttribute('aria-expanded') !== 'true';
+                    this.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+                    panel.classList.toggle('hidden', !nextExpanded);
+
+                    if (label) {
+                        label.textContent = nextExpanded ? 'Hide Votes' : 'View Votes';
+                    }
+                    if (icon) {
+                        icon.classList.toggle('rotate-180', nextExpanded);
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

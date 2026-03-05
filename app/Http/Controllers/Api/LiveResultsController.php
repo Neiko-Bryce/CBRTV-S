@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ArchivedCandidate;
+use App\Models\ArchivedElection;
+use App\Models\ArchivedVote;
 use App\Models\Candidate;
 use App\Models\Election;
 use App\Models\School;
@@ -38,6 +41,19 @@ class LiveResultsController extends Controller
             $elections = Election::withoutGlobalScopes()
                 ->where('show_live_results', true)
                 ->whereIn('status', ['upcoming', 'ongoing', 'completed'])
+                ->when($schoolId, function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                })
+                ->with(['organization' => function ($query) {
+                    $query->withoutGlobalScopes();
+                }])
+                ->orderBy('election_date', 'desc')
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $archivedElections = ArchivedElection::withoutGlobalScopes()
+                ->where('show_live_results', true)
+                ->where('status', 'completed')
                 ->when($schoolId, function ($query) use ($schoolId) {
                     $query->where('school_id', $schoolId);
                 })
@@ -207,6 +223,85 @@ class LiveResultsController extends Controller
             $results[] = $resultData;
         }
 
+        foreach ($archivedElections as $archivedElection) {
+            $candidatesByPosition = ArchivedCandidate::withoutGlobalScopes()
+                ->where('archived_election_id', $archivedElection->id)
+                ->with('archivedPartylist')
+                ->get()
+                ->groupBy(function ($candidate) {
+                    return ($candidate->original_position_id ?: 'archived-position-'.$candidate->id)
+                        .'|'.($candidate->position_name ?: 'Unknown Position')
+                        .'|'.((int) ($candidate->position_order ?? 9999))
+                        .'|'.((int) ($candidate->number_of_slots ?? 1));
+                });
+
+            $positionsData = [];
+            foreach ($candidatesByPosition as $positionKey => $candidates) {
+                [$positionId, $positionName, $positionOrder, $numberOfSlots] = array_pad(explode('|', $positionKey), 4, 0);
+
+                $candidatesData = [];
+                foreach ($candidates as $candidate) {
+                    $currentVotes = ArchivedVote::withoutGlobalScopes()
+                        ->where('archived_candidate_id', $candidate->id)
+                        ->count();
+
+                    $photoUrl = null;
+                    if ($candidate->photo) {
+                        $photoUrl = route('candidates.photo.public', ['path' => $candidate->photo]);
+                    }
+
+                    $candidatesData[] = [
+                        'id' => $candidate->id,
+                        'name' => $candidate->candidate_name,
+                        'photo' => $photoUrl,
+                        'votes_count' => $currentVotes,
+                        'is_anonymous' => false,
+                        'partylist_name' => $candidate->archivedPartylist?->name ?? null,
+                    ];
+                }
+
+                usort($candidatesData, function ($a, $b) {
+                    return $b['votes_count'] - $a['votes_count'];
+                });
+
+                $positionsData[] = [
+                    'position_id' => $positionId,
+                    'position_name' => $positionName ?: 'Unknown Position',
+                    'position_order' => (int) $positionOrder,
+                    'number_of_slots' => max(1, (int) $numberOfSlots),
+                    'candidates' => $candidatesData,
+                    'total_votes' => array_sum(array_column($candidatesData, 'votes_count')),
+                ];
+            }
+
+            usort($positionsData, function ($a, $b) {
+                return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
+            });
+
+            $effectiveStatus = 'completed';
+            $endDateTime = $this->parseElectionEndTime($archivedElection);
+
+            $resultData = [
+                // Use negative IDs so archived and active entries never clash in frontend keys.
+                'id' => 0 - (int) $archivedElection->id,
+                'election_name' => $archivedElection->election_name,
+                'organization' => $archivedElection->organization?->name,
+                'election_date' => $archivedElection->election_date ? $archivedElection->election_date->format('M d, Y') : 'N/A',
+                'status' => $effectiveStatus,
+                'positions' => $positionsData,
+                'total_voters' => ArchivedVote::withoutGlobalScopes()
+                    ->where('archived_election_id', $archivedElection->id)
+                    ->distinct('voter_id')
+                    ->count(),
+            ];
+
+            if ($endDateTime) {
+                $resultData['ended_at'] = $endDateTime->format('M d, Y g:i A');
+            }
+
+            $results[] = $resultData;
+        }
+
         return response()->json([
             'success' => true,
             'elections' => $results,
@@ -269,12 +364,55 @@ class LiveResultsController extends Controller
     {
         $now = Carbon::now('Asia/Manila');
         $schoolId = $this->resolveSchoolIdFromRequest();
+        $rawElectionId = (string) $electionId;
+        $archivedElectionId = null;
+
+        if (preg_match('/^archived[-_](\d+)$/', $rawElectionId, $matches)) {
+            $archivedElectionId = (int) $matches[1];
+        } elseif (is_numeric($rawElectionId) && (int) $rawElectionId < 0) {
+            $archivedElectionId = abs((int) $rawElectionId);
+        }
 
         if (! Schema::hasColumn('elections', 'show_live_results')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Election not found or results are not displayed.',
             ], 404);
+        }
+
+        if ($archivedElectionId) {
+            $archivedElection = ArchivedElection::withoutGlobalScopes()
+                ->where('id', $archivedElectionId)
+                ->where('show_live_results', true)
+                ->where('status', 'completed')
+                ->when($schoolId, function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                })
+                ->first();
+
+            if (! $archivedElection) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Election not found or results are not displayed.',
+                ], 404);
+            }
+
+            $voteCounts = ArchivedVote::withoutGlobalScopes()
+                ->where('archived_election_id', $archivedElectionId)
+                ->select('archived_candidate_id', DB::raw('count(*) as votes'))
+                ->groupBy('archived_candidate_id')
+                ->pluck('votes', 'archived_candidate_id')
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'vote_counts' => $voteCounts,
+                'total_voters' => ArchivedVote::withoutGlobalScopes()
+                    ->where('archived_election_id', $archivedElectionId)
+                    ->distinct('voter_id')
+                    ->count(),
+                'timestamp' => $now->toIso8601String(),
+            ]);
         }
 
         $election = Election::withoutGlobalScopes()

@@ -175,6 +175,17 @@
                 <span class="font-medium">Reports</span>
             </a>
 
+            <!-- Archived Elections -->
+            <a href="{{ route('admin.archived-elections.index') }}"
+                class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.archived-elections.*') ? 'active' : '' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5 8h14M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M9 8V6a3 3 0 016 0v2">
+                    </path>
+                </svg>
+                <span class="font-medium">Archived Elections</span>
+            </a>
+
             <!-- Settings Dropdown -->
             <div x-data="{ open: {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.landing-page.*') || request()->routeIs('admin.schools.*') ? 'true' : 'false' }} }" class="relative">
                 <button @click="open = !open"

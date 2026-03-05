@@ -239,7 +239,9 @@ class ElectionController extends Controller
      */
     public function show($id)
     {
-        $election = Election::findOrFail($id);
+        $election = Election::with('organization')
+            ->withCount(['candidates', 'votes'])
+            ->findOrFail($id);
 
         if (request()->ajax()) {
             return response()->json([

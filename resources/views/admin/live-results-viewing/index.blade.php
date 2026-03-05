@@ -251,6 +251,13 @@
 
         {{-- Live results section: candidates + bar graph show here when an election is selected --}}
         <div class="live-results-card card shadow-sm live-results-panel" id="live-results-section">
+            <div id="live-results-section-header" class="flex items-center justify-between gap-3 pb-3 mb-3 border-b" style="display: none; border-color: var(--border-color);">
+                <span class="text-sm font-semibold text-primary">Live results</span>
+                <button type="button" onclick="closeLiveResults()" class="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border transition-colors hover:opacity-90" style="border-color: var(--border-color); color: var(--text-primary); background-color: var(--card-bg);" title="Close results">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Close
+                </button>
+            </div>
             <div class="panel-loading" id="live-results-section-loading" style="display: none;">Loading live results…</div>
             <div class="panel-error" id="live-results-section-error" style="display: none;"></div>
             <div id="live-results-section-content" style="display: none;"></div>
@@ -449,6 +456,30 @@
             }, 2000);
         }
 
+        function closeLiveResults() {
+            if (resultsRefreshInterval) {
+                clearInterval(resultsRefreshInterval);
+                resultsRefreshInterval = null;
+            }
+            currentElectionId = null;
+            var headerEl = document.getElementById('live-results-section-header');
+            var contentEl = document.getElementById('live-results-section-content');
+            var emptyEl = document.getElementById('live-results-section-empty');
+            var loadingEl = document.getElementById('live-results-section-loading');
+            var errorEl = document.getElementById('live-results-section-error');
+            if (headerEl) headerEl.style.display = 'none';
+            if (contentEl) {
+                contentEl.style.display = 'none';
+                contentEl.innerHTML = '';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (errorEl) {
+                errorEl.style.display = 'none';
+                errorEl.textContent = '';
+            }
+            if (emptyEl) emptyEl.style.display = 'block';
+        }
+
         function loadLiveResults(electionId) {
             var loadingEl = document.getElementById('live-results-section-loading');
             var errorEl = document.getElementById('live-results-section-error');
@@ -492,6 +523,8 @@
                         errorEl.style.display = 'block';
                         contentEl.style.display = 'none';
                         emptyEl.style.display = 'none';
+                        var headerEl = document.getElementById('live-results-section-header');
+                        if (headerEl) headerEl.style.display = 'none';
                         return;
                     }
                     var e = data.election;
@@ -504,6 +537,8 @@
                     contentEl.style.display = 'block';
                     errorEl.style.display = 'none';
                     emptyEl.style.display = 'none';
+                    var headerEl = document.getElementById('live-results-section-header');
+                    if (headerEl) headerEl.style.display = 'flex';
                 })
                 .catch(function(err) {
                     if (!isRefresh) loadingEl.style.display = 'none';
@@ -511,6 +546,8 @@
                     errorEl.style.display = 'block';
                     contentEl.style.display = 'none';
                     emptyEl.style.display = 'none';
+                    var headerEl = document.getElementById('live-results-section-header');
+                    if (headerEl) headerEl.style.display = 'none';
                 });
         }
 

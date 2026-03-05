@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -48,7 +49,7 @@ Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateCont
 // Protected Routes - Redirect to appropriate dashboard based on user type
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
-        $user = auth()->user();
+        $user = Auth::user();
         $userType = $user->usertype ?? 'student';
 
         if ($userType === 'admin') {
@@ -75,6 +76,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Elections Management
     Route::resource('elections', \App\Http\Controllers\Admin\ElectionController::class);
+    Route::post('elections/{id}/archive', [\App\Http\Controllers\Admin\ElectionArchiveController::class, 'archive'])->name('elections.archive');
+    Route::get('archived-elections', [\App\Http\Controllers\Admin\ElectionArchiveController::class, 'index'])->name('archived-elections.index');
+    Route::get('archived-elections/{id}', [\App\Http\Controllers\Admin\ElectionArchiveController::class, 'show'])->name('archived-elections.show');
+    Route::post('archived-elections/{id}/display', [\App\Http\Controllers\Admin\ElectionArchiveController::class, 'display'])->name('archived-elections.display');
+    Route::post('archived-elections/{id}/hide', [\App\Http\Controllers\Admin\ElectionArchiveController::class, 'hide'])->name('archived-elections.hide');
     Route::post('elections/{id}/update-status', [\App\Http\Controllers\Admin\ElectionController::class, 'updateStatus'])->name('elections.update-status');
     Route::get('elections/stats/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getStats'])->name('elections.stats.get');
     Route::get('elections/data/get', [\App\Http\Controllers\Admin\ElectionController::class, 'getElectionsData'])->name('elections.data.get');
@@ -133,7 +139,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Reports
     Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
-    Route::get('reports/{electionId}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
+    Route::get('reports/{electionRef}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
 
     // Landing Page Management (All Admins can manage their own scoped sections)
     Route::get('landing-page', [\App\Http\Controllers\Admin\LandingPageController::class, 'index'])->name('landing-page.index');
