@@ -42,24 +42,6 @@ Route::prefix('api')->group(function () {
     })->name('api.landing-page.settings');
 });
 
-// TEMPORARY DIAGNOSTIC — remove after debugging
-Route::get('/debug/school-check', function () {
-    $elections = \Illuminate\Support\Facades\DB::table('elections')->select('id', 'election_name', 'school_id', 'organization_id', 'status')->get();
-    $schools = \Illuminate\Support\Facades\DB::table('schools')->select('id', 'name', 'slug')->get();
-    $orgs = \Illuminate\Support\Facades\DB::table('organizations')->select('id', 'name', 'school_id')->get();
-    $student = \Illuminate\Support\Facades\DB::table('students')->where('student_id_number', '2018-0043-N')->first();
-    $user = \Illuminate\Support\Facades\DB::table('users')->where('email', '2018-0043-N')->first(['id', 'email', 'school_id', 'organization_id', 'usertype']);
-    $adminUser = \Illuminate\Support\Facades\DB::table('users')->where('email', 'admin@gmail.com')->first(['id', 'email', 'school_id', 'organization_id', 'usertype', 'is_super_admin']);
-    return response()->json([
-        'schools' => $schools,
-        'organizations' => $orgs,
-        'elections' => $elections,
-        'student_record' => $student ? ['id' => $student->id, 'student_id_number' => $student->student_id_number, 'school_id' => $student->school_id, 'organization_id' => $student->organization_id] : null,
-        'user_record' => $user,
-        'admin_record' => $adminUser,
-    ]);
-});
-
 // Public candidate photo URL (no auth) so student-side images load even when DB/session is flaky
 Route::get('candidates/photo/{path}', [\App\Http\Controllers\Admin\CandidateController::class, 'getPhoto'])->where('path', '.*')->name('candidates.photo.public');
 
