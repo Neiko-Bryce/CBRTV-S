@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Organization;
+use App\Models\School;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ class AuthenticatedSessionController extends Controller
                     $resolvedSchoolId = $org->school_id;
                 }
             }
+            $resolvedSchoolId = $this->canonicalizeSchoolId($resolvedSchoolId);
 
             if ($resolvedSchoolId && $user->school_id !== $resolvedSchoolId) {
                 $user->school_id = $resolvedSchoolId;
@@ -85,6 +87,30 @@ class AuthenticatedSessionController extends Controller
         }
 
         return redirect()->intended($studentDashboard);
+    }
+
+    /**
+     * Canonicalize legacy duplicate school IDs to active campus ID.
+     */
+    private function canonicalizeSchoolId($schoolId): ?int
+    {
+        if (! $schoolId || ! is_numeric($schoolId)) {
+            return $schoolId ? (int) $schoolId : null;
+        }
+
+        $school = School::withoutGlobalScopes()->find((int) $schoolId);
+        if (! $school) {
+            return (int) $schoolId;
+        }
+
+        if ($school->slug === 'main-school') {
+            $mainCampus = School::withoutGlobalScopes()->where('slug', 'main-campus')->first();
+            if ($mainCampus) {
+                return (int) $mainCampus->id;
+            }
+        }
+
+        return (int) $schoolId;
     }
 
     /**

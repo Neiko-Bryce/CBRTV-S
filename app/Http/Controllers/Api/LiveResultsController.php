@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Election;
+use App\Models\School;
 use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class LiveResultsController extends Controller
     public function getCompletedElections()
     {
         $now = Carbon::now('Asia/Manila');
+        $schoolId = $this->resolveSchoolIdFromRequest();
 
         // If migration not run yet (e.g. on Railway), return empty JSON so frontend never gets HTML error page
         if (! Schema::hasColumn('elections', 'show_live_results')) {
@@ -30,10 +32,18 @@ class LiveResultsController extends Controller
         }
 
         try {
-            // Only elections that admin has turned on for landing page display; latest first
-            $elections = Election::where('show_live_results', true)
+            // Admin-published elections on landing page.
+            // If school_id is provided (school portal), filter by school.
+            // If not provided (root domain), show all published elections.
+            $elections = Election::withoutGlobalScopes()
+                ->where('show_live_results', true)
                 ->whereIn('status', ['upcoming', 'ongoing', 'completed'])
-                ->with(['organization'])
+                ->when($schoolId, function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                })
+                ->with(['organization' => function ($query) {
+                    $query->withoutGlobalScopes();
+                }])
                 ->orderBy('election_date', 'desc')
                 ->orderBy('id', 'desc')
                 ->get();
@@ -55,7 +65,8 @@ class LiveResultsController extends Controller
                 $election->update(['status' => 'completed']);
             }
 
-            $candidatesByPosition = Candidate::where('election_id', $election->id)
+            $candidatesByPosition = Candidate::withoutGlobalScopes()
+                ->where('election_id', $election->id)
                 ->with(['position', 'partylist'])
                 ->withCount('votes')
                 ->get()
@@ -81,7 +92,7 @@ class LiveResultsController extends Controller
                     $letterIndex = 0;
                     foreach ($shuffledCandidates as $candidate) {
                         $anonymousLabel = $this->getAnonymousLabel($letterIndex);
-                        $currentVotes = Vote::where('candidate_id', $candidate['id'])->count();
+                        $currentVotes = Vote::withoutGlobalScopes()->where('candidate_id', $candidate['id'])->count();
 
                         $candidatesData[] = [
                             'id' => $candidate['id'],
@@ -96,7 +107,7 @@ class LiveResultsController extends Controller
                 } else {
                     // COMPLETED: Reveal real candidate info!
                     foreach ($candidates as $candidate) {
-                        $currentVotes = Vote::where('candidate_id', $candidate->id)->count();
+                        $currentVotes = Vote::withoutGlobalScopes()->where('candidate_id', $candidate->id)->count();
 
                         // Build photo URL
                         $photoUrl = null;
@@ -144,7 +155,7 @@ class LiveResultsController extends Controller
                 'election_date' => $election->election_date->format('M d, Y'),
                 'status' => $effectiveStatus,
                 'positions' => $positionsData,
-                'total_voters' => Vote::where('election_id', $election->id)->distinct('voter_id')->count(),
+                'total_voters' => Vote::withoutGlobalScopes()->where('election_id', $election->id)->distinct('voter_id')->count(),
             ];
 
             if ($effectiveStatus === 'upcoming') {
@@ -257,6 +268,7 @@ class LiveResultsController extends Controller
     public function getElectionResults($electionId)
     {
         $now = Carbon::now('Asia/Manila');
+        $schoolId = $this->resolveSchoolIdFromRequest();
 
         if (! Schema::hasColumn('elections', 'show_live_results')) {
             return response()->json([
@@ -265,9 +277,13 @@ class LiveResultsController extends Controller
             ], 404);
         }
 
-        $election = Election::where('id', $electionId)
+        $election = Election::withoutGlobalScopes()
+            ->where('id', $electionId)
             ->where('show_live_results', true)
             ->whereIn('status', ['ongoing', 'completed'])
+            ->when($schoolId, function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId);
+            })
             ->first();
 
         if (! $election) {
@@ -278,7 +294,7 @@ class LiveResultsController extends Controller
         }
 
         // Get vote counts
-        $voteCounts = Vote::where('election_id', $electionId)
+        $voteCounts = Vote::withoutGlobalScopes()->where('election_id', $electionId)
             ->select('candidate_id', DB::raw('count(*) as votes'))
             ->groupBy('candidate_id')
             ->pluck('votes', 'candidate_id')
@@ -287,9 +303,29 @@ class LiveResultsController extends Controller
         return response()->json([
             'success' => true,
             'vote_counts' => $voteCounts,
-            'total_voters' => Vote::where('election_id', $electionId)->distinct('voter_id')->count(),
+            'total_voters' => Vote::withoutGlobalScopes()->where('election_id', $electionId)->distinct('voter_id')->count(),
             'timestamp' => $now->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Resolve school_id from query string (numeric ID or slug).
+     * Null means "no school filter" (used by root landing page).
+     */
+    private function resolveSchoolIdFromRequest(): ?int
+    {
+        $schoolParam = request('school_id');
+        if ($schoolParam === null || $schoolParam === '') {
+            return null;
+        }
+
+        if (is_numeric($schoolParam)) {
+            return (int) $schoolParam;
+        }
+
+        $school = School::withoutGlobalScopes()->where('slug', $schoolParam)->first();
+
+        return $school?->id;
     }
 
     /**

@@ -431,9 +431,10 @@ class DashboardController extends Controller
                 $resolvedSchoolId = $school?->id;
             }
         }
+        $resolvedSchoolId = $this->canonicalizeSchoolId($resolvedSchoolId);
 
-        // Persist missing links for legacy accounts or mismatches with student record
-        if ($user && $resolvedSchoolId && (! $user->school_id || ($student && $student->school_id && $user->school_id !== $student->school_id))) {
+        // Persist missing links for legacy accounts or canonicalized school mapping.
+        if ($user && $resolvedSchoolId && $user->school_id !== $resolvedSchoolId) {
             $user->school_id = $resolvedSchoolId;
         }
         if ($user && $organizationId && (! $user->organization_id || ($student && $student->organization_id && $user->organization_id !== $student->organization_id))) {
@@ -456,9 +457,36 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $context = $this->resolveStudentContext($user);
-        $schoolOk = ! $context['school_id'] || ! $election->school_id || $election->school_id === $context['school_id'];
+        $studentSchoolId = $this->canonicalizeSchoolId($context['school_id']);
+        $electionSchoolId = $this->canonicalizeSchoolId($election->school_id);
+        $schoolOk = ! $studentSchoolId || ! $electionSchoolId || $electionSchoolId === $studentSchoolId;
         if (! $schoolOk) {
             abort(403, 'You are not authorized to access this election.');
         }
+    }
+
+    /**
+     * Canonicalize legacy duplicate school IDs to the active campus ID.
+     */
+    private function canonicalizeSchoolId($schoolId): ?int
+    {
+        if (! $schoolId || ! is_numeric($schoolId)) {
+            return $schoolId ? (int) $schoolId : null;
+        }
+
+        $school = School::withoutGlobalScopes()->find((int) $schoolId);
+        if (! $school) {
+            return (int) $schoolId;
+        }
+
+        // Legacy data can contain "main-school" while active records use "main-campus".
+        if ($school->slug === 'main-school') {
+            $mainCampus = School::withoutGlobalScopes()->where('slug', 'main-campus')->first();
+            if ($mainCampus) {
+                return (int) $mainCampus->id;
+            }
+        }
+
+        return (int) $schoolId;
     }
 }
