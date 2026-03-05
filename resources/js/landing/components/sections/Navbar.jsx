@@ -12,7 +12,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-    const { organization, school } = useLanding();
+    const { organization } = useLanding();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -24,8 +24,8 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Preference order: Organization Name -> School Name -> Site Default
-    const orgName = organization?.name || school?.name || 'CpsuVotewisely.com';
+    // Always show app title only; never show school or organization name in navbar
+    const appTitle = 'CpsuVotewisely.com';
     const logoUrl = organization?.logo ? `/storage/${organization.logo}` : null;
 
     return (
@@ -50,7 +50,7 @@ export default function Navbar() {
                         className="flex items-center gap-3"
                     >
                         {logoUrl ? (
-                            <img src={logoUrl} alt={orgName} className="w-12 h-12 object-contain bg-white rounded-xl shadow-lg" />
+                            <img src={logoUrl} alt={appTitle} className="w-12 h-12 object-contain bg-white rounded-xl shadow-lg" />
                         ) : (
                             <div className="w-12 h-12 bg-gradient-to-br from-gov-green-700 to-gov-green-900 rounded-xl flex items-center justify-center shadow-lg">
                                 <MdHowToVote className="w-7 h-7 text-white" />
@@ -58,7 +58,7 @@ export default function Navbar() {
                         )}
                         <div className="hidden sm:block">
                             <span className={`text-xl font-bold ${isScrolled ? 'text-gov-green-900' : 'text-white'}`}>
-                                {orgName}
+                                {appTitle}
                             </span>
                             <span className={`block text-xs font-medium ${isScrolled ? 'text-gov-green-600' : 'text-white/70'}`}>
                                 Secure Cloud-Based Real-Time Voting Platform

@@ -1,0 +1,19 @@
+{
+    "name": "CpsuVotewisely - Voting System",
+    "short_name": "CpsuVotewisely",
+    "description": "Cloud-Based Real-Time Voting System for CPSU student council elections.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#166534",
+    "theme_color": "#166534",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}

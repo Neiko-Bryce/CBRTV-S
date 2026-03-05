@@ -6,8 +6,8 @@ import Button from '../ui/Button';
 import { useLanding } from '../../context/LandingContext';
 
 export default function Hero() {
-    const { organization } = useLanding();
-    const orgName = organization?.name || 'Central Philippine State University';
+    useLanding(); // context for future use (e.g. logo)
+    const appTitle = 'CpsuVotewisely.com';
 
     const floatingIcons = [
         { icon: MdHowToVote, delay: 0, position: 'top-20 left-10' },
@@ -77,7 +77,7 @@ export default function Hero() {
                         >
                             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gov-gold-400 rounded-full animate-pulse" />
                             <span className="text-white/90 text-xs sm:text-sm font-medium">
-                                {orgName}
+                                {appTitle}
                             </span>
                         </motion.div>
 
