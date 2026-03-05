@@ -24,12 +24,13 @@ class DashboardController extends Controller
         $user = Auth::user();
         $context = $this->resolveStudentContext($user);
         $resolvedSchoolId = $context['school_id'];
+        $allowedSchoolIds = $this->expandEquivalentSchoolIds($resolvedSchoolId);
 
         $allElections = Election::withoutGlobalScopes()
             ->with('organization')
-            ->when($resolvedSchoolId, function ($q) use ($resolvedSchoolId) {
-                $q->where(function ($inner) use ($resolvedSchoolId) {
-                    $inner->where('school_id', $resolvedSchoolId)
+            ->when(! empty($allowedSchoolIds), function ($q) use ($allowedSchoolIds) {
+                $q->where(function ($inner) use ($allowedSchoolIds) {
+                    $inner->whereIn('school_id', $allowedSchoolIds)
                         ->orWhereNull('school_id');
                 });
             })
@@ -488,5 +489,30 @@ class DashboardController extends Controller
         }
 
         return (int) $schoolId;
+    }
+
+    /**
+     * Expand equivalent legacy school IDs (main-school/main-campus) for list queries.
+     */
+    private function expandEquivalentSchoolIds(?int $schoolId): array
+    {
+        if (! $schoolId) {
+            return [];
+        }
+
+        $ids = [(int) $schoolId];
+        $school = School::withoutGlobalScopes()->find((int) $schoolId);
+        if (! $school) {
+            return $ids;
+        }
+
+        if ($school->slug === 'main-school' || $school->slug === 'main-campus') {
+            $legacy = School::withoutGlobalScopes()->whereIn('slug', ['main-school', 'main-campus'])->pluck('id')->all();
+            foreach ($legacy as $id) {
+                $ids[] = (int) $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 }
