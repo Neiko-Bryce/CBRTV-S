@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PasswordRegenerationHistory;
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +19,14 @@ class StudentAccountController extends Controller
      */
     public function index()
     {
-        // Get all student accounts
-        $studentAccounts = User::where('usertype', 'student')
+        // Load from an unscoped query, then apply explicit visibility rules.
+        // This prevents older accounts with stale school metadata from disappearing for admins.
+        $studentAccountsQuery = User::withoutGlobalScopes()
+            ->where('usertype', 'student');
+
+        $this->applyStudentAccountAccessFilter($studentAccountsQuery);
+
+        $studentAccounts = $studentAccountsQuery
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -123,7 +130,10 @@ class StudentAccountController extends Controller
         }
 
         // Check if account already exists
-        $existingUser = User::where('email', $student->student_id_number)->first();
+        $existingUser = User::withoutGlobalScopes()
+            ->where('usertype', 'student')
+            ->where('email', $student->student_id_number)
+            ->first();
 
         return response()->json([
             'success' => true,
@@ -155,7 +165,10 @@ class StudentAccountController extends Controller
         }
 
         // Check if account already exists
-        $existingUser = User::where('email', $student->student_id_number)->first();
+        $existingUser = User::withoutGlobalScopes()
+            ->where('usertype', 'student')
+            ->where('email', $student->student_id_number)
+            ->first();
         if ($existingUser) {
             return response()->json([
                 'success' => false,
@@ -163,14 +176,17 @@ class StudentAccountController extends Controller
             ], 422);
         }
 
+        $authUser = Auth::user();
+
         // Create user account
         $user = User::create([
             'name' => trim(($student->fname ?? '').' '.($student->mname ?? '').' '.$student->lname.' '.($student->ext ?? '')),
             'email' => $student->student_id_number,
             'password' => Hash::make($request->password),
             'usertype' => 'student',
-            'organization_id' => $student->organization_id,
-            'school_id' => $student->school_id,
+            // Keep student metadata if present, otherwise inherit from the current admin.
+            'organization_id' => $student->organization_id ?? $authUser?->organization_id,
+            'school_id' => $student->school_id ?? $authUser?->school_id,
         ]);
 
         return response()->json([
@@ -203,9 +219,7 @@ class StudentAccountController extends Controller
      */
     public function regeneratePassword(Request $request, $userId)
     {
-        $user = User::where('id', $userId)
-            ->where('usertype', 'student')
-            ->first();
+        $user = $this->findManageableStudentAccount($userId);
 
         if (! $user) {
             return response()->json([
@@ -249,9 +263,7 @@ class StudentAccountController extends Controller
      */
     public function getPasswordHistory($userId)
     {
-        $user = User::where('id', $userId)
-            ->where('usertype', 'student')
-            ->first();
+        $user = $this->findManageableStudentAccount($userId);
 
         if (! $user) {
             return response()->json([
@@ -275,9 +287,7 @@ class StudentAccountController extends Controller
      */
     public function deleteAccount($userId)
     {
-        $user = User::where('id', $userId)
-            ->where('usertype', 'student')
-            ->first();
+        $user = $this->findManageableStudentAccount($userId);
 
         if (! $user) {
             return response()->json([
@@ -296,5 +306,38 @@ class StudentAccountController extends Controller
             'success' => true,
             'message' => 'Student account deleted successfully.',
         ]);
+    }
+
+    /**
+     * Apply student account visibility rules for the authenticated admin.
+     */
+    private function applyStudentAccountAccessFilter(Builder $query): void
+    {
+        $authUser = Auth::user();
+
+        // Super admins (or rescue mode admins with no school) can see all student accounts.
+        if (! $authUser || $authUser->is_super_admin || ! $authUser->school_id) {
+            return;
+        }
+
+        $query->where(function (Builder $builder) use ($authUser) {
+            $builder->where('school_id', $authUser->school_id)
+                ->orWhereNull('school_id')
+                ->orWhereIn('email', Student::query()->select('student_id_number'));
+        });
+    }
+
+    /**
+     * Find a student account that the current admin is allowed to manage.
+     */
+    private function findManageableStudentAccount(int|string $userId): ?User
+    {
+        $query = User::withoutGlobalScopes()
+            ->where('id', $userId)
+            ->where('usertype', 'student');
+
+        $this->applyStudentAccountAccessFilter($query);
+
+        return $query->first();
     }
 }
