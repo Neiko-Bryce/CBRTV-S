@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Official Election Results - {{ $election->election_name }}</title>
     <style>
-        /* A4 bond: 210mm x 297mm, standard margins */
+        /* A4: 210mm x 297mm — formal print layout */
         @page {
             size: A4 portrait;
-            margin: 15mm;
+            margin: 18mm;
         }
 
         * {
@@ -23,31 +23,33 @@
             font-size: 11pt;
             line-height: 1.4;
             color: #000;
-            background: #fff;
+            background: #e5e5e5;
         }
 
+        /* On-screen: A4 sheet preview */
         .page {
             width: 210mm;
             min-height: 297mm;
-            margin: 0 auto;
-            padding: 20mm 15mm;
-            background: white;
+            margin: 24px auto;
+            padding: 18mm 18mm;
+            background: #fff;
             position: relative;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
         }
 
-        /* Letterhead */
+        /* Letterhead — formal institutional header */
         .letterhead {
             text-align: center;
-            padding-bottom: 10pt;
+            padding-bottom: 12pt;
             border-bottom: 2px solid #000;
-            margin-bottom: 14pt;
+            margin-bottom: 16pt;
         }
 
         .letterhead .republic {
             font-size: 9pt;
             letter-spacing: 0.5pt;
-            color: #333;
-            margin-bottom: 2pt;
+            color: #1a1a1a;
+            margin-bottom: 4pt;
         }
 
         .letterhead .school-name {
@@ -56,41 +58,40 @@
             color: #000;
             text-transform: uppercase;
             letter-spacing: 1pt;
-            margin: 2pt 0;
+            margin: 4pt 0;
         }
 
         .letterhead .school-address {
             font-size: 9pt;
-            color: #444;
-            font-style: italic;
-            margin-bottom: 2pt;
+            color: #333;
+            margin-bottom: 4pt;
         }
 
         .letterhead .org-name {
-            font-size: 10pt;
+            font-size: 11pt;
             font-weight: bold;
-            margin-top: 4pt;
+            margin-top: 6pt;
             color: #000;
         }
 
         /* Document title */
         .doc-title {
             text-align: center;
-            margin: 16pt 0 12pt;
+            margin: 18pt 0 14pt;
         }
 
         .doc-title h1 {
-            font-size: 12pt;
+            font-size: 13pt;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1pt;
             text-decoration: underline;
-            margin-bottom: 4pt;
+            margin-bottom: 6pt;
         }
 
         .doc-title .subtitle {
             font-size: 11pt;
-            font-weight: normal;
+            font-weight: bold;
         }
 
         /* Meta block */
@@ -409,14 +410,22 @@
 
             .page {
                 width: 100%;
-                min-height: auto;
+                min-height: 0;
                 padding: 0;
                 margin: 0;
+                box-shadow: none;
             }
 
-            .position-block,
-            .certification,
-            .summary {
+            .summary,
+            .certification {
+                page-break-inside: avoid;
+            }
+
+            .position-block .results-table {
+                page-break-inside: auto;
+            }
+
+            .results-table tr {
                 page-break-inside: avoid;
             }
         }
@@ -506,7 +515,7 @@
 
         @foreach ($reportData['resultsByPosition'] as $group)
             <div class="position-block">
-                <div class="position-head">{{ $group['position_name'] }} (Slots: {{ $group['number_of_slots'] }})
+                <div class="position-head">{{ $group['position_name'] }}
                 </div>
                 <table class="results-table">
                     <thead>
@@ -531,7 +540,7 @@
                                             style="font-weight: bold; color: #000;">(ELECTED)</span>
                                     @endif
                                 </td>
-                                <td>{{ $candidate->partylist->name ?? 'Independent' }}</td>
+                                <td>{{ optional($candidate->partylist)->name ?? 'Independent' }}</td>
                                 <td class="col-votes">{{ number_format($candidate->filtered_votes) }}</td>
                             </tr>
                         @endforeach

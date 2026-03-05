@@ -5,12 +5,131 @@
 
 @section('content')
     <div class="space-y-4 sm:space-y-6" x-data="reportManager()">
-        <!-- Header with Election Selector: original on desktop (sm+), stacked/full-width on mobile -->
+        <!-- Report Mode: By Election | By Date Range -->
         <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
+            <h3 class="text-base sm:text-lg font-bold text-primary mb-3">Report Type</h3>
+            <div class="flex flex-wrap gap-3">
+                <button type="button" @click="reportMode = 'by_election'; reportData = null; dateRangeData = null; selectedElection = ''"
+                    :class="reportMode === 'by_election' ? 'ring-2 ring-offset-2 font-semibold' : 'opacity-90 hover:opacity-100'"
+                    :style="reportMode === 'by_election' ? 'ring-color: var(--cpsu-green); background: linear-gradient(135deg, rgba(22, 101, 52, 0.12) 0%, rgba(20, 83, 45, 0.08) 100%); border: 1px solid var(--cpsu-green); color: var(--cpsu-green);' : 'background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);'"
+                    class="px-4 py-3 rounded-lg text-sm transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Report by Election
+                </button>
+                <button type="button" @click="reportMode = 'by_date_range'; reportData = null; dateRangeData = null; selectedElection = ''"
+                    :class="reportMode === 'by_date_range' ? 'ring-2 ring-offset-2 font-semibold' : 'opacity-90 hover:opacity-100'"
+                    :style="reportMode === 'by_date_range' ? 'ring-color: var(--cpsu-green); background: linear-gradient(135deg, rgba(22, 101, 52, 0.12) 0%, rgba(20, 83, 45, 0.08) 100%); border: 1px solid var(--cpsu-green); color: var(--cpsu-green);' : 'background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);'"
+                    class="px-4 py-3 rounded-lg text-sm transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Custom Report by Date Range
+                </button>
+            </div>
+        </div>
+
+        <!-- By Date Range: date inputs + table -->
+        <template x-if="reportMode === 'by_date_range'">
+            <div class="space-y-4">
+                <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
+                    <h3 class="text-base font-bold text-primary mb-3">Custom Report — By Date Range</h3>
+                    <p class="text-sm text-secondary mb-4">View all elections that had votes in the selected period.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-secondary mb-1">From</label>
+                            <input type="date" x-model="dateRangeFrom"
+                                class="w-full px-3 py-2 rounded-lg text-sm"
+                                style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-secondary mb-1">To</label>
+                            <input type="date" x-model="dateRangeTo"
+                                class="w-full px-3 py-2 rounded-lg text-sm"
+                                style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" />
+                        </div>
+                        <div>
+                            <button type="button" @click="loadDateRangeReport()" :disabled="dateRangeLoading"
+                                class="w-full px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+                                style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                                <span x-show="!dateRangeLoading">Apply</span>
+                                <span x-show="dateRangeLoading">Loading...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="dateRangeLoading" class="card rounded-xl p-12 shadow-sm">
+                    <div class="flex flex-col items-center justify-center">
+                        <svg class="animate-spin h-10 w-10 mb-4" style="color: var(--cpsu-green);" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-secondary">Loading elections...</p>
+                    </div>
+                </div>
+
+                <div x-show="dateRangeData && !dateRangeLoading" x-cloak class="card rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" style="border-color: var(--border-color);">
+                        <div>
+                            <h4 class="text-base font-bold text-primary">Elections in period</h4>
+                            <p class="text-sm text-secondary mt-1" x-text="dateRangeData?.report_period_label || ''"></p>
+                        </div>
+                        <a :href="getPrintSummaryUrl()" target="_blank" rel="noopener"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg flex-shrink-0"
+                            style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            </svg>
+                            Print summary
+                        </a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="table-header border-b" style="border-color: var(--border-color);">
+                                    <th class="text-left py-3 px-4 text-xs sm:text-sm font-semibold text-secondary">Election Name</th>
+                                    <th class="text-left py-3 px-4 text-xs sm:text-sm font-semibold text-secondary">Period</th>
+                                    <th class="text-right py-3 px-4 text-xs sm:text-sm font-semibold text-secondary">Total Votes</th>
+                                    <th class="text-right py-3 px-4 text-xs sm:text-sm font-semibold text-secondary">Students Voted</th>
+                                    <th class="text-right py-3 px-4 text-xs sm:text-sm font-semibold text-secondary">Participation %</th>
+                                    <th class="text-right py-3 px-4 text-xs sm:text-sm font-semibold text-secondary">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y" style="border-color: var(--border-color);">
+                                <template x-for="row in (dateRangeData?.elections || [])" :key="row.election_ref">
+                                    <tr class="table-row transition-colors">
+                                        <td class="py-3 px-4 text-sm font-medium text-primary" x-text="row.election_name"></td>
+                                        <td class="py-3 px-4 text-sm text-secondary" x-text="row.period_label"></td>
+                                        <td class="py-3 px-4 text-sm text-right" x-text="(row.total_votes || 0).toLocaleString()"></td>
+                                        <td class="py-3 px-4 text-sm text-right font-semibold" style="color: var(--cpsu-green);" x-text="(row.total_students_voted || 0).toLocaleString()"></td>
+                                        <td class="py-3 px-4 text-sm text-right" x-text="(row.participation_rate ?? '—') + (row.participation_rate != null ? '%' : '')"></td>
+                                        <td class="py-3 px-4 text-right">
+                                            <a :href="getPrintUrlForRef(row.election_ref)" target="_blank" rel="noopener"
+                                                class="inline-flex items-center gap-1 text-sm font-medium"
+                                                style="color: var(--cpsu-green);">
+                                                View full report
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div x-show="!(dateRangeData?.elections?.length)" class="p-8 text-center text-secondary">
+                        No elections with votes in the selected period.
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- By Election: Header with Election Selector -->
+        <div x-show="reportMode === 'by_election'" class="card rounded-xl p-4 sm:p-6 shadow-sm">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="min-w-0">
                     <h3 class="text-base sm:text-lg font-bold text-primary">Generate Election Report</h3>
-                    <p class="text-xs sm:text-sm text-secondary mt-1">View vote tallies and participation statistics</p>
+                    <p class="text-xs sm:text-sm text-secondary mt-1">View vote tallies and participation statistics for one election</p>
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <select x-model="selectedElection" @change="loadReport()"
@@ -46,8 +165,8 @@
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div x-show="loading" class="card rounded-xl p-12 shadow-sm">
+        <!-- Loading State (single election) -->
+        <div x-show="reportMode === 'by_election' && loading" class="card rounded-xl p-12 shadow-sm">
             <div class="flex flex-col items-center justify-center">
                 <svg class="animate-spin h-10 w-10 mb-4" style="color: var(--cpsu-green);"
                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -61,8 +180,8 @@
             </div>
         </div>
 
-        <!-- No Election Selected -->
-        <div x-show="!selectedElection && !loading" class="card rounded-xl p-12 shadow-sm">
+        <!-- No Election Selected (by election mode only) -->
+        <div x-show="reportMode === 'by_election' && !selectedElection && !loading" class="card rounded-xl p-12 shadow-sm">
             <div class="flex flex-col items-center justify-center text-center">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4"
                     style="background: linear-gradient(135deg, rgba(22, 101, 52, 0.1) 0%, rgba(20, 83, 45, 0.08) 100%);">
@@ -78,8 +197,8 @@
             </div>
         </div>
 
-        <!-- Report Content -->
-        <div x-show="reportData && !loading" x-cloak>
+        <!-- Report Content (single election) -->
+        <div x-show="reportMode === 'by_election' && reportData && !loading" x-cloak>
             <!-- Filter Tabs: desktop (sm+) = original wrap; mobile = horizontal scroll -->
             <div class="card rounded-xl shadow-sm overflow-hidden">
                 <div class="border-b" style="border-color: var(--border-color);">
@@ -452,10 +571,15 @@
         <script>
             function reportManager() {
                 return {
+                    reportMode: 'by_election',
                     selectedElection: '',
                     currentElection: null,
                     reportData: null,
                     loading: false,
+                    dateRangeData: null,
+                    dateRangeFrom: '',
+                    dateRangeTo: '',
+                    dateRangeLoading: false,
                     filterType: 'all',
                     filterValue: '',
                     datePreset: 'all_time',
@@ -465,6 +589,54 @@
                         courses: [],
                         yearlevels: [],
                         sections: []
+                    },
+
+                    getPrintUrlForRef(electionRef) {
+                        if (!electionRef) return '#';
+                        const params = new URLSearchParams({
+                            filter_type: 'all',
+                            filter_value: '',
+                            date_from: this.dateRangeFrom || '',
+                            date_to: this.dateRangeTo || ''
+                        });
+                        return `{{ url('admin/reports') }}/${electionRef}/print?${params.toString()}`;
+                    },
+
+                    getPrintSummaryUrl() {
+                        if (!this.dateRangeFrom || !this.dateRangeTo) return '#';
+                        const params = new URLSearchParams({
+                            date_from: this.dateRangeFrom,
+                            date_to: this.dateRangeTo
+                        });
+                        return `{{ route('admin.reports.by-date-range.print') }}?${params.toString()}`;
+                    },
+
+                    async loadDateRangeReport() {
+                        if (!this.dateRangeFrom || !this.dateRangeTo) return;
+                        this.dateRangeLoading = true;
+                        this.dateRangeData = null;
+                        try {
+                            const response = await fetch('{{ route('admin.reports.by-date-range') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    date_from: this.dateRangeFrom,
+                                    date_to: this.dateRangeTo
+                                })
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                this.dateRangeData = data;
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        } finally {
+                            this.dateRangeLoading = false;
+                        }
                     },
 
                     applyDatePreset() {

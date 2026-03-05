@@ -139,6 +139,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Reports
     Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
+    Route::post('reports/by-date-range', [\App\Http\Controllers\Admin\ReportController::class, 'generateByDateRange'])->name('reports.by-date-range');
+    Route::get('reports/by-date-range/print', [\App\Http\Controllers\Admin\ReportController::class, 'printByDateRange'])->name('reports.by-date-range.print');
     Route::get('reports/{electionRef}/print', [\App\Http\Controllers\Admin\ReportController::class, 'print'])->name('reports.print');
 
     // Landing Page Management (All Admins can manage their own scoped sections)

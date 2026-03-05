@@ -75,6 +75,138 @@ class ReportController extends Controller
     }
 
     /**
+     * Generate custom report by date range (all elections with votes in period).
+     */
+    public function generateByDateRange(Request $request)
+    {
+        $request->validate([
+            'date_from' => ['required', 'date'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $data = $this->getDateRangeReportData($request->date_from, $request->date_to);
+
+        return response()->json([
+            'success' => true,
+            'report_period_label' => $data['report_period_label'],
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'total_eligible' => $data['total_eligible'],
+            'elections' => $data['elections'],
+        ]);
+    }
+
+    /**
+     * Print summary of elections in date range (custom report).
+     */
+    public function printByDateRange(Request $request)
+    {
+        $request->validate([
+            'date_from' => ['required', 'date'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $data = $this->getDateRangeReportData($request->date_from, $request->date_to);
+
+        return view('admin.reports.print-by-date-range', [
+            'elections' => $data['elections'],
+            'report_period_label' => $data['report_period_label'],
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'total_eligible' => $data['total_eligible'],
+            'generatedAt' => now(),
+        ]);
+    }
+
+    /**
+     * Get elections and stats for a date range (shared by generateByDateRange and printByDateRange).
+     */
+    private function getDateRangeReportData(string $dateFrom, string $dateTo): array
+    {
+        $totalEligible = Student::join('users', 'students.student_id_number', '=', 'users.email')
+            ->where('users.usertype', 'student')
+            ->count();
+
+        $elections = [];
+
+        // Active elections with votes in range (votes.created_at)
+        $activeIds = Vote::whereBetween(DB::raw('date(votes.created_at)'), [$dateFrom, $dateTo])
+            ->distinct()
+            ->pluck('election_id');
+        $activeElections = Election::with('organization')
+            ->whereIn('id', $activeIds)
+            ->orderByDesc('election_date')
+            ->get();
+
+        foreach ($activeElections as $election) {
+            $totalVotes = Vote::where('election_id', $election->id)
+                ->whereBetween(DB::raw('date(votes.created_at)'), [$dateFrom, $dateTo])
+                ->count();
+            $totalStudentsVoted = (int) Vote::where('election_id', $election->id)
+                ->whereBetween(DB::raw('date(votes.created_at)'), [$dateFrom, $dateTo])
+                ->select(DB::raw('COUNT(DISTINCT voter_id) as c'))
+                ->value('c');
+            $participationRate = $totalEligible > 0
+                ? round(($totalStudentsVoted / $totalEligible) * 100, 1)
+                : 0;
+            $electionDate = $election->election_date
+                ? (Carbon::parse($election->election_date)->format('M d, Y'))
+                : '—';
+            $elections[] = [
+                'election_ref' => 'active_'.$election->id,
+                'election_name' => $election->election_name,
+                'period_label' => $electionDate,
+                'total_votes' => $totalVotes,
+                'total_students_voted' => $totalStudentsVoted,
+                'participation_rate' => $participationRate,
+                'source' => 'active',
+            ];
+        }
+
+        // Archived elections with votes in range (archived_votes.voted_at)
+        $archivedIds = ArchivedVote::whereBetween(DB::raw('date(archived_votes.voted_at)'), [$dateFrom, $dateTo])
+            ->distinct()
+            ->pluck('archived_election_id');
+        $archivedElections = ArchivedElection::with('organization')
+            ->whereIn('id', $archivedIds)
+            ->orderByDesc('election_date')
+            ->get();
+
+        foreach ($archivedElections as $election) {
+            $totalVotes = ArchivedVote::where('archived_election_id', $election->id)
+                ->whereBetween(DB::raw('date(archived_votes.voted_at)'), [$dateFrom, $dateTo])
+                ->count();
+            $totalStudentsVoted = (int) ArchivedVote::where('archived_election_id', $election->id)
+                ->whereBetween(DB::raw('date(archived_votes.voted_at)'), [$dateFrom, $dateTo])
+                ->select(DB::raw('COUNT(DISTINCT voter_id) as c'))
+                ->value('c');
+            $participationRate = $totalEligible > 0
+                ? round(($totalStudentsVoted / $totalEligible) * 100, 1)
+                : 0;
+            $electionDate = $election->election_date
+                ? (Carbon::parse($election->election_date)->format('M d, Y'))
+                : '—';
+            $elections[] = [
+                'election_ref' => 'archived_'.$election->id,
+                'election_name' => '[Archived] '.$election->election_name,
+                'period_label' => $electionDate,
+                'total_votes' => $totalVotes,
+                'total_students_voted' => $totalStudentsVoted,
+                'participation_rate' => $participationRate,
+                'source' => 'archived',
+            ];
+        }
+
+        $reportPeriodLabel = Carbon::parse($dateFrom)->format('M d, Y').' to '.Carbon::parse($dateTo)->format('M d, Y');
+
+        return [
+            'elections' => $elections,
+            'report_period_label' => $reportPeriodLabel,
+            'total_eligible' => $totalEligible,
+        ];
+    }
+
+    /**
      * Display print-friendly report.
      */
     public function print(Request $request, $electionRef)
