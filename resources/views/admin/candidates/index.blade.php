@@ -570,6 +570,33 @@
             let currentCandidateId = null;
             let candidateMode = 'single';
 
+            // Compress image for upload (helps mobile and large files). Returns Promise<Blob>.
+            function compressImageFile(file, maxWidth = 1200, maxSizeKB = 2048) {
+                if (!file || !file.type.startsWith('image/') || file.size <= maxSizeKB * 1024) return Promise.resolve(file);
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    img.onload = function() {
+                        URL.revokeObjectURL(url);
+                        let w = img.width, h = img.height;
+                        if (w > maxWidth || h > maxWidth) {
+                            if (w > h) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+                            else { w = Math.round(w * maxWidth / h); h = maxWidth; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        canvas.toBlob(function(blob) {
+                            resolve(blob || file);
+                        }, 'image/jpeg', 0.85);
+                    };
+                    img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
+                    img.src = url;
+                });
+            }
+
             function filterByElection(electionId) {
                 if (electionId) {
                     window.location.href = `{{ route('admin.candidates.index') }}?election=${electionId}`;
@@ -1097,11 +1124,35 @@
                 }
             }
 
-            document.getElementById('candidateForm').addEventListener('submit', function(e) {
+            document.getElementById('candidateForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const formData = new FormData(this);
-                const url = this.action;
+                const form = this;
+                const formData = new FormData(form);
+                const url = form.action;
                 const isEdit = currentCandidateId !== null;
+
+                // Compress large photos before upload (helps mobile and avoids server rejections)
+                try {
+                    if (candidateMode === 'single') {
+                        const photoInput = document.getElementById('photo');
+                        if (photoInput && photoInput.files[0]) {
+                            const file = photoInput.files[0];
+                            const blob = await compressImageFile(file);
+                            if (blob !== file) formData.set('photo', blob, file.name || 'photo.jpg');
+                        }
+                    } else {
+                        const photoInputs = document.querySelectorAll('input[name^="candidates"][name*="[photo]"]');
+                        for (const input of photoInputs) {
+                            if (input.files[0]) {
+                                const file = input.files[0];
+                                const blob = await compressImageFile(file);
+                                if (blob !== file) formData.set(input.getAttribute('name'), blob, file.name || 'photo.jpg');
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Photo compress error:', err);
+                }
 
                 fetch(url, {
                         method: 'POST',

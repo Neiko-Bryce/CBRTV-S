@@ -170,16 +170,29 @@ class CandidateController extends Controller
             'partylist_id' => $request->partylist_id ?: null,
         ]);
 
+        // If a photo was sent but upload failed (e.g. too large for PHP), return a clear message
+        if ($request->hasFile('photo') && ! $request->file('photo')->isValid()) {
+            $msg = 'Photo could not be uploaded. Use a smaller image (under 5MB) or JPG/PNG format.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $msg, 'errors' => ['photo' => [$msg]]], 422);
+            }
+            return back()->withInput()->with('error', $msg);
+        }
+
         $validated = $request->validate([
             'election_id' => 'required|exists:elections,id',
             'position_id' => 'required|exists:positions,id',
             'partylist_id' => 'nullable|exists:partylists,id',
             'student_id' => 'nullable|exists:students,id',
             'candidate_name' => 'required|string|max:255',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'biography' => 'nullable|string',
             'platform' => 'nullable|string',
             'is_active' => 'boolean',
+        ], [
+            'photo.image' => 'Photo must be an image (JPG, PNG or GIF).',
+            'photo.mimes' => 'Photo must be JPG, PNG or GIF.',
+            'photo.max' => 'Photo must be under 5MB.',
         ]);
 
         // Handle photo upload
@@ -241,6 +254,19 @@ class CandidateController extends Controller
         // Custom validation for checking duplicate/limit before proceeding?
         // We do it manually below anyway.
 
+        // If any candidate photo was sent but upload failed, return a clear message
+        if ($request->has('candidates') && is_array($request->candidates)) {
+            foreach ($request->candidates as $index => $candidate) {
+                if ($request->hasFile("candidates.{$index}.photo") && ! $request->file("candidates.{$index}.photo")->isValid()) {
+                    $msg = 'Photo could not be uploaded for one or more candidates. Use smaller images (under 5MB) or JPG/PNG format.';
+                    if ($request->wantsJson()) {
+                        return response()->json(['message' => $msg, 'errors' => ['candidates.'.$index.'.photo' => [$msg]]], 422);
+                    }
+                    return back()->withInput()->with('error', $msg);
+                }
+            }
+        }
+
         $validated = $request->validate([
             'election_id' => 'required|exists:elections,id',
             'partylist_id' => 'required|exists:partylists,id',
@@ -249,8 +275,12 @@ class CandidateController extends Controller
             'candidates.*.position_id' => 'required|exists:positions,id',
             'candidates.*.student_id' => 'nullable|exists:students,id',
             'candidates.*.candidate_name' => 'required|string|max:255',
-            'candidates.*.photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'candidates.*.photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'candidates.*.biography' => 'nullable|string',
+        ], [
+            'candidates.*.photo.image' => 'Photo must be an image (JPG, PNG or GIF).',
+            'candidates.*.photo.mimes' => 'Photo must be JPG, PNG or GIF.',
+            'candidates.*.photo.max' => 'Photo must be under 5MB.',
         ]);
 
         $electionId = $validated['election_id'];
@@ -339,16 +369,29 @@ class CandidateController extends Controller
             'partylist_id' => $request->partylist_id ?: null,
         ]);
 
+        // If a photo was sent but upload failed (e.g. too large for PHP), return a clear message
+        if ($request->hasFile('photo') && ! $request->file('photo')->isValid()) {
+            $msg = 'Photo could not be uploaded. Use a smaller image (under 5MB) or JPG/PNG format.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $msg, 'errors' => ['photo' => [$msg]]], 422);
+            }
+            return back()->withInput()->with('error', $msg);
+        }
+
         $validated = $request->validate([
             'election_id' => 'required|exists:elections,id',
             'position_id' => 'required|exists:positions,id',
             'partylist_id' => 'nullable|exists:partylists,id',
             'student_id' => 'nullable|exists:students,id',
             'candidate_name' => 'required|string|max:255',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'biography' => 'nullable|string',
             'platform' => 'nullable|string',
             'is_active' => 'boolean',
+        ], [
+            'photo.image' => 'Photo must be an image (JPG, PNG or GIF).',
+            'photo.mimes' => 'Photo must be JPG, PNG or GIF.',
+            'photo.max' => 'Photo must be under 5MB.',
         ]);
 
         // Handle photo upload

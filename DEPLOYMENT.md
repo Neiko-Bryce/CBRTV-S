@@ -37,7 +37,16 @@ If the build fails with **"league/flysystem-aws-s3-v3 is not present in the lock
 
 4. **Redeploy** after setting `APP_URL` so the app uses the correct URL in links and redirects.
 
-## 3. Candidate photos on the deployed site
+## 3. PHP upload limits (candidate photos)
+
+Candidate photo uploads can fail on mobile with a generic “photo failed to upload” if PHP limits are too low. Ensure the server has:
+
+- **`upload_max_filesize`** ≥ 6MB (e.g. `8M`)
+- **`post_max_size`** ≥ 6MB (e.g. `8M`)
+
+Set these in `php.ini` (or your host’s PHP config). The app accepts photos up to 5MB; if these limits are lower, PHP may drop the file before Laravel sees it.
+
+## 4. Candidate photos on the deployed site
 
 Locally, photos work because they’re stored on your machine. When deployed, the app’s filesystem is **ephemeral** by default, so photo files are lost on redeploy and only placeholders show. Use one of the options below so photos persist and display.
 
@@ -65,7 +74,7 @@ Photos can be stored in S3 so they persist and display without a volume.
 
 Leave `CANDIDATE_PHOTOS_DISK` unset (or `public`) locally so photos stay on local disk.
 
-### Option 3: No volume, no S3
+### Option 3 (no volume, no S3)
 
 - Pages work; when a photo file is missing, a **placeholder icon** is shown.
 - Re‑upload candidate photos in admin after each deploy if you need real photos (they’ll disappear again on next redeploy unless you use Option 1 or 2).
