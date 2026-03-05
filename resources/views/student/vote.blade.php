@@ -1337,7 +1337,7 @@
             let diff = target - now;
             if (diff <= 0) {
                 countdownElement.innerHTML = '<span class="text-red-500 font-semibold">Election Ended</span>';
-                document.getElementById('voteForm').style.display = 'none';
+                // Do not hide the form: server is the source of truth. User can still try to submit; server will reject if really ended.
                 return;
             }
             const days = Math.floor(diff / 86400);

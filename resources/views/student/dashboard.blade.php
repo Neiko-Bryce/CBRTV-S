@@ -743,6 +743,8 @@
                 } else if (startTime) {
                     updateCountdown(electionId, startTime, false);
                     setInterval(() => updateCountdown(electionId, startTime, false), 1000);
+                } else if (element.closest('.countdown-container') && element.hasAttribute('data-end-time')) {
+                    element.innerHTML = '<span class="text-gray-500">—</span>';
                 }
             });
         }

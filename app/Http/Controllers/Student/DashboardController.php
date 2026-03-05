@@ -76,18 +76,18 @@ class DashboardController extends Controller
 
             // End datetime (midnight 00:00 = next calendar day, same as calculateStatus)
             if (! empty($election->time_ended)) {
-                $endTimeStr = trim((string) $election->time_ended);
-                $endTimeParts = explode(':', $endTimeStr);
-                if (count($endTimeParts) >= 2) {
-                    $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':'.(isset($endTimeParts[2]) ? $endTimeParts[2] : '00');
-                }
-                try {
-                    $endDt = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
-                    if ($election->start_datetime && $endDt->lessThanOrEqualTo($election->start_datetime)) {
-                        $endDt->addDay();
+                $endTimeStr = $this->normalizeTimeToHis(trim((string) $election->time_ended));
+                if ($endTimeStr !== null) {
+                    try {
+                        $endDt = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
+                        if ($election->start_datetime && $endDt->lessThanOrEqualTo($election->start_datetime)) {
+                            $endDt->addDay();
+                        }
+                        $election->end_datetime = $endDt;
+                    } catch (\Exception $e) {
+                        $election->end_datetime = null;
                     }
-                    $election->end_datetime = $endDt;
-                } catch (\Exception $e) {
+                } else {
                     $election->end_datetime = null;
                 }
             } else {
@@ -279,18 +279,16 @@ class DashboardController extends Controller
         $startDateTime = $this->parseStartDateTime($dateString, $election->timestarted, $electionDate);
         $endDateTime = null;
         if (! empty($election->time_ended)) {
-            $endTimeStr = trim((string) $election->time_ended);
-            $endTimeParts = explode(':', $endTimeStr);
-            if (count($endTimeParts) >= 2) {
-                $endTimeStr = $endTimeParts[0].':'.$endTimeParts[1].':'.(isset($endTimeParts[2]) ? $endTimeParts[2] : '00');
-            }
-            try {
-                $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
-                if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
-                    $endDateTime->addDay();
+            $endTimeStr = $this->normalizeTimeToHis(trim((string) $election->time_ended));
+            if ($endTimeStr !== null) {
+                try {
+                    $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
+                    if ($endDateTime->lessThanOrEqualTo($startDateTime)) {
+                        $endDateTime->addDay();
+                    }
+                } catch (\Exception $e) {
+                    $endDateTime = null;
                 }
-            } catch (\Exception $e) {
-                $endDateTime = null;
             }
         }
 
@@ -414,12 +412,8 @@ class DashboardController extends Controller
 
             // End datetime: if time_ended is 00:00 (midnight) or <= start, treat as next calendar day
             if (! empty($election->time_ended)) {
-                $endTimeStr = trim((string) $election->time_ended);
-                $parts = explode(':', $endTimeStr);
-                if (count($parts) >= 2) {
-                    $endTimeStr = $parts[0].':'.$parts[1].':'.(isset($parts[2]) ? $parts[2] : '00');
-                }
-                if (strlen($endTimeStr) >= 5) {
+                $endTimeStr = $this->normalizeTimeToHis(trim((string) $election->time_ended));
+                if ($endTimeStr !== null) {
                     try {
                         $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$endTimeStr, 'Asia/Manila');
                         if ($endDateTime->lessThanOrEqualTo($electionDateTime)) {
@@ -470,16 +464,35 @@ class DashboardController extends Controller
         if (empty($timestarted)) {
             return $electionDate->copy()->startOfDay();
         }
-        $timeStr = trim((string) $timestarted);
-        $parts = explode(':', $timeStr);
-        if (count($parts) >= 2) {
-            $timeStr = $parts[0].':'.$parts[1].':'.(isset($parts[2]) ? $parts[2] : '00');
+        $timeStr = $this->normalizeTimeToHis(trim((string) $timestarted));
+        if ($timeStr === null) {
+            return $electionDate->copy()->startOfDay();
         }
         try {
             return Carbon::createFromFormat('Y-m-d H:i:s', $dateString.' '.$timeStr, 'Asia/Manila');
         } catch (\Exception $e) {
             return $electionDate->copy()->startOfDay();
         }
+    }
+
+    /**
+     * Normalize time string to HH:ii:ss (two-digit hour and minute) for createFromFormat('Y-m-d H:i:s').
+     * Handles "2:31", "02:31", "02:31:00", "2:31:00" etc. Returns null if invalid.
+     */
+    private function normalizeTimeToHis(string $time): ?string
+    {
+        $parts = array_map('trim', explode(':', $time));
+        if (count($parts) < 2) {
+            return null;
+        }
+        $h = (int) $parts[0];
+        $i = (int) $parts[1];
+        $s = isset($parts[2]) ? (int) $parts[2] : 0;
+        if ($h < 0 || $h > 23 || $i < 0 || $i > 59 || $s < 0 || $s > 59) {
+            return null;
+        }
+
+        return sprintf('%02d:%02d:%02d', $h, $i, $s);
     }
 
     /**
