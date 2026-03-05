@@ -1,8 +1,68 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdHowToVote, MdPerson, MdLeaderboard } from 'react-icons/md';
 import { HiQuestionMarkCircle, HiStatusOnline } from 'react-icons/hi';
 import confetti from 'canvas-confetti';
+
+function useCountdown(totalSecondsFromServer) {
+    const [remaining, setRemaining] = useState(null);
+    const baseRef = useRef(null);
+    const startedRef = useRef(null);
+
+    useEffect(() => {
+        if (totalSecondsFromServer == null || totalSecondsFromServer <= 0) {
+            setRemaining(null);
+            return;
+        }
+        baseRef.current = Math.floor(totalSecondsFromServer);
+        startedRef.current = Date.now();
+        setRemaining(baseRef.current);
+
+        const id = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startedRef.current) / 1000);
+            const left = baseRef.current - elapsed;
+            setRemaining(left > 0 ? left : 0);
+        }, 1000);
+        return () => clearInterval(id);
+    }, [totalSecondsFromServer]);
+
+    if (remaining == null || remaining <= 0) return null;
+    const d = Math.floor(remaining / 86400);
+    const h = Math.floor((remaining % 86400) / 3600);
+    const m = Math.floor((remaining % 3600) / 60);
+    const s = remaining % 60;
+    return { days: d, hours: h, minutes: m, seconds: s };
+}
+
+function CountdownDisplay({ seconds, label }) {
+    const cd = useCountdown(seconds);
+    if (!cd) return null;
+    return (
+        <div className="bg-white/5 rounded-xl p-3 border border-white/10 text-center">
+            <p className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">{label}</p>
+            <div className="flex gap-2 justify-center">
+                {cd.days > 0 && (
+                    <div className="text-white border-r border-white/10 pr-2">
+                        <span className="text-lg font-bold tabular-nums">{cd.days}</span>
+                        <span className="text-[10px] ml-1 opacity-50">D</span>
+                    </div>
+                )}
+                <div className="text-white">
+                    <span className="text-lg font-bold tabular-nums">{String(cd.hours).padStart(2, '0')}</span>
+                    <span className="text-[10px] ml-1 opacity-50">H</span>
+                </div>
+                <div className="text-white">
+                    <span className="text-lg font-bold tabular-nums">{String(cd.minutes).padStart(2, '0')}</span>
+                    <span className="text-[10px] ml-1 opacity-50">M</span>
+                </div>
+                <div className="text-white">
+                    <span className="text-lg font-bold tabular-nums">{String(cd.seconds).padStart(2, '0')}</span>
+                    <span className="text-[10px] ml-1 opacity-50">S</span>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function LiveResults() {
     const [elections, setElections] = useState([]);
@@ -200,30 +260,8 @@ export default function LiveResults() {
                                             )}
                                         </div>
                                         <div className="flex-shrink-0">
-                                            {election.time_remaining && (
-                                                <div className="bg-white/5 rounded-xl p-3 border border-white/10 text-center">
-                                                    <p className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">Starts In</p>
-                                                    <div className="flex gap-2">
-                                                        {election.time_remaining.days > 0 && (
-                                                            <div className="text-white border-r border-white/10 pr-2">
-                                                                <span className="text-lg font-bold tabular-nums">{election.time_remaining.days}</span>
-                                                                <span className="text-[10px] ml-1 opacity-50">D</span>
-                                                            </div>
-                                                        )}
-                                                        <div className="text-white">
-                                                            <span className="text-lg font-bold tabular-nums">{election.time_remaining.hours}</span>
-                                                            <span className="text-[10px] ml-1 opacity-50">H</span>
-                                                        </div>
-                                                        <div className="text-white">
-                                                            <span className="text-lg font-bold tabular-nums">{election.time_remaining.minutes}</span>
-                                                            <span className="text-[10px] ml-1 opacity-50">M</span>
-                                                        </div>
-                                                        <div className="text-white">
-                                                            <span className="text-lg font-bold tabular-nums">{election.time_remaining.seconds}</span>
-                                                            <span className="text-[10px] ml-1 opacity-50">S</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                            {election.starts_in_seconds > 0 && (
+                                                <CountdownDisplay seconds={election.starts_in_seconds} label="Starts In" />
                                             )}
                                         </div>
                                     </div>
@@ -266,9 +304,13 @@ export default function LiveResults() {
                                             )}
                                         </div>
                                         <div className="flex-shrink-0">
-                                            <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white text-xs font-medium px-3 py-2 rounded-lg">
-                                                Results will be revealed soon
-                                            </span>
+                                            {election.ends_in_seconds > 0 ? (
+                                                <CountdownDisplay seconds={election.ends_in_seconds} label="Time Remaining" />
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white text-xs font-medium px-3 py-2 rounded-lg">
+                                                    Results will be revealed soon
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
