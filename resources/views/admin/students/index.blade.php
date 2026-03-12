@@ -725,18 +725,34 @@
         // Clear previous errors
         document.getElementById('importFile-error').textContent = '';
 
-        fetch('/admin/students/import', {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            showNotification('Session expired. Please refresh the page and try again.', 'error');
+            submitBtn.disabled = false;
+            btnText.textContent = 'Import Students';
+            return;
+        }
+
+        fetch('{{ route('admin.students.import') }}', {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': csrfToken
             },
-            body: formData
+            body: formData,
+            credentials: 'same-origin'
         })
         .then(async response => {
-            const data = await response.json();
-            
+            let data;
+            try {
+                data = await response.json();
+            } catch (parseErr) {
+                showNotification('Server returned invalid response (status ' + response.status + '). Check if session expired.', 'error');
+                submitBtn.disabled = false;
+                btnText.textContent = 'Import Students';
+                return;
+            }
             if (!response.ok) {
                 // Handle error responses
                 let errorMessage = data.message || 'Import failed';
@@ -830,26 +846,13 @@
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            let errorMessage = 'Failed to import students. Please try again.';
-            
-            // Try to extract error message from error object
+            console.error('Import error:', error);
+            let errorMessage = 'Failed to import students. ';
             if (error.message) {
-                errorMessage = error.message;
-            } else if (error.response) {
-                error.response.json().then(data => {
-                    errorMessage = data.message || errorMessage;
-                    if (data.errors && data.errors.file) {
-                        document.getElementById('importFile-error').textContent = Array.isArray(data.errors.file) ? data.errors.file[0] : data.errors.file;
-                        errorMessage = Array.isArray(data.errors.file) ? data.errors.file[0] : data.errors.file;
-                    }
-                    showNotification(errorMessage, 'error');
-                }).catch(() => {
-                    showNotification(errorMessage, 'error');
-                });
-                return;
+                errorMessage += error.message;
+            } else {
+                errorMessage += 'Please check your connection and try again.';
             }
-            
             showNotification(errorMessage, 'error');
         })
         .finally(() => {
