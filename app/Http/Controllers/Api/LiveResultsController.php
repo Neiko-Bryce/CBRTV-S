@@ -74,9 +74,18 @@ class LiveResultsController extends Controller
         $results = [];
 
         foreach ($elections as $election) {
+            $startDateTime = $this->parseElectionStartTime($election);
             $endDateTime = $this->parseElectionEndTime($election);
             $effectiveStatus = $election->status;
-            if ($election->status === 'ongoing' && $endDateTime && $now->greaterThan($endDateTime)) {
+
+            // Auto-advance: upcoming → ongoing (start time has passed)
+            if ($election->status === 'upcoming' && $startDateTime && $now->greaterThanOrEqualTo($startDateTime)) {
+                $effectiveStatus = 'ongoing';
+                $election->update(['status' => 'ongoing']);
+            }
+
+            // Auto-advance: ongoing → completed (end time has passed)
+            if (in_array($effectiveStatus, ['ongoing']) && $endDateTime && $now->greaterThan($endDateTime)) {
                 $effectiveStatus = 'completed';
                 $election->update(['status' => 'completed']);
             }
@@ -162,7 +171,7 @@ class LiveResultsController extends Controller
                 return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
             });
 
-            $startDateTime = $this->parseElectionStartTime($election);
+
 
             $resultData = [
                 'id' => $election->id,

@@ -170,7 +170,7 @@
             }
 
             .users-table .actions-cell .flex {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
                 justify-content: center;
                 gap: 0.25rem;
             }
@@ -302,7 +302,7 @@
                             </th>
                             <th scope="col"
                                 class="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
-                                style="border-color: var(--border-color); min-width: 120px;">
+                                style="border-color: var(--border-color); min-width: 130px;">
                                 Actions
                             </th>
                         </tr>
@@ -368,7 +368,7 @@
                                     <div class="text-sm text-secondary">{{ $user->created_at->format('M d, Y') }}</div>
                                 </td>
                                 <td class="px-4 py-4 align-middle text-center actions-cell">
-                                    <div class="flex items-center justify-center space-x-2">
+                                    <div class="flex flex-nowrap items-center justify-center gap-1">
                                         <button type="button" onclick="viewUser({{ $user->id }})"
                                             class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
                                             style="color: var(--cpsu-green);" title="View">
