@@ -642,7 +642,28 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
 
                             <!-- User Profile Dropdown -->
-                            <div class="relative" x-data="{ open: false }">
+                            <div class="relative" x-data="{ 
+                                open: false, 
+                                isMaintenance: {{ \App\Models\Setting::isMaintenanceModeEnabled() ? 'true' : 'false' }}, 
+                                toggleMaintenance() {
+                                    this.isMaintenance = !this.isMaintenance;
+                                    fetch('{{ route('admin.settings.maintenance.toggle') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify({ maintenance_mode: this.isMaintenance ? 1 : 0 })
+                                    }).then(res => res.json()).then(data => {
+                                        if(!data.success) { 
+                                            this.isMaintenance = !this.isMaintenance; 
+                                        } else {
+                                            window.dispatchEvent(new CustomEvent('maintenance-toggled', { detail: { state: this.isMaintenance } }));
+                                        }
+                                    }).catch(() => { this.isMaintenance = !this.isMaintenance; });
+                                } 
+                            }">
                                 <button @click="open = !open" @click.away="open = false"
                                     class="flex items-center space-x-2 p-1.5 rounded-lg transition-colors hover:bg-[var(--hover-bg)] relative">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-sm relative"
@@ -698,6 +719,27 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                         </svg>
                                         Profile Settings
                                     </a>
+
+                                    @if(auth()->user()->usertype === 'admin' || auth()->user()->usertype === 'super_admin' || auth()->user()->is_super_admin)
+                                    <!-- Maintenance Mode Toggle via Ajax -->
+                                    <button @click.prevent="toggleMaintenance()" type="button"
+                                        class="w-full flex items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-[var(--hover-bg)]"
+                                        style="color: var(--text-primary);">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="isMaintenance ? 'text-yellow-500' : 'text-gray-400'">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                            </svg>
+                                            <span class="whitespace-nowrap" x-text="isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance'"></span>
+                                        </div>
+                                        <!-- Toggle Switch UI -->
+                                        <div class="relative inline-flex items-center cursor-pointer ml-2">
+                                            <div class="w-8 h-4 rounded-full shadow-inner transition-colors duration-200" :class="isMaintenance ? 'bg-yellow-400' : 'bg-gray-300 dark:bg-gray-600'"></div>
+                                            <div class="absolute left-0 w-4 h-4 rounded-full shadow transform transition-transform duration-200 bg-white" style="border: 1px solid var(--border-color);" :class="isMaintenance ? 'translate-x-4 border-yellow-400' : 'translate-x-0'"></div>
+                                        </div>
+                                    </button>
+                                    @endif
+                                    
+                                    <div class="border-t my-1" style="border-color: var(--border-color);"></div>
 
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf

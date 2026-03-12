@@ -1751,4 +1751,17 @@
     </script>
 </body>
 
+<script>
+    (function() {
+        var interval = setInterval(function() {
+            fetch('/api/maintenance-status', { cache: 'no-store' })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.maintenance) { clearInterval(interval); window.location.reload(); }
+                })
+                .catch(function() {});
+        }, 1500);
+    })();
+</script>
+
 </html>

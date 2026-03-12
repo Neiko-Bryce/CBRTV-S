@@ -5,6 +5,54 @@
 
 @section('content')
     <div class="space-y-6">
+        <!-- Maintenance Mode Warning Banner -->
+        <div x-data="{ 
+                isMaintenance: {{ \App\Models\Setting::isMaintenanceModeEnabled() ? 'true' : 'false' }},
+                disableMaintenance() {
+                    this.isMaintenance = false;
+                    fetch('{{ route('admin.settings.maintenance.toggle') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ maintenance_mode: 0 })
+                    }).then(res => res.json()).then(data => {
+                        window.dispatchEvent(new CustomEvent('maintenance-toggled', { detail: { state: false } }));
+                    });
+                }
+             }" 
+             @maintenance-toggled.window="isMaintenance = $event.detail.state"
+             x-show="isMaintenance"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform -translate-y-4"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             style="display: none;"
+             class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm flex items-start justify-between mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">EMERGENCY MAINTENANCE MODE IS ACTIVE</h3>
+                    <div class="mt-1 text-sm text-red-700">
+                        <p>The student portal is completely locked down. No students or guests can access the website or vote.</p>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button @click="disableMaintenance()" type="button" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors cursor-pointer">
+                    Disable Lockdown
+                </button>
+            </div>
+        </div>
+
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Total Users -->
@@ -286,6 +334,31 @@
             <div class="card rounded-xl p-6 shadow-sm">
                 <h3 class="text-base font-semibold text-primary mb-4">Quick Actions</h3>
                 <div class="space-y-3">
+                    
+                    <form action="{{ route('admin.settings.maintenance.toggle') }}" method="POST" class="block m-0 p-0">
+                        @csrf
+                        <input type="hidden" name="maintenance_mode" value="{{ (isset($maintenanceMode) && $maintenanceMode) ? '0' : '1' }}">
+                        <button type="submit" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-md cursor-pointer border-none text-left"
+                            style="background: {{ (isset($maintenanceMode) && $maintenanceMode) ? 'linear-gradient(135deg, #166534 0%, #22c55e 100%)' : 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)' }};">
+                            
+                            <div class="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                                @if(isset($maintenanceMode) && $maintenanceMode)
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                @else
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                @endif
+                            </div>
+                            <span class="text-sm font-medium text-white">
+                                {{ (isset($maintenanceMode) && $maintenanceMode) ? 'Restore System (Disable Maintenance)' : 'Emergency Stop (Enable Maintenance)' }}
+                            </span>
+                        </button>
+                    </form>
+
                     <a href="{{ route('admin.elections.index') }}"
                         class="flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-md"
                         style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">

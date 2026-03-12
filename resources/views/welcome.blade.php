@@ -317,4 +317,21 @@
 
 </body>
 
+<script>
+    // Real-time maintenance mode detection: auto-redirect to maintenance page when admin enables it
+    (function() {
+        var interval = setInterval(function() {
+            fetch('/api/maintenance-status', { cache: 'no-store' })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.maintenance) {
+                        clearInterval(interval);
+                        window.location.reload();
+                    }
+                })
+                .catch(function() { /* silently retry */ });
+        }, 1500);
+    })();
+</script>
+
 </html>

@@ -41,6 +41,13 @@ Route::prefix('api')->group(function () {
             'features' => $featuresSettings,
         ]);
     })->name('api.landing-page.settings');
+
+    // Public maintenance status endpoint - used for real-time polling
+    Route::get('/maintenance-status', function () {
+        return response()->json([
+            'maintenance' => \App\Models\Setting::isMaintenanceModeEnabled()
+        ]);
+    })->name('api.maintenance-status');
 });
 
 // Public candidate photo URL (no auth) so student-side images load even when DB/session is flaky
@@ -165,6 +172,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
     Route::put('profile/password', [\App\Http\Controllers\Admin\ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('profile', [\App\Http\Controllers\Admin\ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // System Settings
+    Route::post('settings/maintenance', [\App\Http\Controllers\SettingController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
 });
 
 // Student-only routes:

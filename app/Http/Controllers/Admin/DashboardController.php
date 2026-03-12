@@ -82,6 +82,8 @@ class DashboardController extends Controller
         ];
         $totalElectionsCount = array_sum($electionStatusCounts);
 
+        $maintenanceMode = \App\Models\Setting::isMaintenanceModeEnabled();
+
         return view('admin.dashboard', compact(
             'totalUsers',
             'userGrowth',
@@ -95,7 +97,8 @@ class DashboardController extends Controller
             'electionStatusCounts',
             'totalElectionsCount',
             'uniqueVoters',
-            'totalStudents'
+            'totalStudents',
+            'maintenanceMode'
         ));
     }
 
