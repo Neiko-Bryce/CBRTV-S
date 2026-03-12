@@ -679,27 +679,39 @@ class StudentController extends Controller
             $studentIdsInBatch = [];
             $organizationId = auth()->user()->organization_id;
             $schoolId = auth()->user()->school_id;
+            $isSuperAdmin = auth()->user()->is_super_admin;
 
-            if (! $schoolId) {
-                Log::error('Import failed: Admin user has no school_id');
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your account is not associated with a school. Please contact a Super Admin.',
-                    'imported' => 0,
-                    'skipped' => 0,
-                ], 403);
+            // Pre-load campus mapping for all admins to resolve school and organization IDs
+            $campusMap = [];
+            try {
+                $schools = \App\Models\School::with(['organizations' => function($q) {
+                    $q->where('is_active', true)->limit(1);
+                }])->where('is_active', true)->get();
+                
+                foreach ($schools as $school) {
+                    $campusMap[strtolower(trim($school->name))] = [
+                        'school_id' => $school->id,
+                        'school_name' => $school->name,
+                        'organization_id' => $school->organizations->first()->id ?? null
+                    ];
+                }
+                Log::info('Loaded campus mapping for ' . (auth()->user()->is_super_admin ? 'Super Admin' : 'Admin') . ': ' . json_encode($campusMap));
+            } catch (\Exception $e) {
+                Log::error('Error loading campus mapping: ' . $e->getMessage());
             }
 
-            if (! $organizationId) {
-                Log::error('Import failed: Admin user has no organization_id');
+            if (! $isSuperAdmin) {
+                // Regular admins must at least have a school_id assigned
+                if (! $schoolId) {
+                    Log::error('Import failed: Admin user has no school_id');
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your account is not associated with an organization. Please contact a Super Admin.',
-                    'imported' => 0,
-                    'skipped' => 0,
-                ], 403);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Your account is not associated with a school. Please contact a Super Admin.',
+                        'imported' => 0,
+                        'skipped' => 0,
+                    ], 403);
+                }
             }
             $skipReasons = [
                 'missing_fields' => 0,
@@ -873,11 +885,54 @@ class StudentController extends Controller
                     // Normalize student ID - remove any whitespace
                     $studentId = trim($studentId);
                     // Normalize other fields
-                    $campus = trim($campus);
+                    $campusName = trim($campus);
                     $lname = trim($lname);
                     $course = trim($course);
                     $yearlevel = trim($yearlevel);
                     $section = trim($section);
+
+                    // Determine school and organization IDs
+                    $currentRowSchoolId = null;
+                    $currentRowOrganizationId = null;
+
+                    $targetCampus = strtolower(trim($campusName));
+                    if (isset($campusMap[$targetCampus])) {
+                        $currentRowSchoolId = $campusMap[$targetCampus]['school_id'];
+                        $currentRowOrganizationId = $campusMap[$targetCampus]['organization_id'];
+                        
+                        // Check authorization for regular admins
+                        if (!$isSuperAdmin && $currentRowSchoolId != $schoolId) {
+                            $skipped++;
+                            $skipReasons['other']++;
+                            if (count($errors) < 100) {
+                                $userSchoolName = '';
+                                foreach($campusMap as $c) {
+                                    if($c['school_id'] == $schoolId) {
+                                        $userSchoolName = $c['school_name'];
+                                        break;
+                                    }
+                                }
+                                $errors[] = "Row " . ($rowIndex + 2) . ": Unauthorized campus '{$campusName}'. You are only authorized to import for '{$userSchoolName}'.";
+                            }
+                            continue;
+                        }
+                    } else {
+                        $skipped++;
+                        $skipReasons['other']++;
+                        if (count($errors) < 100) {
+                            $errors[] = "Row " . ($rowIndex + 2) . ": Campus '{$campusName}' not found or inactive.";
+                        }
+                        continue;
+                    }
+
+                    if (!$currentRowOrganizationId) {
+                         $skipped++;
+                         $skipReasons['other']++;
+                         if (count($errors) < 100) {
+                            $errors[] = "Row " . ($rowIndex + 2) . ": Campus '{$campusName}' has no active organization.";
+                         }
+                         continue;
+                    }
 
                     // If optional fields are empty and columns don't exist in file, set to empty string
                     // This allows import to proceed even without these fields
@@ -995,8 +1050,8 @@ class StudentController extends Controller
                     // Use empty string for course/yearlevel/section when missing (DB columns are NOT NULL)
                     $data = [
                         'student_id_number' => $studentId,
-                        'organization_id' => $organizationId,
-                        'school_id' => $schoolId,
+                        'organization_id' => $currentRowOrganizationId,
+                        'school_id' => $currentRowSchoolId,
                         'campus' => $campus,
                         'lname' => $lname,
                         'fname' => ($fname !== null && $fname !== '') ? $fname : null,
