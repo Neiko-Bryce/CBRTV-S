@@ -583,45 +583,7 @@
             color: var(--cpsu-green);
         }
 
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem;
-            font-size: 0.875rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--cpsu-green);
-            cursor: pointer;
-        }
-
-        .checkbox-group label {
-            color: #64748b;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .forgot-link {
-            color: var(--cpsu-green);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .forgot-link:hover {
-            color: var(--cpsu-green-dark);
-        }
+        /* Removed unused forgot-link and checkbox-group styles */
 
         .submit-btn {
             width: 100%;

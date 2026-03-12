@@ -30,8 +30,9 @@ class EmergencyMaintenanceMiddleware
             // Students stay logged in but see the maintenance page (do NOT log them out)
         }
 
-        // Allow everyone to view the login page (and logout) so admins can still log in/out
-        if ($request->is('login') || $request->is('login/*') || $request->is('logout') || $request->routeIs('login') || $request->routeIs('password.*')) {
+        // Allow login and logout only — admins can still access the login form during maintenance
+        $path = ltrim($request->getPathInfo(), '/');
+        if ($path === 'login' || $path === 'logout' || str_starts_with($path, 'login/') || $request->routeIs('login')) {
             return $next($request);
         }
         

@@ -11,6 +11,12 @@ Route::get('/', function () {
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
 });
 
+// Disable password reset pages — not used in this system
+Route::any('forgot-password', fn() => abort(404));
+Route::any('forgot-password/{any}', fn() => abort(404))->where('any', '.*');
+Route::any('reset-password', fn() => abort(404));
+Route::any('reset-password/{any}', fn() => abort(404))->where('any', '.*');
+
 // Public API for live election results (no auth required)
 Route::prefix('api')->group(function () {
     Route::get('/live-results', [\App\Http\Controllers\Api\LiveResultsController::class, 'getCompletedElections'])->name('api.live-results');
