@@ -320,71 +320,105 @@ class DashboardController extends Controller
         $userId = Auth::id();
         $votes = array_values(array_unique($request->input('votes', [])));
 
-        $alreadyVoted = Vote::withoutGlobalScopes()
-            ->where('election_id', $electionId)
-            ->where('voter_id', $userId)
-            ->exists();
-        if ($alreadyVoted) {
+        // 1. Atomic Lock to prevent double-submission race conditions
+        // This ensures if a user double-clicks submit, the second request is blocked immediately
+        $lock = \Illuminate\Support\Facades\Cache::lock("submit_vote_{$electionId}_{$userId}", 10);
+        
+        if (!$lock->get()) {
             return response()->json([
                 'success' => false,
-                'message' => 'You have already submitted your votes for this election.',
-            ], 409);
+                'message' => 'Your vote is currently being processed. Please wait.',
+            ], 429);
         }
 
-        $candidatesToVote = Candidate::withoutGlobalScopes()
-            ->whereIn('id', $votes)
-            ->where('election_id', $electionId)
-            ->get();
-
-        $positions = Position::withoutGlobalScopes()
-            ->where('organization_id', $election->organization_id)
-            ->get()
-            ->keyBy('id');
-
-        // Group selected votes by position
-        $votesByPosition = $candidatesToVote->groupBy('position_id');
-
-        // Validate vote counts per position
-        foreach ($votesByPosition as $positionId => $candidates) {
-            $position = $positions[$positionId] ?? null;
-            if ($position) {
-                // If number_of_slots is null or 0, default to 1 (safety fallback)
-                $maxSlots = $position->number_of_slots > 0 ? $position->number_of_slots : 1;
-
-                if ($candidates->count() > $maxSlots) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "You selected too many candidates for {$position->name}. Max allowed is {$maxSlots}.",
-                    ], 422);
-                }
-            }
-        }
-
-        foreach ($votes as $candidateId) {
-            $existingVote = Vote::withoutGlobalScopes()
+        try {
+            $alreadyVoted = Vote::withoutGlobalScopes()
                 ->where('election_id', $electionId)
-                ->where('candidate_id', $candidateId)
                 ->where('voter_id', $userId)
-                ->first();
+                ->exists();
+            if ($alreadyVoted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already submitted your votes for this election.',
+                ], 409);
+            }
 
-            if (! $existingVote) {
-                Vote::create([
-                    'election_id' => $electionId,
-                    'candidate_id' => $candidateId,
-                    'voter_id' => $userId,
-                ]);
+            $candidatesToVote = Candidate::withoutGlobalScopes()
+                ->whereIn('id', $votes)
+                ->where('election_id', $electionId)
+                ->get();
 
-                $candidate = Candidate::withoutGlobalScopes()->find($candidateId);
-                if ($candidate) {
-                    $candidate->increment('votes_count');
+            $positions = Position::withoutGlobalScopes()
+                ->where('organization_id', $election->organization_id)
+                ->get()
+                ->keyBy('id');
+
+            // Group selected votes by position
+            $votesByPosition = $candidatesToVote->groupBy('position_id');
+
+            // Validate vote counts per position
+            foreach ($votesByPosition as $positionId => $candidates) {
+                $position = $positions[$positionId] ?? null;
+                if ($position) {
+                    // If number_of_slots is null or 0, default to 1 (safety fallback)
+                    $maxSlots = $position->number_of_slots > 0 ? $position->number_of_slots : 1;
+
+                    if ($candidates->count() > $maxSlots) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "You selected too many candidates for {$position->name}. Max allowed is {$maxSlots}.",
+                        ], 422);
+                    }
                 }
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Your votes have been submitted successfully!',
-        ]);
+            // 2. Database Transaction Wrap
+            // Ensures ALL votes are saved, or NONE are. Prevents partial ballots on crash.
+            \Illuminate\Support\Facades\DB::transaction(function () use ($electionId, $userId, $votes) {
+                $votesToInsert = [];
+                $candidateIdsToIncrement = [];
+
+                foreach ($votes as $candidateId) {
+                    // Prepare bulk insert
+                    $votesToInsert[] = [
+                        'election_id' => $electionId,
+                        'candidate_id' => $candidateId,
+                        'voter_id' => $userId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    $candidateIdsToIncrement[] = $candidateId;
+                }
+
+                if (!empty($votesToInsert)) {
+                    // Insert all votes at once (much faster than looping)
+                    Vote::insert($votesToInsert);
+
+                    // 3. Batch candidate increment
+                    // Decreases Row Lock time significantly for MySQL
+                    if (!empty($candidateIdsToIncrement)) {
+                        Candidate::withoutGlobalScopes()
+                            ->whereIn('id', $candidateIdsToIncrement)
+                            ->increment('votes_count');
+                    }
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Your votes have been submitted successfully!',
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Voting Error (Election: {$electionId}, User: {$userId}): " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while saving your votes. Please try again.',
+            ], 500);
+        } finally {
+            // Always release the lock when done
+            $lock->release();
+        }
     }
 
     /**

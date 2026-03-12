@@ -31,7 +31,7 @@ class DashboardController extends Controller
         $this->syncElectionStatuses();
 
         // Refresh the query to ensure we get updated statuses from database
-        $activeElections = Election::where('status', 'ongoing')->count();
+        $activeElections = Election::whereIn('status', ['ongoing', 'upcoming'])->count();
 
         $endingSoon = Election::where('status', 'ongoing')
             ->whereNotNull('time_ended')
