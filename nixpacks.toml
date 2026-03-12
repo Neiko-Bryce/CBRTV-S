@@ -5,11 +5,17 @@
 [phases.setup]
 nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql", "nodejs_20", "php83Packages.composer"]
 
+[variables]
+# Prevent composer from hitting memory limits during install (Railway "context canceled" fix)
+COMPOSER_MEMORY_LIMIT = "-1"
+
 [phases.install]
 # Install PHP and Node deps (npm ci includes devDependencies so Vite can run in build)
+# Composer: --prefer-dist (faster), --no-progress (less I/O), COMPOSER_MEMORY_LIMIT prevents OOM
+# NPM: --prefer-offline --no-audit speeds up install
 cmds = [
-    "composer install --no-dev --optimize-autoloader --no-interaction",
-    "npm ci"
+    "composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress",
+    "npm ci --prefer-offline --no-audit"
 ]
 
 [phases.build]
