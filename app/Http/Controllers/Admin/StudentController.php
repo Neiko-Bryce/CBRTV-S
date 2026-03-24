@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
+use App\Models\School;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -677,41 +680,59 @@ class StudentController extends Controller
             $errors = [];
             $studentsToInsert = [];
             $studentIdsInBatch = [];
-            $organizationId = auth()->user()->organization_id;
-            $schoolId = auth()->user()->school_id;
-            $isSuperAdmin = auth()->user()->is_super_admin;
+            $user = auth()->user();
+            $isSuperAdmin = $this->userIsSuperAdminForImport($user);
+            /** Admins with no school_id use the same rescue rule as BelongsToSchool (can manage all campuses until assigned). */
+            $adminWithoutCampusAssignment = $user->usertype === 'admin' && $user->school_id === null && ! $isSuperAdmin;
+            $skipCampusImportRestriction = $isSuperAdmin || $adminWithoutCampusAssignment;
+            /** @var int|null $authorizedSchoolId Effective active school for campus-scoped admins only. */
+            $authorizedSchoolId = null;
 
             // Pre-load campus mapping for all admins to resolve school and organization IDs
             $campusMap = [];
             try {
-                $schools = \App\Models\School::with(['organizations' => function($q) {
+                $schools = School::with(['organizations' => function ($q) {
                     $q->where('is_active', true)->limit(1);
                 }])->where('is_active', true)->get();
-                
+
                 foreach ($schools as $school) {
-                    $campusMap[strtolower(trim($school->name))] = [
+                    $entry = [
                         'school_id' => $school->id,
                         'school_name' => $school->name,
-                        'organization_id' => $school->organizations->first()->id ?? null
+                        'organization_id' => $school->organizations->first()->id ?? null,
                     ];
+                    $nameKey = strtolower(trim($school->name));
+                    if ($nameKey !== '') {
+                        $campusMap[$nameKey] = $entry;
+                    }
+                    $slug = (string) ($school->slug ?? '');
+                    $slugKey = strtolower(trim($slug));
+                    if ($slugKey !== '' && ! isset($campusMap[$slugKey])) {
+                        $campusMap[$slugKey] = $entry;
+                    }
+                    $slugCompact = strtolower(str_replace(['-', '_', ' '], '', $slug));
+                    if ($slugCompact !== '' && $slugCompact !== $nameKey && ! isset($campusMap[$slugCompact])) {
+                        $campusMap[$slugCompact] = $entry;
+                    }
                 }
-                Log::info('Loaded campus mapping for ' . (auth()->user()->is_super_admin ? 'Super Admin' : 'Admin') . ': ' . json_encode($campusMap));
+                Log::info('Loaded campus mapping for '.($isSuperAdmin ? 'Super Admin' : 'Admin').': '.json_encode($campusMap));
             } catch (\Exception $e) {
-                Log::error('Error loading campus mapping: ' . $e->getMessage());
+                Log::error('Error loading campus mapping: '.$e->getMessage());
             }
 
-            if (! $isSuperAdmin) {
-                // Regular admins must at least have a school_id assigned
-                if (! $schoolId) {
-                    Log::error('Import failed: Admin user has no school_id');
+            if (! $skipCampusImportRestriction) {
+                $resolution = $this->resolveAdminSchoolForStudentImport($user);
+                if ($resolution['error']) {
+                    Log::error('Import failed: '.$resolution['message']);
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Your account is not associated with a school. Please contact a Super Admin.',
+                        'message' => $resolution['message'],
                         'imported' => 0,
                         'skipped' => 0,
                     ], 403);
                 }
+                $authorizedSchoolId = $resolution['effective_id'];
             }
             $skipReasons = [
                 'missing_fields' => 0,
@@ -900,19 +921,22 @@ class StudentController extends Controller
                         $currentRowSchoolId = $campusMap[$targetCampus]['school_id'];
                         $currentRowOrganizationId = $campusMap[$targetCampus]['organization_id'];
                         
-                        // Check authorization for regular admins
-                        if (!$isSuperAdmin && $currentRowSchoolId != $schoolId) {
+                        // Super admins and admins without a campus assignment may import any active campus.
+                        if (! $skipCampusImportRestriction && (int) $currentRowSchoolId !== (int) $authorizedSchoolId) {
                             $skipped++;
                             $skipReasons['other']++;
                             if (count($errors) < 100) {
                                 $userSchoolName = '';
-                                foreach($campusMap as $c) {
-                                    if($c['school_id'] == $schoolId) {
+                                foreach ($campusMap as $c) {
+                                    if ((int) $c['school_id'] === (int) $authorizedSchoolId) {
                                         $userSchoolName = $c['school_name'];
                                         break;
                                     }
                                 }
-                                $errors[] = "Row " . ($rowIndex + 2) . ": Unauthorized campus '{$campusName}'. You are only authorized to import for '{$userSchoolName}'.";
+                                if ($userSchoolName === '') {
+                                    $userSchoolName = School::query()->whereKey($authorizedSchoolId)->value('name') ?? '';
+                                }
+                                $errors[] = 'Row '.($rowIndex + 2).": Unauthorized campus '{$campusName}'. You are only authorized to import for '{$userSchoolName}'.";
                             }
                             continue;
                         }
@@ -1506,5 +1530,81 @@ class StudentController extends Controller
         }
 
         Log::info('insertStudentChunk completed: imported='.$imported.', skipped='.$skipped.' from '.count($batch).' total students');
+    }
+
+    /**
+     * Super admins may import for every campus. Also honors usertype=super_admin if present in the database.
+     */
+    private function userIsSuperAdminForImport(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+        if ($user->is_super_admin) {
+            return true;
+        }
+
+        return ($user->usertype ?? '') === 'super_admin';
+    }
+
+    /**
+     * Resolve which active school a regular admin is allowed to import for.
+     *
+     * After campus merges, production accounts sometimes keep school_id pointing at an inactive
+     * school row. That school is omitted from the import campus map, so every row looked
+     * "unauthorized" and the error showed an empty campus name. We prefer the organization’s
+     * active school, then a single active campus, before failing with a clear message.
+     *
+     * @return array{error: bool, message?: string, effective_id?: int}
+     */
+    private function resolveAdminSchoolForStudentImport(User $user): array
+    {
+        $rawSchoolId = $user->school_id;
+        if ($rawSchoolId === null || $rawSchoolId === '') {
+            return [
+                'error' => true,
+                'message' => 'Your account is not associated with a school. Please contact a Super Admin.',
+            ];
+        }
+        $rawSchoolId = (int) $rawSchoolId;
+        $school = School::query()->whereKey($rawSchoolId)->first();
+        if (! $school) {
+            return [
+                'error' => true,
+                'message' => 'Your account references a campus that no longer exists. Please contact a Super Admin to fix your assignment.',
+            ];
+        }
+        if ($school->is_active) {
+            return ['error' => false, 'effective_id' => $rawSchoolId];
+        }
+
+        if ($user->organization_id) {
+            $orgSchoolId = Organization::withoutGlobalScopes()
+                ->whereKey($user->organization_id)
+                ->value('school_id');
+            if ($orgSchoolId) {
+                $orgSchool = School::query()->whereKey($orgSchoolId)->first();
+                if ($orgSchool && $orgSchool->is_active) {
+                    Log::info("Student import: admin {$user->id} had inactive school_id {$rawSchoolId}; using organization {$user->organization_id} active school {$orgSchool->id} ({$orgSchool->name}).");
+
+                    return ['error' => false, 'effective_id' => (int) $orgSchool->id];
+                }
+            }
+        }
+
+        $activeSchools = School::query()->where('is_active', true)->orderBy('id')->get();
+        if ($activeSchools->count() === 1) {
+            $only = (int) $activeSchools->first()->id;
+            Log::warning("Student import: admin {$user->id} inactive school_id {$rawSchoolId} ({$school->name}) remapped to sole active school {$only}.");
+
+            return ['error' => false, 'effective_id' => $only];
+        }
+
+        $names = $activeSchools->pluck('name')->filter()->implode(', ');
+
+        return [
+            'error' => true,
+            'message' => 'Your account is still linked to inactive campus "'.$school->name.'". A Super Admin must assign you to the correct active campus before importing. Active campuses: '.($names !== '' ? $names : '(none configured)').'.',
+        ];
     }
 }
