@@ -37,7 +37,7 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Neiko Bryce',
-                'password' => Hash::make('neiko@admin12345'),
+                'password' => Hash::make('neikobryce@admin12345'),
                 'usertype' => 'admin',
                 'is_super_admin' => false,
                 'school_id' => $schoolId,
