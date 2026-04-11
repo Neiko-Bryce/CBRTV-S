@@ -171,7 +171,8 @@ class LiveResultsController extends Controller
                 return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
             });
 
-
+            $distinctVoters = $election->getDistinctVoterCount();
+            $quorumVoid = $effectiveStatus === 'completed' && $election->isResultsVoidDueToQuorum();
 
             $resultData = [
                 'id' => $election->id,
@@ -180,7 +181,15 @@ class LiveResultsController extends Controller
                 'election_date' => $election->election_date->format('M d, Y'),
                 'status' => $effectiveStatus,
                 'positions' => $positionsData,
-                'total_voters' => Vote::withoutGlobalScopes()->where('election_id', $election->id)->distinct('voter_id')->count(),
+                'total_voters' => $distinctVoters,
+                'quorum_void' => $quorumVoid,
+                'quorum' => [
+                    'applicable' => $election->isQuorumApplicable(),
+                    'voter_capacity' => $election->voter_capacity,
+                    'required_votes' => $election->getQuorumRequiredVotes(),
+                    'distinct_voters' => $distinctVoters,
+                    'met' => $election->isQuorumMet(),
+                ],
             ];
 
             if ($effectiveStatus === 'upcoming') {

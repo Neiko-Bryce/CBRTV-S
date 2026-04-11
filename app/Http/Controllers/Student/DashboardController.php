@@ -68,6 +68,9 @@ class DashboardController extends Controller
             fn ($e) => $e->timestarted ?? '',
         ])->values();
 
+        $studentForCourse = $this->getStudentRecordForVoter();
+        $studentCourse = $studentForCourse?->course;
+
         // For each election, set datetime info and load candidates
         foreach ($elections as $election) {
             $dateString = $this->electionDateToString($election->election_date) ?? Carbon::now('Asia/Manila')->format('Y-m-d');
@@ -111,6 +114,10 @@ class DashboardController extends Controller
                 ->count();
 
             $election->hasVoted = $userVotes > 0;
+            $election->vote_disabled_course = ! $election->studentCourseAllowsVoting($studentCourse);
+            $election->vote_disabled_capacity = $election->hasVoterCapacityLimit()
+                && $election->isVoterCapacityFull()
+                && ! $election->hasVoted;
         }
 
         return view('student.dashboard', compact('elections'));
@@ -273,6 +280,11 @@ class DashboardController extends Controller
                 ->with('info', 'You have already submitted your votes for this election.');
         }
 
+        if (! $election->acceptsNewDistinctVoter((int) Auth::id())) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'This election has reached its voter capacity ('.(int) $election->voter_capacity.' distinct voters). No additional ballots can be accepted.');
+        }
+
         // End datetime for countdown (same midnight rule: 00:00 = next calendar day)
         $dateString = $this->electionDateToString($election->election_date) ?? Carbon::now('Asia/Manila')->format('Y-m-d');
         $electionDate = Carbon::parse($dateString, 'Asia/Manila');
@@ -323,8 +335,8 @@ class DashboardController extends Controller
         // 1. Atomic Lock to prevent double-submission race conditions
         // This ensures if a user double-clicks submit, the second request is blocked immediately
         $lock = \Illuminate\Support\Facades\Cache::lock("submit_vote_{$electionId}_{$userId}", 10);
-        
-        if (!$lock->get()) {
+
+        if (! $lock->get()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Your vote is currently being processed. Please wait.',
@@ -341,6 +353,13 @@ class DashboardController extends Controller
                     'success' => false,
                     'message' => 'You have already submitted your votes for this election.',
                 ], 409);
+            }
+
+            if (! $election->acceptsNewDistinctVoter((int) $userId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This election has reached its voter capacity ('.(int) $election->voter_capacity.' distinct voters). No additional ballots can be accepted.',
+                ], 403);
             }
 
             $candidatesToVote = Candidate::withoutGlobalScopes()
@@ -375,6 +394,11 @@ class DashboardController extends Controller
             // 2. Database Transaction Wrap
             // Ensures ALL votes are saved, or NONE are. Prevents partial ballots on crash.
             \Illuminate\Support\Facades\DB::transaction(function () use ($electionId, $userId, $votes) {
+                $electionLocked = Election::withoutGlobalScopes()->lockForUpdate()->find($electionId);
+                if (! $electionLocked || ! $electionLocked->acceptsNewDistinctVoter((int) $userId)) {
+                    throw new \RuntimeException('VOTER_CAPACITY_FULL');
+                }
+
                 $votesToInsert = [];
                 $candidateIdsToIncrement = [];
 
@@ -390,13 +414,13 @@ class DashboardController extends Controller
                     $candidateIdsToIncrement[] = $candidateId;
                 }
 
-                if (!empty($votesToInsert)) {
+                if (! empty($votesToInsert)) {
                     // Insert all votes at once (much faster than looping)
                     Vote::insert($votesToInsert);
 
                     // 3. Batch candidate increment
                     // Decreases Row Lock time significantly for MySQL
-                    if (!empty($candidateIdsToIncrement)) {
+                    if (! empty($candidateIdsToIncrement)) {
                         Candidate::withoutGlobalScopes()
                             ->whereIn('id', $candidateIdsToIncrement)
                             ->increment('votes_count');
@@ -409,8 +433,17 @@ class DashboardController extends Controller
                 'message' => 'Your votes have been submitted successfully!',
             ]);
 
+        } catch (\RuntimeException $e) {
+            if ($e->getMessage() === 'VOTER_CAPACITY_FULL') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This election has reached its voter capacity. No additional ballots can be accepted.',
+                ], 403);
+            }
+            throw $e;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Voting Error (Election: {$electionId}, User: {$userId}): " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Voting Error (Election: {$electionId}, User: {$userId}): ".$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while saving your votes. Please try again.',
@@ -594,6 +627,26 @@ class DashboardController extends Controller
         if (! $schoolOk) {
             abort(403, 'You are not authorized to access this election.');
         }
+        $student = $this->getStudentRecordForVoter();
+        $course = $student?->course;
+        if (! $election->studentCourseAllowsVoting($course)) {
+            abort(403, 'You are not eligible to vote in this election based on your course.');
+        }
+    }
+
+    /**
+     * Student row linked to this login (student_id_number = user email).
+     */
+    private function getStudentRecordForVoter(): ?\App\Models\Student
+    {
+        $user = Auth::user();
+        if (! $user || ! $user->email) {
+            return null;
+        }
+
+        return \App\Models\Student::withoutGlobalScopes()
+            ->where('student_id_number', $user->email)
+            ->first();
     }
 
     /**

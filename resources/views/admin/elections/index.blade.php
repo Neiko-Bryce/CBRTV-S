@@ -68,6 +68,12 @@
         justify-content: flex-end;
         gap: 0.75rem;
     }
+    /* Wider create/edit election modal — easier on laptop screens */
+    #electionModal .modal-content {
+        width: min(96vw, 1000px);
+        max-width: 1000px;
+        max-height: min(88vh, 900px);
+    }
     .close {
         color: var(--text-secondary);
         font-size: 28px;
@@ -589,30 +595,30 @@
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 
                 <div class="space-y-4">
-                    <div>
-                        <label for="election_name" class="block text-sm font-medium text-primary mb-2">Election Name *</label>
-                        <input type="text" id="election_name" name="election_name" required class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
-                        <div id="election_name-error" class="text-red-500 text-sm mt-1"></div>
-                        <p class="text-xs text-secondary mt-1">Election ID will be auto-generated</p>
-                    </div>
-                    
-                    <div>
-                        <label for="organization_id" class="block text-sm font-medium text-primary mb-2">Type of Election (Organization) *</label>
-                        <select id="organization_id" name="organization_id" required onchange="updateTypeOfElection()" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
-                            <option value="">Select Organization</option>
-                            @foreach($organizations as $org)
-                            <option value="{{ $org->id }}" data-name="{{ $org->name }}">{{ $org->name }}{{ $org->code ? ' (' . $org->code . ')' : '' }}</option>
-                            @endforeach
-                        </select>
-                        <div id="organization_id-error" class="text-red-500 text-sm mt-1"></div>
-                        <p class="text-xs text-secondary mt-1">Select the organization type (SSG, FLP, Classroom, etc.)</p>
-                        <!-- Hidden field to maintain backward compatibility -->
-                        <input type="hidden" id="type_of_election" name="type_of_election">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                        <div>
+                            <label for="election_name" class="block text-sm font-medium text-primary mb-2">Election Name *</label>
+                            <input type="text" id="election_name" name="election_name" required class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            <div id="election_name-error" class="text-red-500 text-sm mt-1"></div>
+                            <p class="text-xs text-secondary mt-1">Election ID will be auto-generated</p>
+                        </div>
+                        <div>
+                            <label for="organization_id" class="block text-sm font-medium text-primary mb-2">Type of Election (Organization) *</label>
+                            <select id="organization_id" name="organization_id" required onchange="updateTypeOfElection()" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                                <option value="">Select Organization</option>
+                                @foreach($organizations as $org)
+                                <option value="{{ $org->id }}" data-name="{{ $org->name }}">{{ $org->name }}{{ $org->code ? ' (' . $org->code . ')' : '' }}</option>
+                                @endforeach
+                            </select>
+                            <div id="organization_id-error" class="text-red-500 text-sm mt-1"></div>
+                            <p class="text-xs text-secondary mt-1">Select the organization type (SSG, FLP, Classroom, etc.)</p>
+                            <input type="hidden" id="type_of_election" name="type_of_election">
+                        </div>
                     </div>
                     
                     <div>
                         <label for="description" class="block text-sm font-medium text-primary mb-2">Description</label>
-                        <textarea id="description" name="description" rows="3" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);"></textarea>
+                        <textarea id="description" name="description" rows="2" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);"></textarea>
                         <div id="description-error" class="text-red-500 text-sm mt-1"></div>
                     </div>
                     
@@ -657,6 +663,34 @@
                             <div id="time_ended-error" class="text-red-500 text-sm mt-1"></div>
                             <p class="text-xs text-secondary mt-1">Overnight elections supported (e.g., 11PM to 1AM)</p>
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="voter_capacity" class="block text-sm font-medium text-primary mb-2">Voter capacity (max voters + quorum)</label>
+                            <input type="number" min="1" id="voter_capacity" name="voter_capacity" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" placeholder="e.g. 500">
+                            <div id="voter_capacity-error" class="text-red-500 text-sm mt-1"></div>
+                            <p id="quorumPreview" class="text-xs text-secondary mt-1"></p>
+                            <p class="text-xs text-secondary mt-1">If set: (1) <strong>at most</strong> this many <em>different</em> students can cast a ballot—others are blocked once the limit is reached. (2) Winners are declared only if distinct voters reach <strong>50% + 1</strong> of this number. Leave blank for no limit and no quorum rule.</p>
+                        </div>
+                        <div>
+                            <label for="course_filter_mode" class="block text-sm font-medium text-primary mb-2">Who can vote (by course)</label>
+                            <select id="course_filter_mode" name="course_filter_mode" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" onchange="toggleCourseSelect()">
+                                <option value="all">All courses (every eligible student in this organization)</option>
+                                <option value="specific">Only selected courses</option>
+                            </select>
+                            <div id="course_filter_mode-error" class="text-red-500 text-sm mt-1"></div>
+                        </div>
+                    </div>
+                    <div id="allowedCoursesWrap" class="hidden">
+                        <label for="allowed_courses" class="block text-sm font-medium text-primary mb-2">Allowed courses</label>
+                        <select id="allowed_courses" name="allowed_courses[]" multiple size="6" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            @foreach($availableCourses ?? [] as $c)
+                                <option value="{{ $c }}">{{ $c }}</option>
+                            @endforeach
+                        </select>
+                        <div id="allowed_courses-error" class="text-red-500 text-sm mt-1"></div>
+                        <p class="text-xs text-secondary mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple. Must match the course text on student records.</p>
                     </div>
                 </div>
             </div>
@@ -945,6 +979,21 @@
                 } else {
                     document.getElementById('status').value = 'upcoming';
                 }
+
+                const vc = document.getElementById('voter_capacity');
+                if (vc) vc.value = election.voter_capacity != null ? election.voter_capacity : '';
+                const cfm = document.getElementById('course_filter_mode');
+                if (cfm) cfm.value = election.course_filter_mode === 'specific' ? 'specific' : 'all';
+                toggleCourseSelect();
+                const allowedSel = document.getElementById('allowed_courses');
+                if (allowedSel) {
+                    const allowed = election.allowed_courses || [];
+                    for (let i = 0; i < allowedSel.options.length; i++) {
+                        const opt = allowedSel.options[i];
+                        opt.selected = Array.isArray(allowed) && allowed.indexOf(opt.value) !== -1;
+                    }
+                }
+                updateQuorumPreview();
                 
                 openModal('electionModal');
             } else {
@@ -1247,18 +1296,54 @@
         }
     }
 
+    function toggleCourseSelect() {
+        const mode = document.getElementById('course_filter_mode');
+        const wrap = document.getElementById('allowedCoursesWrap');
+        if (!mode || !wrap) return;
+        wrap.classList.toggle('hidden', mode.value !== 'specific');
+    }
+
+    function updateQuorumPreview() {
+        const capEl = document.getElementById('voter_capacity');
+        const preview = document.getElementById('quorumPreview');
+        if (!capEl || !preview) return;
+        const cap = parseInt(capEl.value, 10);
+        if (!cap || cap < 1) {
+            preview.textContent = '';
+            return;
+        }
+        const req = Math.floor(cap / 2) + 1;
+        preview.textContent = 'Minimum valid turnout (50% + 1): ' + req + ' distinct voters';
+    }
+    (function () {
+        const v = document.getElementById('voter_capacity');
+        if (v) v.addEventListener('input', updateQuorumPreview);
+    })();
+
     // Reset Form
     function resetForm() {
         document.getElementById('electionForm').reset();
         document.getElementById('electionId').value = '';
         document.getElementById('organization_id').value = '';
         document.getElementById('type_of_election').value = '';
+        const vc = document.getElementById('voter_capacity');
+        if (vc) vc.value = '';
+        const cfm = document.getElementById('course_filter_mode');
+        if (cfm) cfm.value = 'all';
+        toggleCourseSelect();
+        const allowedSel = document.getElementById('allowed_courses');
+        if (allowedSel) {
+            for (let i = 0; i < allowedSel.options.length; i++) {
+                allowedSel.options[i].selected = false;
+            }
+        }
+        updateQuorumPreview();
         clearErrors();
     }
 
     // Clear Errors
     function clearErrors() {
-        ['election_name', 'organization_id', 'type_of_election', 'description', 'venue', 'election_date', 'timestarted', 'time_ended', 'status'].forEach(field => {
+        ['election_name', 'organization_id', 'type_of_election', 'description', 'venue', 'election_date', 'timestarted', 'time_ended', 'status', 'voter_capacity', 'course_filter_mode', 'allowed_courses'].forEach(field => {
             const errorElement = document.getElementById(`${field}-error`);
             if (errorElement) {
                 errorElement.textContent = '';

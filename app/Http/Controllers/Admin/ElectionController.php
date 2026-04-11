@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Election;
+use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ElectionController extends Controller
 {
@@ -96,7 +98,18 @@ class ElectionController extends Controller
 
         $organizations = \App\Models\Organization::where('is_active', true)->orderBy('name', 'asc')->get();
 
-        return view('admin.elections.index', compact('elections', 'stats', 'organizations'));
+        $availableCourses = Student::query()
+            ->when(auth()->user()?->school_id, function ($q) {
+                $q->where('school_id', auth()->user()->school_id);
+            })
+            ->whereNotNull('course')
+            ->where('course', '!=', '')
+            ->distinct()
+            ->orderBy('course')
+            ->pluck('course')
+            ->values();
+
+        return view('admin.elections.index', compact('elections', 'stats', 'organizations', 'availableCourses'));
     }
 
     /**
@@ -131,7 +144,13 @@ class ElectionController extends Controller
                 'timestarted' => 'nullable|date_format:H:i',
                 'time_ended' => 'nullable|date_format:H:i',
                 'status' => 'nullable|in:upcoming,ongoing,completed,cancelled',
+                'voter_capacity' => 'nullable|integer|min:1',
+                'course_filter_mode' => 'nullable|in:all,specific',
+                'allowed_courses' => 'nullable|array',
+                'allowed_courses.*' => 'nullable|string|max:255',
             ]);
+
+            $validated = $this->prepareElectionQuorumAndCourseFields($request, $validated);
 
             // Set type_of_election from organization name if not provided
             if (empty($validated['type_of_election']) && ! empty($validated['organization_id'])) {
@@ -299,7 +318,13 @@ class ElectionController extends Controller
                 'timestarted' => 'nullable|date_format:H:i',
                 'time_ended' => 'nullable|date_format:H:i',
                 'status' => 'nullable|in:upcoming,ongoing,completed,cancelled',
+                'voter_capacity' => 'nullable|integer|min:1',
+                'course_filter_mode' => 'nullable|in:all,specific',
+                'allowed_courses' => 'nullable|array',
+                'allowed_courses.*' => 'nullable|string|max:255',
             ]);
+
+            $validated = $this->prepareElectionQuorumAndCourseFields($request, $validated);
 
             // Allow editing of date/time freely when updating
             // No restriction on past dates when editing - admin can update to any date/time
@@ -863,5 +888,35 @@ class ElectionController extends Controller
                 'message' => 'Failed to fetch elections data',
             ], 500);
         }
+    }
+
+    /**
+     * Normalize voter capacity and course restriction fields after validation.
+     */
+    private function prepareElectionQuorumAndCourseFields(Request $request, array $validated): array
+    {
+        $mode = $validated['course_filter_mode'] ?? 'all';
+        if ($mode !== 'specific') {
+            $validated['course_filter_mode'] = 'all';
+            $validated['allowed_courses'] = null;
+        } else {
+            $courses = $request->input('allowed_courses', []);
+            if (! is_array($courses)) {
+                $courses = [];
+            }
+            $courses = array_values(array_unique(array_filter(array_map('trim', $courses), fn ($c) => $c !== '')));
+            if (count($courses) === 0) {
+                throw ValidationException::withMessages([
+                    'allowed_courses' => ['Select at least one course, or set "Who can vote" to All courses.'],
+                ]);
+            }
+            $validated['allowed_courses'] = $courses;
+        }
+
+        if (array_key_exists('voter_capacity', $validated) && ($validated['voter_capacity'] === '' || $validated['voter_capacity'] === null)) {
+            $validated['voter_capacity'] = null;
+        }
+
+        return $validated;
     }
 }

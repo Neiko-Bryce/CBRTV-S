@@ -127,10 +127,11 @@ export default function LiveResults() {
         const justEndedIds = completedElections.filter(e => prevOngoingIdsRef.current.has(e.id));
         prevOngoingIdsRef.current = currentOngoingIds;
 
-        if (justEndedIds.length === 0) return;
+        const celebrateIds = justEndedIds.filter(e => !e.quorum_void);
+        if (celebrateIds.length === 0) return;
         if (!isLiveResultsInViewRef.current) return;
 
-        // Fire confetti!
+        // Fire confetti (only when quorum was met — not void elections)
         const colors = ['#facc15', '#22c55e', '#166534', '#ffffff'];
         setTimeout(() => { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors }); }, 100);
         setTimeout(() => { confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors }); }, 200);
@@ -357,10 +358,16 @@ export default function LiveResults() {
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/10">
                                         <div>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-400/30 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                                    <span className="text-sm">🏆</span>
-                                                    RESULTS REVEALED
-                                                </span>
+                                                {election.quorum_void ? (
+                                                    <span className="inline-flex items-center gap-1.5 bg-red-500/20 border border-red-400/40 text-red-200 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                                        ELECTION VOID
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 bg-gov-gold-500/20 border border-gov-gold-400/30 text-gov-gold-400 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                                        <span className="text-sm">🏆</span>
+                                                        RESULTS REVEALED
+                                                    </span>
+                                                )}
                                             </div>
                                             <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
                                                 {election.election_name}
@@ -371,6 +378,13 @@ export default function LiveResults() {
                                             <p className="text-white/60 text-xs mt-1">
                                                 Election ended: {election.ended_at}
                                             </p>
+                                            {election.quorum_void && election.quorum?.applicable && (
+                                                <p className="text-amber-200/90 text-xs mt-2 max-w-xl">
+                                                    Turnout did not reach the required quorum (50% + 1 of capacity).
+                                                    Needed at least <span className="font-semibold">{election.quorum?.required_votes ?? '—'}</span> distinct voters;
+                                                    <span className="font-semibold"> {election.total_voters}</span> voted. Winners are not declared.
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -380,6 +394,12 @@ export default function LiveResults() {
                                             <MdPerson className="w-4 h-4 text-gov-gold-400" />
                                             <span className="text-white/90 text-sm">
                                                 <span className="font-semibold text-white">{election.total_voters}</span> total voters
+                                                {election.quorum?.applicable && election.quorum?.required_votes != null && (
+                                                    <span className="text-white/60">
+                                                        {' '}
+                                                        (max {election.quorum.voter_capacity ?? '—'} voters · quorum {election.quorum.required_votes}+)
+                                                    </span>
+                                                )}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10">
@@ -398,6 +418,7 @@ export default function LiveResults() {
                                                     key={position.position_id}
                                                     position={position}
                                                     isLive={false}
+                                                    quorumVoid={election.quorum_void === true}
                                                 />
                                             ))
                                         ) : (
@@ -426,7 +447,7 @@ export default function LiveResults() {
 }
 
 // Position block: flat list, no nested cards. Section title + rows only.
-function PositionResults({ position, isLive }) {
+function PositionResults({ position, isLive, quorumVoid = false }) {
     const totalVotes = position.total_votes || 0;
     return (
         <div className="space-y-0">
@@ -440,7 +461,7 @@ function PositionResults({ position, isLive }) {
                 {position.candidates.map((candidate, candIndex) => {
                     const percentage = totalVotes > 0 ? ((candidate.votes_count / totalVotes) * 100).toFixed(1) : 0;
                     const numberOfSlots = position.number_of_slots || 1;
-                    const isWinner = candIndex < numberOfSlots && totalVotes > 0;
+                    const isWinner = !quorumVoid && candIndex < numberOfSlots && totalVotes > 0;
                     const showWinnerStyle = !isLive && isWinner;
                     return (
                         <CandidateRow

@@ -139,7 +139,8 @@ class LiveResultsViewController extends Controller
             return ($a['position_order'] ?? 0) <=> ($b['position_order'] ?? 0);
         });
 
-        $totalVoters = Vote::where('election_id', $election->id)->distinct('voter_id')->count();
+        $totalVoters = $election->getDistinctVoterCount();
+        $quorumVoid = strtolower((string) ($election->status ?? '')) === 'completed' && $election->isResultsVoidDueToQuorum();
 
         return response()->json([
             'success' => true,
@@ -150,6 +151,14 @@ class LiveResultsViewController extends Controller
                 'status' => $election->status,
                 'positions' => $positionsData,
                 'total_voters' => $totalVoters,
+                'quorum_void' => $quorumVoid,
+                'quorum' => [
+                    'applicable' => $election->isQuorumApplicable(),
+                    'voter_capacity' => $election->voter_capacity,
+                    'required_votes' => $election->getQuorumRequiredVotes(),
+                    'distinct_voters' => $totalVoters,
+                    'met' => $election->isQuorumMet(),
+                ],
             ],
         ]);
     }
