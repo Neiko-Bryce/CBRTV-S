@@ -172,10 +172,18 @@
                 font-size: 0.8125rem;
             }
 
+            .actions-cell {
+                white-space: nowrap;
+                min-width: 12rem;
+            }
             .actions-cell .flex {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
                 justify-content: center;
-                gap: 0.25rem;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .actions-cell .flex > button {
+                flex-shrink: 0;
             }
         }
     </style>
@@ -339,8 +347,8 @@
                                 Password Regenerated
                             </th>
                             <th scope="col"
-                                class="px-6 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
-                                style="border-color: var(--border-color);">
+                                class="actions-cell px-6 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
+                                style="border-color: var(--border-color); min-width: 12rem;">
                                 Actions
                             </th>
                         </tr>
@@ -379,11 +387,11 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 align-middle actions-cell">
-                                    <div class="flex items-center justify-center space-x-2">
+                                <td class="px-6 py-4 align-middle text-center actions-cell">
+                                    <div class="flex flex-nowrap items-center justify-center gap-2">
                                         <button type="button"
                                             onclick="openRegenerateModal({{ $account->id }}, '{{ $account->email }}', '{{ $account->name }}', {{ $account->password_regenerated_count ?? 0 }})"
-                                            class="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-sm"
+                                            class="flex shrink-0 items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-sm"
                                             style="background-color: rgba(0, 136, 68, 0.08); color: var(--cpsu-green-light); border: 1px solid rgba(0, 136, 68, 0.2);"
                                             onmouseover="this.style.backgroundColor='rgba(0, 136, 68, 0.12)'; this.style.borderColor='rgba(0, 136, 68, 0.3)';"
                                             onmouseout="this.style.backgroundColor='rgba(0, 136, 68, 0.08)'; this.style.borderColor='rgba(0, 136, 68, 0.2)';"
@@ -398,7 +406,7 @@
                                         </button>
                                         <button type="button"
                                             onclick="openDeleteModal({{ $account->id }}, '{{ $account->email }}', '{{ $account->name }}')"
-                                            class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            class="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                             style="color: #dc2626;" title="Delete Account">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
