@@ -570,6 +570,26 @@
             let currentCandidateId = null;
             let candidateMode = 'single';
 
+            /** Build same URL as route('admin.candidates.photo', ['path' => ...]) for JS preview */
+            function adminCandidatePhotoUrl(path) {
+                if (!path) return '';
+                const base = @json(rtrim(url('/admin/candidates/photo'), '/'));
+                return base + '/' + String(path).split('/').map(encodeURIComponent).join('/');
+            }
+
+            function showExistingPhotoPreview(photoPath) {
+                const previewContainer = document.getElementById('photoPreviewContainer');
+                const preview = document.getElementById('photoPreview');
+                if (!previewContainer || !preview) return;
+                if (!photoPath) {
+                    previewContainer.classList.add('hidden');
+                    preview.removeAttribute('src');
+                    return;
+                }
+                preview.src = adminCandidatePhotoUrl(photoPath);
+                previewContainer.classList.remove('hidden');
+            }
+
             // Compress image for upload (helps mobile and large files). Returns Promise<Blob>.
             function compressImageFile(file, maxWidth = 1200, maxSizeKB = 2048) {
                 if (!file || !file.type.startsWith('image/') || file.size <= maxSizeKB * 1024) return Promise.resolve(file);
@@ -605,7 +625,7 @@
                 }
             }
 
-            function loadOrganizationData(organizationId, includeElectionId = null) {
+            function loadOrganizationData(organizationId, includeElectionId = null, editDefaults = null) {
                 if (!organizationId) {
                     const positionSection = document.getElementById('positionSection');
                     const electionSelect = document.getElementById('election_id');
@@ -687,6 +707,12 @@
                         ${data.positions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('')}
                     </select>
                 `;
+                            if (editDefaults && editDefaults.position_id) {
+                                const posEl = document.getElementById('position_id');
+                                if (posEl) {
+                                    posEl.value = String(editDefaults.position_id);
+                                }
+                            }
                         }
                     })
                     .catch(err => {
@@ -766,10 +792,20 @@
                             electionSelect.onchange = function() {
                                 loadPartylists(this.value);
                             };
+
+                            // After options exist: set election + partylist when editing (async loads race the old sync .value = hack)
+                            if (includeElectionId && data.elections.length > 0) {
+                                electionSelect.value = String(includeElectionId);
+                                loadPartylists(
+                                    includeElectionId,
+                                    editDefaults ? editDefaults.partylist_id : undefined,
+                                    editDefaults ? editDefaults.partylist : null
+                                );
+                            }
                         }
 
-                        // Reset partylist when organization changes (elections are reloaded)
-                        if (partylistSelect) {
+                        // Reset partylist when organization changes (elections are reloaded), unless edit flow just filled it
+                        if (partylistSelect && !(includeElectionId && data.elections && data.elections.length > 0)) {
                             partylistSelect.innerHTML = '<option value="">Independent (No Partylist)</option>';
                         }
                     })
@@ -778,7 +814,25 @@
                     });
             }
 
-            function loadPartylists(electionId) {
+            function applyPartylistSelectionToSelect(partylistSelect, selectPartylistId, fallbackPartylist) {
+                if (selectPartylistId === null || selectPartylistId === undefined || selectPartylistId === '') {
+                    partylistSelect.value = '';
+                    return;
+                }
+                const sid = String(selectPartylistId);
+                const found = Array.from(partylistSelect.options).some(o => o.value === sid);
+                if (!found && fallbackPartylist && String(fallbackPartylist.id) === sid) {
+                    const option = document.createElement('option');
+                    option.value = String(fallbackPartylist.id);
+                    const inactive = fallbackPartylist.is_active === false;
+                    option.textContent = fallbackPartylist.name + (inactive ? ' (inactive)' : '');
+                    partylistSelect.appendChild(option);
+                }
+                partylistSelect.value = sid;
+            }
+
+            function loadPartylists(electionId, selectPartylistId, fallbackPartylist) {
+                const applyPartylistSelection = arguments.length >= 2;
                 const partylistSelect = document.getElementById('partylist_id');
 
                 if (!partylistSelect) {
@@ -791,13 +845,19 @@
 
                 if (!electionId || electionId === '' || electionId === '0') {
                     console.log('No election selected, partylist reset to Independent only');
+                    if (applyPartylistSelection) {
+                        applyPartylistSelectionToSelect(partylistSelect, selectPartylistId, fallbackPartylist);
+                    }
                     return;
                 }
 
                 // Ensure electionId is a number
-                electionId = parseInt(electionId);
+                electionId = parseInt(electionId, 10);
                 if (isNaN(electionId)) {
                     console.error('Invalid election ID:', electionId);
+                    if (applyPartylistSelection) {
+                        applyPartylistSelectionToSelect(partylistSelect, selectPartylistId, fallbackPartylist);
+                    }
                     return;
                 }
 
@@ -849,10 +909,16 @@
                             );
                             // Keep "Independent" option - no need to show error, it's optional
                         }
+
+                        if (applyPartylistSelection) {
+                            applyPartylistSelectionToSelect(partylistSelect, selectPartylistId, fallbackPartylist);
+                        }
                     })
                     .catch(err => {
                         console.error('❌ Error loading partylists:', err);
-                        // Keep "Independent" option on error
+                        if (applyPartylistSelection) {
+                            applyPartylistSelectionToSelect(partylistSelect, selectPartylistId, fallbackPartylist);
+                        }
                     });
             }
 
@@ -966,23 +1032,24 @@
                         document.getElementById('singleCandidateFields').style.display = 'block';
                         document.getElementById('partylistDropdownSection').style.display = 'block';
 
-                        // Load organization and set values
-                        if (data.election && data.election.organization_id) {
-                            document.getElementById('organization_id').value = data.election.organization_id || '';
-                            // When editing, include the current election ID so it shows even if completed
-                            loadOrganizationData(data.election.organization_id, data.election_id);
+                        clearPhotoPreview();
+                        if (data.photo) {
+                            showExistingPhotoPreview(data.photo);
                         }
 
-                        document.getElementById('election_id').value = data.election_id || '';
-                        if (data.election_id) {
-                            loadPartylists(data.election_id);
-                            setTimeout(() => {
-                                document.getElementById('position_id').value = data.position_id || '';
-                                document.getElementById('partylist_id').value = data.partylist_id || '';
-                            }, 1000);
-                        }
                         document.getElementById('candidate_name').value = data.candidate_name || '';
                         document.getElementById('platform').value = data.platform || '';
+
+                        // Load organization: election + partylist + position are set after async dropdowns are built
+                        if (data.election && data.election.organization_id) {
+                            document.getElementById('organization_id').value = data.election.organization_id || '';
+                            loadOrganizationData(data.election.organization_id, data.election_id, {
+                                position_id: data.position_id,
+                                partylist_id: data.partylist_id,
+                                partylist: data.partylist || null,
+                            });
+                        }
+
                         document.getElementById('candidateModal').classList.add('active');
                     })
                     .catch(err => {

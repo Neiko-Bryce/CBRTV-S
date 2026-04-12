@@ -120,6 +120,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('student-management/{userId}/delete', [\App\Http\Controllers\Admin\StudentAccountController::class, 'deleteAccount'])->name('student-management.delete');
 
     // Organizations Management
+    Route::get('organizations/{organization}/positions', [\App\Http\Controllers\Admin\OrganizationController::class, 'positions'])->name('organizations.positions');
     Route::resource('organizations', \App\Http\Controllers\Admin\OrganizationController::class);
 
     // Positions Management

@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\User;
 use App\Models\Vote;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -85,54 +86,8 @@ class AnalyticsController extends Controller
             ];
         });
 
-        // NEW: Votes by Year Level & Section (All Classes include 0 votes)
-        $allClasses = Student::query()
-            ->select('yearlevel', 'section', DB::raw('COUNT(*) as student_count'))
-            ->groupBy('yearlevel', 'section')
-            ->orderBy('yearlevel')
-            ->orderBy('section')
-            ->get();
-
-        $voterCounts = Vote::query()
-            ->join('users', 'votes.voter_id', '=', 'users.id')
-            ->join('students', 'users.email', '=', 'students.student_id_number')
-            ->select(
-                'students.yearlevel',
-                'students.section',
-                DB::raw('COUNT(*) as total_votes'),
-                DB::raw('COUNT(DISTINCT votes.voter_id) as unique_voters')
-            )
-            ->groupBy('students.yearlevel', 'students.section')
-            ->get()
-            ->groupBy(function ($item) {
-                return $item->yearlevel.'-'.$item->section;
-            });
-
-        $votesByYearLevel = $allClasses->map(function ($item) use ($voterCounts) {
-            $year = $item->yearlevel ?? 'Unknown';
-            $section = $item->section ?? 'N/A';
-            $totalInClass = $item->student_count ?? 0;
-            $key = $year.'-'.$section;
-
-            $yearLabel = is_numeric($year) ? match ((int) $year) {
-                1 => '1st Year',
-                2 => '2nd Year',
-                3 => '3rd Year',
-                4 => '4th Year',
-                default => $year.'th Year'
-            } : $year;
-
-            $stats = $voterCounts->has($key) ? $voterCounts->get($key)->first() : null;
-
-            return [
-                'yearlevel' => $yearLabel.' - '.$section,
-                'count' => $stats ? $stats->total_votes : 0,
-                'voter_count' => $stats ? $stats->unique_voters : 0,
-                'student_count' => $totalInClass,
-            ];
-        })->values();
-
-        $maxVotesByYear = $votesByYearLevel->max('count') ?: 1;
+        // Single breakdown: course + year + section (one chart — avoids duplicating the same ballot totals).
+        $votesByCourseAndSection = $this->buildVotesByCourseYearSectionBreakdown();
 
         // NEW: Peak Voting Hours (24-hour breakdown)
         $isPostgres = DB::connection()->getDriverName() === 'pgsql';
@@ -197,11 +152,130 @@ class AnalyticsController extends Controller
             'last7Days',
             'maxVotesInPeriod',
             'electionsWithStats',
-            'votesByYearLevel',
-            'maxVotesByYear',
+            'votesByCourseAndSection',
             'peakVotingHours',
             'maxVotesByHour',
             'electionComparison'
         ));
+    }
+
+    /**
+     * Stable key for year level + section (avoids int/string mismatches in joins).
+     */
+    private function normalizeYearSectionKey(mixed $yearlevel, mixed $section): string
+    {
+        $y = $yearlevel;
+        if ($y === null || $y === '') {
+            $y = 'Unknown';
+        } elseif (is_numeric($y)) {
+            $y = (string) (int) $y;
+        } else {
+            $y = trim((string) $y);
+            if ($y === '') {
+                $y = 'Unknown';
+            }
+        }
+
+        $s = $section === null || trim((string) $section) === '' ? 'N/A' : trim((string) $section);
+
+        return $y.'|'.$s;
+    }
+
+    private function formatYearLevelLabel(string $yearToken, string $section): string
+    {
+        if ($yearToken === 'Unknown') {
+            return 'Unknown year — '.$section;
+        }
+        if (is_numeric($yearToken)) {
+            $y = (int) $yearToken;
+            $yearLabel = match ($y) {
+                1 => '1st Year',
+                2 => '2nd Year',
+                3 => '3rd Year',
+                4 => '4th Year',
+                default => $yearToken.'th Year',
+            };
+
+            return $yearLabel.' — '.$section;
+        }
+
+        return $yearToken.' — '.$section;
+    }
+
+    /**
+     * Normalize course for stable grouping (empty → "Unknown").
+     */
+    private function normalizeCourseToken(mixed $course): string
+    {
+        $c = trim((string) ($course ?? ''));
+
+        return $c === '' ? 'Unknown' : $c;
+    }
+
+    private function formatCourseYearSectionLabel(string $courseToken, string $yearToken, string $section): string
+    {
+        $coursePart = $courseToken === 'Unknown' ? 'Course unknown' : $courseToken;
+
+        return $coursePart.' · '.$this->formatYearLevelLabel($yearToken, $section);
+    }
+
+    /**
+     * Course + year + section in one breakdown (deduped vote rows, same as prior analytics).
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function buildVotesByCourseYearSectionBreakdown(): Collection
+    {
+        $rows = DB::table('votes as v')
+            ->join('users as u', 'v.voter_id', '=', 'u.id')
+            ->leftJoin('students as s', 'u.email', '=', 's.student_id_number')
+            ->select('v.id as vote_id', 'v.voter_id', 's.course', 's.yearlevel', 's.section', 's.id as student_row_id')
+            ->orderBy('v.id')
+            ->orderByDesc('s.id')
+            ->get();
+
+        $oneRowPerVote = $rows->groupBy('vote_id')->map(fn (Collection $g) => $g->first());
+
+        $statsByKey = [];
+        foreach ($oneRowPerVote as $row) {
+            $composite = $this->normalizeCourseToken($row->course).'###'.$this->normalizeYearSectionKey($row->yearlevel, $row->section);
+            if (! isset($statsByKey[$composite])) {
+                $statsByKey[$composite] = ['total_votes' => 0, 'voters' => []];
+            }
+            $statsByKey[$composite]['total_votes']++;
+            $statsByKey[$composite]['voters'][$row->voter_id] = true;
+        }
+
+        $studentCountByKey = [];
+        foreach (Student::query()
+            ->select('course', 'yearlevel', 'section', DB::raw('COUNT(*) as student_count'))
+            ->groupBy('course', 'yearlevel', 'section')
+            ->get() as $class) {
+            $k = $this->normalizeCourseToken($class->course).'###'.$this->normalizeYearSectionKey($class->yearlevel, $class->section);
+            $studentCountByKey[$k] = ($studentCountByKey[$k] ?? 0) + (int) $class->student_count;
+        }
+
+        $allKeys = collect(array_keys($statsByKey))->merge(array_keys($studentCountByKey))->unique();
+
+        $out = $allKeys->map(function (string $composite) use ($statsByKey, $studentCountByKey) {
+            $parts = explode('###', $composite, 2);
+            $courseToken = $parts[0] ?? 'Unknown';
+            $ys = $parts[1] ?? 'Unknown|N/A';
+            [$yearToken, $section] = array_pad(explode('|', $ys, 2), 2, 'N/A');
+            $stats = $statsByKey[$composite] ?? null;
+            $totalVotes = $stats['total_votes'] ?? 0;
+            $uniqueVoters = $stats ? count($stats['voters']) : 0;
+            $studentCount = $studentCountByKey[$composite] ?? 0;
+
+            return [
+                'key' => $composite,
+                'label' => $this->formatCourseYearSectionLabel($courseToken, $yearToken, $section),
+                'count' => $totalVotes,
+                'voter_count' => $uniqueVoters,
+                'student_count' => $studentCount,
+            ];
+        });
+
+        return $out->filter(fn (array $r) => $r['count'] > 0)->sortBy('key')->values();
     }
 }

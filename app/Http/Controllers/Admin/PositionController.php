@@ -52,10 +52,10 @@ class PositionController extends Controller
             'description' => 'nullable|string',
             'number_of_slots' => 'required|integer|min:1',
             'order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = $request->boolean('is_active');
         $validated['school_id'] = auth()->user()->school_id;
 
         try {
@@ -115,10 +115,10 @@ class PositionController extends Controller
             'description' => 'nullable|string',
             'number_of_slots' => 'required|integer|min:1',
             'order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = $request->boolean('is_active');
         $validated['school_id'] = auth()->user()->school_id;
 
         try {

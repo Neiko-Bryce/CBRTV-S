@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -51,8 +52,10 @@ class OrganizationController extends Controller
                 }),
             ],
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
 
         Organization::create($validated);
 
@@ -68,6 +71,45 @@ class OrganizationController extends Controller
         $organization = Organization::findOrFail($id);
 
         return response()->json($organization);
+    }
+
+    /**
+     * List positions for an organization (read-only JSON for admin modal).
+     */
+    public function positions(Organization $organization): JsonResponse
+    {
+        $this->authorizeOrganizationAccess($organization);
+
+        $positions = $organization->allPositions()
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'description', 'number_of_slots', 'order', 'is_active']);
+
+        return response()->json([
+            'success' => true,
+            'organization' => [
+                'id' => $organization->id,
+                'name' => $organization->name,
+            ],
+            'positions' => $positions,
+        ]);
+    }
+
+    /**
+     * Ensure the current admin may manage this organization (same campus unless super admin).
+     */
+    private function authorizeOrganizationAccess(Organization $organization): void
+    {
+        $user = auth()->user();
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->is_super_admin) {
+            return;
+        }
+        if ($organization->school_id && (int) $organization->school_id !== (int) $user->school_id) {
+            abort(403, 'You are not authorized to view this organization.');
+        }
     }
 
     /**
@@ -88,8 +130,10 @@ class OrganizationController extends Controller
                 })->ignore($id),
             ],
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
 
         $organization->update($validated);
 

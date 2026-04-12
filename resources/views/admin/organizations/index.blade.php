@@ -33,6 +33,9 @@
         border: 1px solid var(--border-color);
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
+    #viewPositionsModal .modal-content {
+        max-width: min(720px, 96vw);
+    }
     .modal-header {
         padding: 1.5rem;
         border-bottom: 1px solid var(--border-color);
@@ -75,6 +78,38 @@
         .table-wrap { -webkit-overflow-scrolling: touch; }
         .data-table th, .data-table td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
         .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+    }
+    /* Active toggle (organization modal) — same behavior as partylist */
+    .org-active-toggle {
+        position: relative;
+        width: 2.75rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        background: var(--border-color);
+        transition: background 0.2s ease;
+        flex-shrink: 0;
+    }
+    .org-active-toggle::after {
+        content: '';
+        position: absolute;
+        top: 0.125rem;
+        left: 0.125rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 9999px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        transition: transform 0.2s ease;
+    }
+    .org-active-input:checked ~ .org-active-toggle {
+        background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+    }
+    .org-active-input:checked ~ .org-active-toggle::after {
+        transform: translateX(1.25rem);
+    }
+    .org-active-input:focus-visible ~ .org-active-toggle {
+        outline: 2px solid var(--cpsu-green);
+        outline-offset: 2px;
     }
 </style>
 @endpush
@@ -132,6 +167,12 @@
                         </td>
                         <td class="px-4 py-4 text-center actions-cell">
                             <div class="flex items-center justify-center space-x-2">
+                                <button type="button" onclick="viewOrganizationPositions({{ $org->id }}, '{{ addslashes($org->name) }}')" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--text-secondary);" title="View positions">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
                                 <button type="button" onclick="editOrganization({{ $org->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -193,11 +234,16 @@
                     <label class="block text-sm font-medium text-primary mb-2">Description</label>
                     <textarea name="description" id="description" rows="3" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"></textarea>
                 </div>
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" checked class="rounded border-gray-300 text-cpsu-green focus:ring-cpsu-green">
-                        <span class="ml-2 text-sm text-primary">Active</span>
+                <div class="rounded-lg p-4 border" style="border-color: var(--border-color); background: var(--bg-tertiary);">
+                    <label class="relative flex items-center gap-3 cursor-pointer select-none">
+                        <input type="checkbox" name="is_active" id="is_active" value="1" checked class="sr-only org-active-input" aria-describedby="org_is_active_help">
+                        <span class="org-active-toggle shrink-0" aria-hidden="true"></span>
+                        <span class="text-sm font-medium text-primary">Active organization</span>
                     </label>
+                    <p id="org_is_active_help" class="text-xs text-secondary mt-2 leading-relaxed pl-0 sm:pl-[3.25rem]">
+                        When <strong>active</strong>, this organization appears in election and candidate setup.
+                        Turn <strong>off</strong> to hide it without deleting historical data.
+                    </p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -205,6 +251,40 @@
                 <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium text-white btn-cpsu-primary">Save</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- View positions (read-only) -->
+<div id="viewPositionsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2 class="text-xl font-semibold text-primary">Positions</h2>
+                <p class="text-sm text-secondary mt-1" id="viewPositionsOrgName"></p>
+            </div>
+            <span class="close" onclick="closeViewPositionsModal()">&times;</span>
+        </div>
+        <div class="modal-body pt-0">
+            <div id="viewPositionsLoading" class="text-sm text-secondary py-6 text-center hidden">Loading…</div>
+            <div id="viewPositionsError" class="text-sm text-red-600 py-4 hidden"></div>
+            <div id="viewPositionsEmpty" class="text-sm text-secondary py-8 text-center hidden rounded-lg border" style="border-color: var(--border-color);">No positions defined for this organization yet.</div>
+            <div class="overflow-x-auto -mx-2 px-2 hidden" id="viewPositionsTableWrap">
+                <table class="min-w-full text-sm" style="border-collapse: collapse;">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold text-secondary uppercase border-b" style="border-color: var(--border-color);">
+                            <th class="py-2 pr-4">Position</th>
+                            <th class="py-2 pr-4 w-20">Order</th>
+                            <th class="py-2 pr-4 w-24">Slots</th>
+                            <th class="py-2 w-28">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="viewPositionsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeViewPositionsModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-white btn-cpsu-primary">Close</button>
+        </div>
     </div>
 </div>
 
@@ -240,6 +320,78 @@
 <script>
 let currentOrganizationId = null;
 let currentDeleteId = null;
+
+function escapeHtml(text) {
+    if (text == null) return '';
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+function closeViewPositionsModal() {
+    document.getElementById('viewPositionsModal').classList.remove('active');
+}
+
+function viewOrganizationPositions(id, orgName) {
+    const modal = document.getElementById('viewPositionsModal');
+    const loading = document.getElementById('viewPositionsLoading');
+    const errEl = document.getElementById('viewPositionsError');
+    const emptyEl = document.getElementById('viewPositionsEmpty');
+    const tableWrap = document.getElementById('viewPositionsTableWrap');
+    const tbody = document.getElementById('viewPositionsTableBody');
+    document.getElementById('viewPositionsOrgName').textContent = orgName || '';
+    errEl.classList.add('hidden');
+    errEl.textContent = '';
+    emptyEl.classList.add('hidden');
+    tableWrap.classList.add('hidden');
+    tbody.innerHTML = '';
+    loading.classList.remove('hidden');
+    modal.classList.add('active');
+
+    fetch(`{{ url('/admin/organizations') }}/${id}/positions`, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(res => {
+            if (res.status === 403) throw new Error('Not allowed to view this organization.');
+            if (!res.ok) throw new Error('Failed to load positions.');
+            return res.json();
+        })
+        .then(data => {
+            loading.classList.add('hidden');
+            if (!data.success || !data.positions) {
+                errEl.textContent = 'Could not load positions.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (data.organization && data.organization.name) {
+                document.getElementById('viewPositionsOrgName').textContent = data.organization.name;
+            }
+            const rows = data.positions;
+            if (!rows.length) {
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+            tableWrap.classList.remove('hidden');
+            tbody.innerHTML = rows.map(p => {
+                const active = p.is_active ? 'Active' : 'Inactive';
+                const badgeStyle = p.is_active
+                    ? 'background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%); color: #fff;'
+                    : 'background: rgba(0,0,0,0.1); color: var(--text-secondary);';
+                const desc = p.description ? '<div class="text-xs text-secondary mt-0.5">' + escapeHtml(p.description.length > 80 ? p.description.slice(0, 80) + '…' : p.description) + '</div>' : '';
+                return '<tr class="border-b" style="border-color: var(--border-color);">' +
+                    '<td class="py-3 pr-4 align-top"><div class="font-medium text-primary">' + escapeHtml(p.name) + '</div>' + desc + '</td>' +
+                    '<td class="py-3 pr-4 align-top text-primary">' + escapeHtml(String(p.order ?? 0)) + '</td>' +
+                    '<td class="py-3 pr-4 align-top text-primary">' + escapeHtml(String(p.number_of_slots ?? 1)) + '</td>' +
+                    '<td class="py-3 align-top"><span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium" style="' + badgeStyle + '">' + active + '</span></td>' +
+                    '</tr>';
+            }).join('');
+        })
+        .catch(e => {
+            loading.classList.add('hidden');
+            errEl.textContent = e.message || 'Failed to load positions.';
+            errEl.classList.remove('hidden');
+        });
+}
 
 function openCreateModal() {
     currentOrganizationId = null;
@@ -372,6 +524,7 @@ document.getElementById('organizationForm').addEventListener('submit', function(
 window.onclick = function(event) {
     if (event.target.id === 'organizationModal') closeModal();
     if (event.target.id === 'deleteModal') closeDeleteModal();
+    if (event.target.id === 'viewPositionsModal') closeViewPositionsModal();
 };
 </script>
 @endpush

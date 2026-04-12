@@ -103,7 +103,46 @@
         .table-wrap th, .table-wrap td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
         .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
     }
+    /* Select2 in election modal (matches theme vars) */
+    #electionModal .select2-container { width: 100% !important; }
+    #electionModal .select2-container--default .select2-selection--multiple {
+        min-height: 42px;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--card-bg);
+        padding: 0.125rem 0.25rem;
+    }
+    #electionModal .select2-container--default.select2-container--focus .select2-selection--multiple,
+    #electionModal .select2-container--default.select2-container--open .select2-selection--multiple {
+        border-color: var(--accent-primary);
+    }
+    #electionModal .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background: rgba(22, 101, 52, 0.12);
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        color: var(--text-primary);
+    }
+    /* Select2 dropdown above modal backdrop */
+    .select2-dropdown-election-modal {
+        z-index: 1100 !important;
+    }
+    .dark #electionModal .select2-container--default .select2-selection--multiple {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    .dark #electionModal .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background: rgba(22, 163, 74, 0.2);
+        color: var(--text-primary);
+    }
+    .dark .select2-dropdown-election-modal {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    .dark .select2-dropdown-election-modal .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--accent-primary) !important;
+    }
 </style>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endpush
 
 @section('content')
@@ -667,11 +706,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="voter_capacity" class="block text-sm font-medium text-primary mb-2">Voter capacity (max voters + quorum)</label>
+                            <label for="voter_capacity" class="block text-sm font-medium text-primary mb-2">Student capacity (max students + quorum)</label>
                             <input type="number" min="1" id="voter_capacity" name="voter_capacity" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);" placeholder="e.g. 500">
                             <div id="voter_capacity-error" class="text-red-500 text-sm mt-1"></div>
                             <p id="quorumPreview" class="text-xs text-secondary mt-1"></p>
-                            <p class="text-xs text-secondary mt-1">If set: (1) <strong>at most</strong> this many <em>different</em> students can cast a ballot—others are blocked once the limit is reached. (2) Winners are declared only if distinct voters reach <strong>50% + 1</strong> of this number. Leave blank for no limit and no quorum rule.</p>
+                            <p class="text-xs text-secondary mt-1">If set: (1) <strong>at most</strong> this many <em>different</em> students can cast a ballot—others are blocked once the limit is reached. (2) Winners are declared only if distinct students reach <strong>50% + 1</strong> of this number. Leave blank for no limit and no quorum rule.</p>
                         </div>
                         <div>
                             <label for="course_filter_mode" class="block text-sm font-medium text-primary mb-2">Who can vote (by course)</label>
@@ -684,13 +723,13 @@
                     </div>
                     <div id="allowedCoursesWrap" class="hidden">
                         <label for="allowed_courses" class="block text-sm font-medium text-primary mb-2">Allowed courses</label>
-                        <select id="allowed_courses" name="allowed_courses[]" multiple size="6" class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                        <select id="allowed_courses" name="allowed_courses[]" multiple class="w-full px-3 py-2 rounded-lg transition-all" style="background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
                             @foreach($availableCourses ?? [] as $c)
                                 <option value="{{ $c }}">{{ $c }}</option>
                             @endforeach
                         </select>
                         <div id="allowed_courses-error" class="text-red-500 text-sm mt-1"></div>
-                        <p class="text-xs text-secondary mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple. Must match the course text on student records.</p>
+                        <p class="text-xs text-secondary mt-1">Tap the field to add courses, or use the search box. You can select multiple. Course names must match student records exactly.</p>
                     </div>
                 </div>
             </div>
@@ -801,6 +840,8 @@
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     let currentElectionId = null;
     let deleteElectionId = null;
@@ -984,7 +1025,6 @@
                 if (vc) vc.value = election.voter_capacity != null ? election.voter_capacity : '';
                 const cfm = document.getElementById('course_filter_mode');
                 if (cfm) cfm.value = election.course_filter_mode === 'specific' ? 'specific' : 'all';
-                toggleCourseSelect();
                 const allowedSel = document.getElementById('allowed_courses');
                 if (allowedSel) {
                     const allowed = election.allowed_courses || [];
@@ -993,6 +1033,7 @@
                         opt.selected = Array.isArray(allowed) && allowed.indexOf(opt.value) !== -1;
                     }
                 }
+                toggleCourseSelect();
                 updateQuorumPreview();
                 
                 openModal('electionModal');
@@ -1296,11 +1337,45 @@
         }
     }
 
+    function destroyAllowedCoursesSelect2() {
+        const $sel = window.jQuery ? window.jQuery('#allowed_courses') : null;
+        if ($sel && $sel.length && $sel.hasClass('select2-hidden-accessible')) {
+            $sel.select2('destroy');
+        }
+    }
+
+    function initAllowedCoursesSelect2() {
+        if (typeof window.jQuery === 'undefined' || !window.jQuery.fn.select2) return;
+        const $ = window.jQuery;
+        const $sel = $('#allowed_courses');
+        const $modal = $('#electionModal');
+        if (!$sel.length || !$modal.length) return;
+        destroyAllowedCoursesSelect2();
+        const mode = document.getElementById('course_filter_mode');
+        if (!mode || mode.value !== 'specific') return;
+        const wrap = document.getElementById('allowedCoursesWrap');
+        if (!wrap || wrap.classList.contains('hidden')) return;
+        $sel.select2({
+            width: '100%',
+            placeholder: 'Select one or more courses',
+            allowClear: true,
+            closeOnSelect: false,
+            dropdownCssClass: 'select2-dropdown-election-modal',
+            dropdownParent: $modal
+        });
+    }
+
     function toggleCourseSelect() {
         const mode = document.getElementById('course_filter_mode');
         const wrap = document.getElementById('allowedCoursesWrap');
         if (!mode || !wrap) return;
-        wrap.classList.toggle('hidden', mode.value !== 'specific');
+        const isSpecific = mode.value === 'specific';
+        wrap.classList.toggle('hidden', !isSpecific);
+        if (isSpecific) {
+            initAllowedCoursesSelect2();
+        } else {
+            destroyAllowedCoursesSelect2();
+        }
     }
 
     function updateQuorumPreview() {
@@ -1313,7 +1388,7 @@
             return;
         }
         const req = Math.floor(cap / 2) + 1;
-        preview.textContent = 'Minimum valid turnout (50% + 1): ' + req + ' distinct voters';
+        preview.textContent = 'Minimum valid turnout (50% + 1): ' + req + ' distinct students';
     }
     (function () {
         const v = document.getElementById('voter_capacity');
@@ -1322,6 +1397,7 @@
 
     // Reset Form
     function resetForm() {
+        destroyAllowedCoursesSelect2();
         document.getElementById('electionForm').reset();
         document.getElementById('electionId').value = '';
         document.getElementById('organization_id').value = '';
@@ -1330,13 +1406,13 @@
         if (vc) vc.value = '';
         const cfm = document.getElementById('course_filter_mode');
         if (cfm) cfm.value = 'all';
-        toggleCourseSelect();
         const allowedSel = document.getElementById('allowed_courses');
         if (allowedSel) {
             for (let i = 0; i < allowedSel.options.length; i++) {
                 allowedSel.options[i].selected = false;
             }
         }
+        toggleCourseSelect();
         updateQuorumPreview();
         clearErrors();
     }

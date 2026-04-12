@@ -74,6 +74,38 @@
         .data-table th, .data-table td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
         .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
     }
+    /* Active toggle (partylist modal) */
+    .partylist-active-toggle {
+        position: relative;
+        width: 2.75rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        background: var(--border-color);
+        transition: background 0.2s ease;
+        flex-shrink: 0;
+    }
+    .partylist-active-toggle::after {
+        content: '';
+        position: absolute;
+        top: 0.125rem;
+        left: 0.125rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 9999px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        transition: transform 0.2s ease;
+    }
+    .partylist-active-input:checked ~ .partylist-active-toggle {
+        background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+    }
+    .partylist-active-input:checked ~ .partylist-active-toggle::after {
+        transform: translateX(1.25rem);
+    }
+    .partylist-active-input:focus-visible ~ .partylist-active-toggle {
+        outline: 2px solid var(--cpsu-green);
+        outline-offset: 2px;
+    }
 </style>
 @endpush
 
@@ -188,10 +220,16 @@
                     <label class="block text-sm font-medium text-primary mb-2">Election <span class="text-red-500">*</span></label>
                     <select name="election_id" id="election_id" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
                         <option value="">Select Election</option>
-                        @foreach($elections as $election)
+                        @forelse($electionsForModal as $election)
                         <option value="{{ $election->id }}">{{ $election->election_name }}</option>
-                        @endforeach
+                        @empty
+                        @endforelse
                     </select>
+                    @if($electionsForModal->isEmpty())
+                        <p class="text-xs text-amber-700 dark:text-amber-300 mt-2">No upcoming or in-progress elections. Partylists can only be linked to elections that have not finished yet.</p>
+                    @else
+                        <p class="text-xs text-secondary mt-1">Only <strong>upcoming</strong> and <strong>in progress</strong> elections are listed.</p>
+                    @endif
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-primary mb-2">Partylist Name <span class="text-red-500">*</span></label>
@@ -209,11 +247,17 @@
                     <label class="block text-sm font-medium text-primary mb-2">Description</label>
                     <textarea name="description" id="description" rows="3" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"></textarea>
                 </div>
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" checked class="rounded border-gray-300 text-cpsu-green focus:ring-cpsu-green">
-                        <span class="ml-2 text-sm text-primary">Active</span>
+                <div class="rounded-lg p-4 border" style="border-color: var(--border-color); background: var(--bg-tertiary);">
+                    {{-- One label wraps control + track + text so clicks on the switch actually toggle (sr-only input has no hit area). --}}
+                    <label class="relative flex items-center gap-3 cursor-pointer select-none">
+                        <input type="checkbox" name="is_active" id="is_active" value="1" checked class="sr-only partylist-active-input" aria-describedby="is_active_help">
+                        <span class="partylist-active-toggle shrink-0" aria-hidden="true"></span>
+                        <span class="text-sm font-medium text-primary">Active partylist</span>
                     </label>
+                    <p id="is_active_help" class="text-xs text-secondary mt-2 leading-relaxed pl-0 sm:pl-[3.25rem]">
+                        When <strong>active</strong>, this partylist is available for candidates and displays normally.
+                        Turn <strong>off</strong> to hide or disable it without deleting the record.
+                    </p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -270,7 +314,13 @@ function openCreateModal() {
     document.getElementById('modalTitle').textContent = 'Add New Partylist';
     document.getElementById('partylistForm').action = '{{ route("admin.partylists.store") }}';
     document.getElementById('formMethod').innerHTML = '';
-    document.getElementById('election_id').value = '{{ request("election") ?? "" }}';
+    const electionSel = document.getElementById('election_id');
+    electionSel.querySelectorAll('option[data-temp-ended-election="1"]').forEach(o => o.remove());
+    const preElection = '{{ request("election") ?? "" }}';
+    electionSel.value = '';
+    if (preElection && [...electionSel.options].some(o => o.value === String(preElection))) {
+        electionSel.value = preElection;
+    }
     document.getElementById('name').value = '';
     document.getElementById('code').value = '';
     document.getElementById('color').value = '#166534';
@@ -292,7 +342,16 @@ function editPartylist(id) {
             document.getElementById('modalTitle').textContent = 'Edit Partylist';
             document.getElementById('partylistForm').action = `/admin/partylists/${id}`;
             document.getElementById('formMethod').innerHTML = '@method("PUT")';
-            document.getElementById('election_id').value = data.election_id || '';
+            const electionSel = document.getElementById('election_id');
+            const eid = data.election_id != null ? String(data.election_id) : '';
+            if (eid && data.election && data.election.election_name && ![...electionSel.options].some(o => o.value === eid)) {
+                const opt = document.createElement('option');
+                opt.value = eid;
+                opt.textContent = data.election.election_name + ' (ended)';
+                opt.setAttribute('data-temp-ended-election', '1');
+                electionSel.appendChild(opt);
+            }
+            electionSel.value = eid;
             document.getElementById('name').value = data.name || '';
             document.getElementById('code').value = data.code || '';
             document.getElementById('color').value = data.color || '#166534';

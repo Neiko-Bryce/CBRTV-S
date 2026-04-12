@@ -109,36 +109,58 @@
             </div>
         </div>
 
-        <!-- NEW: Votes by Year & Section (Pie Chart) -->
+        <!-- Votes by course, year & section (single chart — same ballot total, no duplicate cards) -->
         <div class="card rounded-xl p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-primary mb-6">Votes by Year & Section</h3>
+            <h3 class="text-lg font-bold text-primary mb-1">Votes by Course, Year &amp; Section</h3>
+            <p class="text-sm text-secondary mb-6">Each slice is one group on the voter’s <strong>student record</strong>:
+                <strong>course</strong> plus <strong>year level</strong> and <strong>section</strong> (e.g. BSIT · 1st Year — A).
+                One combined chart—no double-counting across separate graphs.</p>
             @php
-                $totalUniqueVoters = $votesByYearLevel->sum('voter_count');
-                $colors = ['#166534', '#22c55e', '#facc15', '#eab308', '#84cc16', '#14b8a6'];
+                $totalUniqueVotersBreakdown = $votesByCourseAndSection->sum('voter_count');
+                $sliceCount = $votesByCourseAndSection->count();
+                // 25 fixed campus-friendly colors (Main Campus / many courses). Beyond 25 slices: HSL so hues stay distinct.
+                $brandSliceColors = [
+                    '#14532d', '#166534', '#15803d', '#22c55e', '#4d7c0f', '#65a30d', '#84cc16',
+                    '#0e7490', '#0d9488', '#0891b2', '#06b6d4', '#14b8a6',
+                    '#1e40af', '#2563eb', '#1d4ed8',
+                    '#6d28d9', '#7c3aed', '#9333ea', '#a855f7',
+                    '#be185d', '#db2777', '#e11d48', '#ea580c', '#d97706',
+                    '#facc15', '#eab308',
+                ];
                 $gradientParts = [];
                 $currentPercent = 0;
                 $legendItems = [];
 
-                foreach ($votesByYearLevel as $index => $yearData) {
-                    $percent = $totalUniqueVoters > 0 ? ($yearData['voter_count'] / $totalUniqueVoters) * 100 : 0;
-                    $color = $colors[$index % count($colors)];
-                    $gradientParts[] = "{$color} {$currentPercent}% " . ($currentPercent + $percent) . '%';
+                foreach ($votesByCourseAndSection as $index => $row) {
+                    $slicePercent =
+                        $totalUniqueVotersBreakdown > 0 ? ($row['voter_count'] / $totalUniqueVotersBreakdown) * 100 : 0;
+                    $classParticipation =
+                        ($row['student_count'] ?? 0) > 0
+                            ? round(($row['voter_count'] / $row['student_count']) * 100, 1)
+                            : null;
+                    if ($sliceCount > count($brandSliceColors)) {
+                        $hue = (int) floor(($index * 360) / max(1, $sliceCount));
+                        $color = sprintf('hsl(%d, 58%%, 42%%)', $hue % 360);
+                    } else {
+                        $color = $brandSliceColors[$index] ?? $brandSliceColors[0];
+                    }
+                    $gradientParts[] = "{$color} {$currentPercent}% " . ($currentPercent + $slicePercent) . '%';
                     $legendItems[] = [
-                        'label' => $yearData['yearlevel'],
-                        'voter_count' => $yearData['voter_count'],
-                        'total_votes' => $yearData['count'],
-                        'student_count' => $yearData['student_count'] ?? 0,
-                        'percent' => round($percent, 1),
+                        'label' => $row['label'],
+                        'voter_count' => $row['voter_count'],
+                        'total_votes' => $row['count'],
+                        'student_count' => $row['student_count'] ?? 0,
+                        'slice_percent' => round($slicePercent, 1),
+                        'class_participation' => $classParticipation,
                         'color' => $color,
                     ];
-                    $currentPercent += $percent;
+                    $currentPercent += $slicePercent;
                 }
                 $gradient = implode(', ', $gradientParts);
             @endphp
 
-            @if ($totalUniqueVoters > 0)
+            @if ($totalUniqueVotersBreakdown > 0)
                 <div class="flex flex-col md:flex-row items-center gap-8">
-                    <!-- Pie Chart -->
                     <div class="relative">
                         <div class="w-48 h-48 rounded-full shadow-lg"
                             style="background: conic-gradient({{ $gradient }});"></div>
@@ -146,25 +168,30 @@
                             <div class="w-24 h-24 rounded-full flex flex-col items-center justify-center"
                                 style="background: var(--bg-primary);">
                                 <span
-                                    class="text-2xl font-bold text-primary">{{ number_format($votesByYearLevel->sum('count')) }}</span>
-                                <span class="text-xs text-secondary text-center">Total Votes</span>
+                                    class="text-2xl font-bold text-primary">{{ number_format($votesByCourseAndSection->sum('count')) }}</span>
+                                <span class="text-xs text-secondary text-center">Total ballot lines</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Legend -->
-                    <div class="flex-1 grid grid-cols-2 gap-3">
+                    <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         @foreach ($legendItems as $item)
                             <div class="flex items-center gap-3 p-3 rounded-lg" style="background: var(--bg-tertiary);">
                                 <div class="w-4 h-4 rounded-full flex-shrink-0" style="background: {{ $item['color'] }};">
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-primary truncate">{{ $item['label'] }}</p>
-                                    <p class="text-xs text-secondary">{{ number_format($item['voter_count']) }} voters /
-                                        {{ number_format($item['student_count']) }} students ({{ $item['percent'] }}%)
+                                    <p class="text-sm font-medium text-primary break-words">{{ $item['label'] }}</p>
+                                    <p class="text-xs text-secondary">
+                                        {{ number_format($item['voter_count']) }} distinct voters ·
+                                        {{ number_format($item['student_count']) }} students in group
+                                        @if ($item['class_participation'] !== null)
+                                            · <span class="font-medium text-primary">{{ $item['class_participation'] }}%</span>
+                                            class turnout
+                                        @endif
                                     </p>
-                                    <p class="text-[10px] text-secondary opacity-60">
-                                        {{ number_format($item['total_votes']) }} total votes
+                                    <p class="text-[10px] text-secondary mt-0.5">
+                                        {{ $item['slice_percent'] }}% of chart voters ·
+                                        {{ number_format($item['total_votes']) }} ballot lines
                                     </p>
                                 </div>
                             </div>

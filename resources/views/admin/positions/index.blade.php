@@ -128,6 +128,42 @@
                 gap: 0.25rem;
             }
         }
+
+        .position-active-toggle {
+            position: relative;
+            width: 2.75rem;
+            height: 1.5rem;
+            border-radius: 9999px;
+            background: var(--border-color);
+            transition: background 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .position-active-toggle::after {
+            content: '';
+            position: absolute;
+            top: 0.125rem;
+            left: 0.125rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease;
+        }
+
+        .position-active-input:checked~.position-active-toggle {
+            background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);
+        }
+
+        .position-active-input:checked~.position-active-toggle::after {
+            transform: translateX(1.25rem);
+        }
+
+        .position-active-input:focus-visible~.position-active-toggle {
+            outline: 2px solid var(--cpsu-green);
+            outline-offset: 2px;
+        }
     </style>
 @endpush
 
@@ -232,7 +268,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-16 text-center">
+                                <td colspan="6" class="px-6 py-16 text-center">
                                     <div class="text-secondary opacity-75">
                                         <p class="text-lg font-semibold text-primary mb-1">No positions found</p>
                                         <p class="text-sm text-secondary">Get started by creating a new position</p>
@@ -287,26 +323,32 @@
                             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
                             style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);"></textarea>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-primary mb-2">Number of Slots (Winners)</label>
-                        <input type="number" name="number_of_slots" id="number_of_slots" value="1" min="1"
-                            required
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
-                            style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
-                        <p class="text-xs text-secondary mt-1">Default is 1. Set to 12 for positions like Senator.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-2">Number of Slots (Winners) <span
+                                    class="text-red-500">*</span></label>
+                            <input type="number" name="number_of_slots" id="number_of_slots" value="1" min="1"
+                                required
+                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
+                                style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-2">Order</label>
+                            <input type="number" name="order" id="order" value="0" min="0"
+                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
+                                style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-primary mb-2">Order</label>
-                        <input type="number" name="order" id="order" value="0" min="0"
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cpsu-green focus:border-transparent"
-                            style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
-                    </div>
-                    <div>
-                        <label class="flex items-center">
+                    <div class="rounded-lg p-4 border" style="border-color: var(--border-color); background: var(--bg-tertiary);">
+                        <label class="relative flex items-center gap-3 cursor-pointer select-none">
                             <input type="checkbox" name="is_active" id="is_active" value="1" checked
-                                class="rounded border-gray-300 text-cpsu-green focus:ring-cpsu-green">
-                            <span class="ml-2 text-sm text-primary">Active</span>
+                                class="sr-only position-active-input" aria-describedby="position_is_active_help">
+                            <span class="position-active-toggle shrink-0" aria-hidden="true"></span>
+                            <span class="text-sm font-medium text-primary">Active position</span>
                         </label>
+                        <p id="position_is_active_help" class="text-xs text-secondary mt-2 leading-relaxed pl-0 sm:pl-[3.25rem]">
+                            When <strong>off</strong>, this position is hidden from candidate assignment and ballots.
+                        </p>
                     </div>
                 </div>
                 <div class="modal-footer">

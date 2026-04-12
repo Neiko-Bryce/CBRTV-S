@@ -7,6 +7,7 @@ use App\Models\Election;
 use App\Models\Partylist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PartylistController extends Controller
 {
@@ -38,8 +39,14 @@ class PartylistController extends Controller
 
         $partylists = $query->orderBy('name', 'asc')->paginate(15)->withQueryString();
         $elections = Election::orderBy('election_name', 'asc')->get();
+        // New partylists: only elections not yet finished (upcoming or in progress).
+        $electionsForModal = Election::query()
+            ->whereIn('status', ['upcoming', 'ongoing'])
+            ->orderBy('election_date', 'asc')
+            ->orderBy('id', 'desc')
+            ->get();
 
-        return view('admin.partylists.index', compact('partylists', 'elections', 'electionId'));
+        return view('admin.partylists.index', compact('partylists', 'elections', 'electionsForModal', 'electionId'));
     }
 
     /**
@@ -48,20 +55,25 @@ class PartylistController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'election_id' => 'required|exists:elections,id',
+            'election_id' => [
+                'required',
+                Rule::exists('elections', 'id')->where(function ($q) {
+                    $q->whereIn('status', ['upcoming', 'ongoing']);
+                }),
+            ],
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7',
             'logo' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
         // Inherit organization_id from election
         $election = Election::findOrFail($validated['election_id']);
         $validated['organization_id'] = $election->organization_id;
 
-        $validated['is_active'] = $request->has('is_active') || $request->is_active === '1';
+        $validated['is_active'] = $request->boolean('is_active');
 
         $partylist = Partylist::create($validated);
 
@@ -95,16 +107,32 @@ class PartylistController extends Controller
         $partylist = Partylist::findOrFail($id);
 
         $validated = $request->validate([
-            'election_id' => 'required|exists:elections,id',
+            'election_id' => [
+                'required',
+                'exists:elections,id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($partylist) {
+                    $election = Election::find($value);
+                    if (! $election) {
+                        return;
+                    }
+                    if (in_array($election->status, ['upcoming', 'ongoing'], true)) {
+                        return;
+                    }
+                    if ((int) $value === (int) $partylist->election_id) {
+                        return;
+                    }
+                    $fail('Choose an election that is upcoming or in progress, or keep the current election.');
+                },
+            ],
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7',
             'logo' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') || $request->is_active === '1';
+        $validated['is_active'] = $request->boolean('is_active');
 
         $partylist->update($validated);
 
