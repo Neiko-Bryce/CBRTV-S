@@ -533,7 +533,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             <!-- Top Header -->
             <header class="header-gradient border-b transition-colors" style="border-color: var(--border-color);">
                 <div class="px-6 py-3">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-3 w-full min-w-0">
                         <div class="flex items-center space-x-4 flex-1 min-w-0">
                             <!-- Mobile Menu Button -->
                             <button @click="$store.sidebarOpen = !$store.sidebarOpen"
@@ -551,77 +551,49 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                             </div>
                         </div>
 
-                        <div class="flex items-center space-x-2">
-                            <!-- Search -->
-                            @if (request()->routeIs('admin.students.*'))
-                                <form method="GET" action="{{ route('admin.students.index') }}" id="headerSearchForm"
-                                    class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors"
+                        <!-- Global search: desktop inline -->
+                        <div id="adminGlobalSearchWrap" class="hidden md:flex flex-shrink-0 items-center px-2 w-48 md:w-64">
+                            <div class="relative w-full">
+                                <div class="flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors w-full"
                                     style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                                    <button type="submit" class="flex-shrink-0" title="Search">
-                                        <svg class="w-4 h-4 text-secondary hover:text-primary cursor-pointer"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                        </svg>
-                                    </button>
-                                    <input type="text" name="search" id="headerSearchInput"
-                                        value="{{ request('search') }}" placeholder="Search students by ID or name..."
-                                        class="bg-transparent border-none outline-none text-sm w-48 md:w-64 text-primary placeholder:text-secondary focus:w-56 md:focus:w-72 transition-all"
-                                        autocomplete="off">
-                                    @if (request('search'))
-                                        <button type="button"
-                                            onclick="window.location.href='{{ route('admin.students.index') }}'"
-                                            class="p-1 rounded hover:bg-[var(--hover-bg)] flex-shrink-0"
-                                            title="Clear search">
-                                            <svg class="w-3 h-3 text-secondary hover:text-primary" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    @endif
-                                </form>
-                            @elseif(request()->routeIs('admin.elections.*'))
-                                <form method="GET" action="{{ route('admin.elections.index') }}" id="headerSearchForm"
-                                    class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors"
-                                    style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                                    <button type="submit" class="flex-shrink-0" title="Search">
-                                        <svg class="w-4 h-4 text-secondary hover:text-primary cursor-pointer"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                        </svg>
-                                    </button>
-                                    <input type="text" name="search" id="headerSearchInput"
-                                        value="{{ request('search') }}"
-                                        placeholder="Search elections by name, type, or venue..."
-                                        class="bg-transparent border-none outline-none text-sm w-48 md:w-64 text-primary placeholder:text-secondary focus:w-56 md:focus:w-72 transition-all"
-                                        autocomplete="off">
-                                    @if (request('search'))
-                                        <button type="button"
-                                            onclick="window.location.href='{{ route('admin.elections.index') }}'"
-                                            class="p-1 rounded hover:bg-[var(--hover-bg)] flex-shrink-0"
-                                            title="Clear search">
-                                            <svg class="w-3 h-3 text-secondary hover:text-primary" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    @endif
-                                </form>
-                            @else
-                                <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors"
-                                    style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-secondary flex-shrink-0" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
-                                    <input type="text" placeholder="Search..."
-                                        class="bg-transparent border-none outline-none text-sm w-32 text-primary placeholder:text-secondary">
+                                    <input type="text" id="adminGlobalSearchInput" placeholder="search"
+                                        class="bg-transparent border-none outline-none text-sm w-full min-w-0 text-primary placeholder:text-secondary"
+                                        autocomplete="off" inputmode="search" enterkeyhint="search"
+                                        aria-autocomplete="list" aria-label="Search"
+                                        aria-controls="adminGlobalSearchPanel" aria-expanded="false">
+                                    <span id="adminGlobalSearchLoading" class="text-xs text-secondary flex-shrink-0 hidden"
+                                        aria-hidden="true">…</span>
+                                    <button type="button" id="adminGlobalSearchClear" class="p-1 rounded hover:bg-[var(--hover-bg)] flex-shrink-0 hidden"
+                                        title="Clear">
+                                        <svg class="w-3 h-3 text-secondary" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
                                 </div>
-                            @endif
+                                <div id="adminGlobalSearchPanel" role="listbox" hidden
+                                    class="admin-global-search-panel absolute left-0 top-full mt-1 z-[60] w-max min-w-full max-w-sm max-h-52 overflow-y-auto overflow-x-hidden rounded-lg shadow-xl border text-left"
+                                    style="background: var(--card-bg); border-color: var(--border-color);">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 flex-shrink-0">
+                            <!-- Mobile: open search sheet -->
+                            <button type="button" id="adminGlobalSearchOpenBtn"
+                                class="md:!hidden header-btn p-2 rounded-lg flex-shrink-0" title="Search"
+                                aria-label="Open search">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </button>
 
                             <!-- Dark Mode Toggle -->
                             <button @click="darkMode = !darkMode" class="header-btn p-2 rounded-lg" type="button"
@@ -762,6 +734,54 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                 </div>
             </header>
 
+            <!-- Mobile search: dimmed overlay on current page (not a separate full-screen white page) -->
+            <div id="adminGlobalSearchMobileSheet" class="fixed inset-0 z-[110] md:!hidden hidden" role="dialog"
+                aria-modal="true" aria-label="Search" aria-hidden="true">
+                <button type="button" id="adminGlobalSearchMobileBackdrop"
+                    class="absolute inset-0 z-0 block w-full h-full cursor-default border-0 p-0 bg-black/45 backdrop-blur-[2px]"
+                    style="-webkit-tap-highlight-color: transparent;" aria-label="Dismiss search"></button>
+                <div class="relative z-10 flex max-h-[min(90vh,560px)] w-full flex-col overflow-hidden rounded-b-2xl border-b shadow-2xl"
+                    style="background: var(--header-bg, var(--card-bg)); border-color: var(--border-color);">
+                    <div class="flex flex-shrink-0 items-center gap-2 border-b px-3 py-3"
+                        style="border-color: var(--border-color);">
+                        <button type="button" id="adminGlobalSearchMobileClose" class="header-btn flex-shrink-0 rounded-lg p-2"
+                            aria-label="Close search">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2"
+                            style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                            <svg class="h-4 w-4 flex-shrink-0 text-secondary" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" id="adminGlobalSearchInputMobile" placeholder="search"
+                                class="min-w-0 flex-1 border-none bg-transparent text-sm text-primary outline-none placeholder:text-secondary"
+                                autocomplete="off" inputmode="search" enterkeyhint="search" aria-label="Search">
+                            <span id="adminGlobalSearchLoadingMobile" class="hidden flex-shrink-0 text-xs text-secondary"
+                                aria-hidden="true">…</span>
+                            <button type="button" id="adminGlobalSearchClearMobile"
+                                class="hidden flex-shrink-0 rounded p-1 hover:bg-[var(--hover-bg)]" title="Clear">
+                                <svg class="h-3 w-3 text-secondary" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="min-h-0 max-h-[min(70vh,420px)] flex flex-col overflow-y-auto px-3 pb-3 pt-2">
+                        <div id="adminGlobalSearchPanelMobile" role="listbox" hidden
+                            class="admin-global-search-panel w-full max-h-52 overflow-y-auto overflow-x-hidden rounded-lg border text-left shadow-xl"
+                            style="background: var(--card-bg); border-color: var(--border-color);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Page Content – balanced spacing, landing-style background -->
             <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
                 style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
@@ -881,29 +901,407 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
         @endif
     </script>
 
-    @stack('scripts')
+    <script>
+        (function() {
+            const input = document.getElementById('adminGlobalSearchInput');
+            const panel = document.getElementById('adminGlobalSearchPanel');
+            const clearBtn = document.getElementById('adminGlobalSearchClear');
+            const loading = document.getElementById('adminGlobalSearchLoading');
+            const wrap = document.getElementById('adminGlobalSearchWrap');
+            const mobileInput = document.getElementById('adminGlobalSearchInputMobile');
+            const mobilePanel = document.getElementById('adminGlobalSearchPanelMobile');
+            const mobileClear = document.getElementById('adminGlobalSearchClearMobile');
+            const mobileLoading = document.getElementById('adminGlobalSearchLoadingMobile');
+            const mobileSheet = document.getElementById('adminGlobalSearchMobileSheet');
+            const mobileOpenBtn = document.getElementById('adminGlobalSearchOpenBtn');
+            const mobileCloseBtn = document.getElementById('adminGlobalSearchMobileClose');
 
-    @if (request()->routeIs('admin.students.*') || request()->routeIs('admin.elections.*'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const searchForm = document.getElementById('headerSearchForm');
-                const searchInput = document.getElementById('headerSearchInput');
+            if (!input || !panel || !wrap) return;
 
-                if (searchForm && searchInput) {
-                    // Handle Enter key
-                    searchInput.addEventListener('keypress', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            searchForm.submit();
-                        }
+            const searchUrl = @json(route('admin.global-search'));
+            const HISTORY_KEY = 'adminGlobalSearchHistoryV1';
+            const HISTORY_MAX = 5;
+            let debounce;
+
+            function esc(s) {
+                const d = document.createElement('div');
+                d.textContent = s;
+                return d.innerHTML;
+            }
+
+            function escAttr(s) {
+                return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function getQuery() {
+                return (input.value || '').trim();
+            }
+
+            function syncFromDesktop() {
+                if (mobileInput) mobileInput.value = input.value;
+            }
+
+            function syncFromMobile() {
+                input.value = mobileInput ? mobileInput.value : input.value;
+            }
+
+            function setPanelsHtml(html) {
+                panel.innerHTML = html;
+                if (mobilePanel) mobilePanel.innerHTML = html;
+            }
+
+            function setPanelsOpen(show) {
+                panel.hidden = !show;
+                input.setAttribute('aria-expanded', show ? 'true' : 'false');
+                if (mobilePanel) mobilePanel.hidden = !show;
+            }
+
+            function setLoading(on) {
+                loading.classList.toggle('hidden', !on);
+                if (mobileLoading) mobileLoading.classList.toggle('hidden', !on);
+            }
+
+            function updateClearButtons() {
+                const q = getQuery();
+                clearBtn.classList.toggle('hidden', !q);
+                if (mobileClear) mobileClear.classList.toggle('hidden', !q);
+            }
+
+            function getHistory() {
+                try {
+                    const raw = localStorage.getItem(HISTORY_KEY);
+                    const arr = raw ? JSON.parse(raw) : [];
+                    const list = Array.isArray(arr) ? arr.filter(t => typeof t === 'string' && t.trim().length) : [];
+                    const trimmed = list.slice(0, HISTORY_MAX);
+                    if (trimmed.length !== list.length) {
+                        localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+                    }
+                    return trimmed;
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function saveHistory(arr) {
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0, HISTORY_MAX)));
+            }
+
+            function addHistory(term) {
+                const t = String(term).trim();
+                if (t.length < 2) return;
+                let arr = getHistory().filter(x => x !== t);
+                arr.unshift(t);
+                saveHistory(arr);
+            }
+
+            function clearHistory() {
+                localStorage.removeItem(HISTORY_KEY);
+            }
+
+            function renderHistorySection() {
+                const arr = getHistory();
+                if (!arr.length) return '';
+                let html =
+                    '<div class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary border-b flex justify-between items-center gap-2" style="border-color: var(--border-color);">' +
+                    '<span>Recent</span>' +
+                    '<button type="button" class="text-xs font-normal admin-global-search-clear-history hover:underline flex-shrink-0" style="color: var(--cpsu-green);">Clear all</button></div>';
+                arr.forEach(term => {
+                    html +=
+                        '<button type="button" role="option" class="admin-global-search-history-item w-full text-left px-2 py-1.5 text-sm border-b hover:bg-[var(--hover-bg)] transition-colors" style="border-color: var(--border-color); color: var(--text-primary);" data-term="' +
+                        escAttr(term) + '">' + esc(term) + '</button>';
+                });
+                return html;
+            }
+
+            function hasResults(d) {
+                return (d.students?.length || 0) + (d.student_accounts?.length || 0) + (d.elections?.length || 0) > 0;
+            }
+
+            function renderApi(d) {
+                const parts = [];
+                if (d.students?.length) {
+                    parts.push(
+                        '<div class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary border-b" style="border-color: var(--border-color);">Students (directory)</div>'
+                    );
+                    d.students.forEach(row => {
+                        parts.push(
+                            '<button type="button" role="option" class="admin-global-search-item w-full text-left px-2 py-2 text-sm hover:bg-[var(--hover-bg)] border-b transition-colors" style="border-color: var(--border-color); color: var(--text-primary);" data-url="' +
+                            escAttr(row.url) + '"><span class="font-medium">' + esc(row.label) + '</span></button>'
+                        );
                     });
+                }
+                if (d.student_accounts?.length) {
+                    parts.push(
+                        '<div class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary border-b" style="border-color: var(--border-color);">Student accounts</div>'
+                    );
+                    d.student_accounts.forEach(row => {
+                        parts.push(
+                            '<button type="button" role="option" class="admin-global-search-item w-full text-left px-2 py-2 text-sm hover:bg-[var(--hover-bg)] border-b transition-colors" style="border-color: var(--border-color); color: var(--text-primary);" data-url="' +
+                            escAttr(row.url) + '"><span class="font-medium">' + esc(row.label) + '</span></button>'
+                        );
+                    });
+                }
+                if (d.elections?.length) {
+                    parts.push(
+                        '<div class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary border-b" style="border-color: var(--border-color);">Elections</div>'
+                    );
+                    d.elections.forEach(row => {
+                        parts.push(
+                            '<button type="button" role="option" class="admin-global-search-item w-full text-left px-2 py-2 text-sm hover:bg-[var(--hover-bg)] border-b last:border-b-0 transition-colors" style="border-color: var(--border-color); color: var(--text-primary);" data-url="' +
+                            escAttr(row.url) + '"><span class="font-medium">' + esc(row.label) + '</span></button>'
+                        );
+                    });
+                }
+                return parts.join('');
+            }
 
-                    // Auto-focus search input when on students/elections page (optional)
-                    // searchInput.focus();
+            function showHistoryOnly() {
+                const h = renderHistorySection();
+                setPanelsHtml(h);
+                setPanelsOpen(!!h);
+            }
+
+            async function runFetch() {
+                const q = getQuery();
+                updateClearButtons();
+                if (q.length === 0) {
+                    showHistoryOnly();
+                    return;
+                }
+                if (q.length === 1) {
+                    setPanelsHtml(
+                        '<div class="px-2 py-2 text-xs text-secondary">Keep typing… (min. 2 characters)</div>'
+                    );
+                    setPanelsOpen(true);
+                    return;
+                }
+                setLoading(true);
+                try {
+                    const res = await fetch(searchUrl + '?q=' + encodeURIComponent(q), {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+                    const data = await res.json();
+                    let body = '';
+                    if (!hasResults(data)) {
+                        body = '<div class="px-2 py-2 text-xs text-secondary">No matches</div>';
+                    } else {
+                        body = renderApi(data);
+                    }
+                    setPanelsHtml(body);
+                    setPanelsOpen(true);
+                } catch (e) {
+                    setPanelsHtml('<div class="px-2 py-2 text-xs text-secondary">Search failed</div>');
+                    setPanelsOpen(true);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            function handleQueryChange() {
+                syncFromDesktop();
+                const q = getQuery();
+                updateClearButtons();
+                clearTimeout(debounce);
+
+                if (q.length === 0) {
+                    showHistoryOnly();
+                    return;
+                }
+                if (q.length === 1) {
+                    setPanelsHtml(
+                        '<div class="px-2 py-2 text-xs text-secondary">Keep typing… (min. 2 characters)</div>'
+                    );
+                    setPanelsOpen(true);
+                    return;
+                }
+                debounce = setTimeout(runFetch, 300);
+            }
+
+            function handleMobileQueryChange() {
+                syncFromMobile();
+                handleQueryChange();
+            }
+
+            function refreshPanelAfterHistoryEdit() {
+                const q = getQuery();
+                if (q.length === 0) showHistoryOnly();
+                else if (q.length === 1) {
+                    setPanelsHtml(
+                        '<div class="px-2 py-2 text-xs text-secondary">Keep typing… (min. 2 characters)</div>'
+                    );
+                    setPanelsOpen(true);
+                } else runFetch();
+            }
+
+            function panelClickHandler(e) {
+                if (e.target.closest('.admin-global-search-clear-history')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearHistory();
+                    refreshPanelAfterHistoryEdit();
+                    return;
+                }
+                const histBtn = e.target.closest('.admin-global-search-history-item');
+                if (histBtn && histBtn.dataset.term) {
+                    e.preventDefault();
+                    const term = histBtn.dataset.term;
+                    input.value = term;
+                    if (mobileInput) mobileInput.value = term;
+                    syncFromDesktop();
+                    updateClearButtons();
+                    clearTimeout(debounce);
+                    if (term.trim().length >= 2) {
+                        addHistory(term.trim());
+                    }
+                    runFetch();
+                    return;
+                }
+                const btn = e.target.closest('.admin-global-search-item');
+                if (btn && btn.dataset.url) {
+                    const q = getQuery();
+                    if (q.length >= 2) addHistory(q);
+                    window.location.href = btn.dataset.url;
+                }
+            }
+
+            input.addEventListener('input', handleQueryChange);
+            input.addEventListener('focus', function() {
+                const q = getQuery();
+                if (q.length === 0) showHistoryOnly();
+                else if (q.length === 1) {
+                    setPanelsHtml(
+                        '<div class="px-2 py-2 text-xs text-secondary">Keep typing… (min. 2 characters)</div>'
+                    );
+                    setPanelsOpen(true);
+                } else runFetch();
+            });
+
+            if (mobileInput) {
+                mobileInput.addEventListener('input', handleMobileQueryChange);
+                mobileInput.addEventListener('focus', function() {
+                    syncFromMobile();
+                    const q = getQuery();
+                    if (q.length === 0) showHistoryOnly();
+                    else if (q.length === 1) {
+                        setPanelsHtml(
+                            '<div class="px-2 py-2 text-xs text-secondary">Keep typing… (min. 2 characters)</div>'
+                        );
+                        setPanelsOpen(true);
+                    } else runFetch();
+                });
+            }
+
+            clearBtn.addEventListener('click', function() {
+                input.value = '';
+                syncFromDesktop();
+                clearBtn.classList.add('hidden');
+                if (mobileClear) mobileClear.classList.add('hidden');
+                showHistoryOnly();
+            });
+
+            if (mobileClear) {
+                mobileClear.addEventListener('click', function() {
+                    input.value = '';
+                    mobileInput.value = '';
+                    mobileClear.classList.add('hidden');
+                    clearBtn.classList.add('hidden');
+                    showHistoryOnly();
+                });
+            }
+
+            panel.addEventListener('click', panelClickHandler);
+            if (mobilePanel) mobilePanel.addEventListener('click', panelClickHandler);
+
+            function isMobileSheetVisiblyOpen() {
+                if (!mobileSheet || mobileSheet.classList.contains('hidden')) return false;
+                return window.getComputedStyle(mobileSheet).display !== 'none';
+            }
+
+            document.addEventListener('click', function(e) {
+                if (isMobileSheetVisiblyOpen()) {
+                    return;
+                }
+                if (!wrap.contains(e.target)) {
+                    panel.hidden = true;
+                    input.setAttribute('aria-expanded', 'false');
                 }
             });
-        </script>
-    @endif
+
+            function openMobileSearch() {
+                if (!mobileSheet || !mobileInput) return;
+                if (!window.matchMedia('(max-width: 767px)').matches) return;
+                mobileInput.value = input.value;
+                mobileSheet.classList.remove('hidden');
+                mobileSheet.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                setTimeout(function() {
+                    mobileInput.focus();
+                    const q = getQuery();
+                    if (q.length === 0) showHistoryOnly();
+                    else if (q.length >= 2) runFetch();
+                    else if (q.length === 1) {
+                        setPanelsHtml(
+                            '<div class="px-2 py-2 text-xs text-secondary">Keep typing… (min. 2 characters)</div>'
+                        );
+                        setPanelsOpen(true);
+                    }
+                }, 50);
+            }
+
+            function closeMobileSearch() {
+                if (!mobileSheet || !mobileInput) return;
+                input.value = mobileInput.value;
+                mobileSheet.classList.add('hidden');
+                mobileSheet.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                panel.hidden = true;
+                input.setAttribute('aria-expanded', 'false');
+                if (mobilePanel) mobilePanel.hidden = true;
+            }
+
+            if (mobileOpenBtn) {
+                mobileOpenBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openMobileSearch();
+                });
+            }
+            if (mobileCloseBtn) {
+                mobileCloseBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeMobileSearch();
+                });
+            }
+            const mobileBackdrop = document.getElementById('adminGlobalSearchMobileBackdrop');
+            if (mobileBackdrop) {
+                mobileBackdrop.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeMobileSearch();
+                });
+            }
+
+            window.addEventListener('resize', function() {
+                if (!mobileSheet) return;
+                if (!window.matchMedia('(min-width: 768px)').matches) return;
+                if (!mobileSheet.classList.contains('hidden')) {
+                    closeMobileSearch();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isMobileSheetVisiblyOpen()) {
+                    closeMobileSearch();
+                }
+            });
+        })();
+    </script>
+
+    @stack('scripts')
+
 </body>
 
 </html>

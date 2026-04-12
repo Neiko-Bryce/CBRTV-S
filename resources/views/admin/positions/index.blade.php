@@ -122,10 +122,18 @@
                 font-size: 0.8125rem;
             }
 
+            .actions-cell {
+                white-space: nowrap;
+                min-width: 7.5rem;
+            }
             .actions-cell .flex {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
                 justify-content: center;
+                align-items: center;
                 gap: 0.25rem;
+            }
+            .actions-cell .flex > button {
+                flex-shrink: 0;
             }
         }
 
@@ -209,8 +217,8 @@
                                 style="border-color: var(--border-color);">Slots</th>
                             <th class="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
                                 style="border-color: var(--border-color);">Status</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
-                                style="border-color: var(--border-color);">Actions</th>
+                            <th class="actions-cell px-4 py-3 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
+                                style="border-color: var(--border-color); min-width: 7.5rem;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -243,9 +251,9 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-center actions-cell">
-                                    <div class="flex items-center justify-center space-x-2">
+                                    <div class="flex flex-nowrap items-center justify-center gap-1.5">
                                         <button type="button" onclick="editPosition({{ $position->id }})"
-                                            class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
+                                            class="shrink-0 p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
                                             style="color: var(--cpsu-green-light);" title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -255,7 +263,7 @@
                                         </button>
                                         <button type="button"
                                             onclick="openDeleteModal({{ $position->id }}, '{{ addslashes($position->name) }}')"
-                                            class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            class="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                             style="color: #dc2626;" title="Delete">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

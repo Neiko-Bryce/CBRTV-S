@@ -205,10 +205,18 @@
                 height: 40px;
             }
 
+            .candidates-table .actions-cell {
+                white-space: nowrap;
+                min-width: 7.5rem;
+            }
             .candidates-table .actions-cell .flex {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
                 justify-content: center;
+                align-items: center;
                 gap: 0.25rem;
+            }
+            .candidates-table .actions-cell .flex > button {
+                flex-shrink: 0;
             }
         }
     </style>
@@ -272,8 +280,8 @@
                                 style="border-color: var(--border-color);">Partylist</th>
                             <th class="px-5 py-3.5 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
                                 style="border-color: var(--border-color);">Votes</th>
-                            <th class="px-5 py-3.5 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
-                                style="border-color: var(--border-color);">Actions</th>
+                            <th class="actions-cell px-5 py-3.5 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b"
+                                style="border-color: var(--border-color); min-width: 7.5rem;">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y" style="background-color: var(--card-bg);">
@@ -339,9 +347,9 @@
                                     </span>
                                 </td>
                                 <td class="px-5 py-4 whitespace-nowrap text-center actions-cell">
-                                    <div class="flex items-center justify-center space-x-1.5">
+                                    <div class="flex flex-nowrap items-center justify-center gap-1.5">
                                         <button onclick="editCandidate({{ $candidate->id }})"
-                                            class="p-2 rounded-lg hover:bg-[var(--hover-bg)] transition-all duration-200"
+                                            class="shrink-0 p-2 rounded-lg hover:bg-[var(--hover-bg)] transition-all duration-200"
                                             style="color: var(--cpsu-green-light);" title="Edit Candidate">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -352,7 +360,7 @@
                                         </button>
                                         <button
                                             onclick="openDeleteModal({{ $candidate->id }}, '{{ addslashes($candidate->candidate_name) }}')"
-                                            class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                                            class="shrink-0 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                                             style="color: #dc2626;" title="Delete Candidate">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">

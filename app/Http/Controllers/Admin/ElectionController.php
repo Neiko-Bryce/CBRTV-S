@@ -83,6 +83,13 @@ class ElectionController extends Controller
                         ->orWhere('election_id', $likeOperator, "%{$searchTerm}%");
                 });
             })
+            ->when($request->filled('highlight_election'), function ($q) use ($request) {
+                $hid = (int) $request->highlight_election;
+                if ($hid > 0) {
+                    // Put the highlighted election first so it appears on page 1 after search
+                    $q->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$hid]);
+                }
+            })
             ->orderBy('id', 'asc')
             ->paginate(15)
             ->withQueryString();
@@ -297,7 +304,8 @@ class ElectionController extends Controller
             ]);
         }
 
-        return view('admin.elections.edit', compact('election'));
+        // Editing is done via modal on the elections index (no separate edit blade file)
+        return redirect()->route('admin.elections.index', ['edit' => $election->id]);
     }
 
     /**

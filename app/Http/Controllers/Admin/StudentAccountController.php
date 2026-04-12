@@ -17,7 +17,7 @@ class StudentAccountController extends Controller
     /**
      * Display the student account management page.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Load from an unscoped query, then apply explicit visibility rules.
         // This prevents older accounts with stale school metadata from disappearing for admins.
@@ -26,9 +26,39 @@ class StudentAccountController extends Controller
 
         $this->applyStudentAccountAccessFilter($studentAccountsQuery);
 
+        if ($request->filled('search')) {
+            $searchTerm = trim((string) $request->search);
+            $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+            $likeOperator = $isPostgres ? 'ILIKE' : 'LIKE';
+            $term = '%'.$searchTerm.'%';
+
+            $matchingStudentIds = Student::query()
+                ->where(function ($inner) use ($searchTerm, $likeOperator, $isPostgres) {
+                    $inner->where('student_id_number', $likeOperator, "%{$searchTerm}%")
+                        ->orWhere('fname', $likeOperator, "%{$searchTerm}%")
+                        ->orWhere('mname', $likeOperator, "%{$searchTerm}%")
+                        ->orWhere('lname', $likeOperator, "%{$searchTerm}%");
+                    if ($isPostgres) {
+                        $inner->orWhereRaw("(COALESCE(fname, '') || ' ' || COALESCE(mname, '') || ' ' || COALESCE(lname, '')) ILIKE ?", ["%{$searchTerm}%"]);
+                    } else {
+                        $inner->orWhereRaw("CONCAT(COALESCE(fname, ''), ' ', COALESCE(mname, ''), ' ', COALESCE(lname, '')) LIKE ?", ["%{$searchTerm}%"]);
+                    }
+                })
+                ->pluck('student_id_number');
+
+            $studentAccountsQuery->where(function ($inner) use ($likeOperator, $term, $matchingStudentIds) {
+                $inner->where('email', $likeOperator, $term)
+                    ->orWhere('name', $likeOperator, $term);
+                if ($matchingStudentIds->isNotEmpty()) {
+                    $inner->orWhereIn('email', $matchingStudentIds);
+                }
+            });
+        }
+
         $studentAccounts = $studentAccountsQuery
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         // Load student data for each account
         foreach ($studentAccounts as $account) {

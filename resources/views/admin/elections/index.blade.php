@@ -101,7 +101,19 @@
     @media (max-width: 768px) {
         .table-wrap { -webkit-overflow-scrolling: touch; }
         .table-wrap th, .table-wrap td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
-        .actions-cell .flex { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+        .actions-cell {
+            white-space: nowrap;
+            min-width: 10rem;
+        }
+        .actions-cell .flex {
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .actions-cell .flex > button {
+            flex-shrink: 0;
+        }
     }
     /* Select2 in election modal (matches theme vars) */
     #electionModal .select2-container { width: 100% !important; }
@@ -275,14 +287,14 @@
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">
                             Status
                         </th>
-                        <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color);">
+                        <th scope="col" class="actions-cell px-6 py-4 text-center text-xs font-semibold text-secondary uppercase tracking-wider border-b" style="border-color: var(--border-color); min-width: 10rem;">
                             Actions
                         </th>
                     </tr>
                 </thead>
                 <tbody id="electionsTableBody">
                     @forelse($elections as $election)
-                    <tr class="table-row transition-colors border-b hover:bg-[var(--hover-bg)]" style="border-color: var(--border-color);" id="election-row-{{ $election->id }}" data-election-id="{{ $election->id }}">
+                    <tr class="table-row transition-colors border-b hover:bg-[var(--hover-bg)] {{ (string) request('highlight_election') === (string) $election->id ? 'ring-2 ring-inset' : '' }}" style="border-color: var(--border-color); {{ (string) request('highlight_election') === (string) $election->id ? 'box-shadow: inset 0 0 0 2px var(--cpsu-green);' : '' }}" id="election-row-{{ $election->id }}" data-election-id="{{ $election->id }}">
                         <td class="px-6 py-4 align-middle">
                             <div class="min-w-0">
                                 <div class="text-sm font-semibold text-primary election-name">
@@ -469,20 +481,20 @@
                                 </span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle actions-cell">
-                            <div class="flex items-center justify-center space-x-2">
-                                <button type="button" onclick="viewElection({{ $election->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green);" title="View">
+                        <td class="px-6 py-4 align-middle text-center actions-cell">
+                            <div class="flex flex-nowrap items-center justify-center gap-1.5">
+                                <button type="button" onclick="viewElection({{ $election->id }})" class="shrink-0 p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green);" title="View">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
-                                <button type="button" onclick="editElection({{ $election->id }})" class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
+                                <button type="button" onclick="editElection({{ $election->id }})" class="shrink-0 p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors" style="color: var(--cpsu-green-light);" title="Edit">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button type="button" onclick='deleteElection({{ $election->id }}, {!! json_encode($election->election_name) !!})' class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
+                                <button type="button" onclick='deleteElection({{ $election->id }}, {!! json_encode($election->election_name) !!})' class="shrink-0 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="color: #dc2626;" title="Delete">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -490,7 +502,7 @@
                                 @if(in_array($status, ['completed', 'cancelled']))
                                     <button type="button"
                                         onclick='archiveElection({{ $election->id }}, {!! json_encode($election->election_name) !!})'
-                                        class="p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
+                                        class="shrink-0 p-1.5 rounded-lg hover:bg-[var(--hover-bg)] transition-colors"
                                         style="color: #0ea5e9;" title="Archive Election">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2278,6 +2290,46 @@
             }, 300);
         }, 4000);
     }
+
+    // ?edit= opens edit modal; ?highlight_election= scrolls to row (e.g. from global search)
+    (function() {
+        function runElectionIndexQueryFlags() {
+            @if (request()->filled('edit'))
+                const editId = {{ (int) request('edit') }};
+                if (editId && typeof editElection === 'function') {
+                    editElection(editId);
+                    if (window.history && window.history.replaceState) {
+                        const u = new URL(window.location.href);
+                        u.searchParams.delete('edit');
+                        const qs = u.searchParams.toString();
+                        window.history.replaceState({}, '', u.pathname + (qs ? '?' + qs : '') + u.hash);
+                    }
+                }
+            @endif
+            @if (request()->filled('highlight_election'))
+                const row = document.getElementById('election-row-{{ (int) request('highlight_election') }}');
+                if (row) {
+                    setTimeout(function() {
+                        row.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 250);
+                    if (window.history && window.history.replaceState) {
+                        const u = new URL(window.location.href);
+                        u.searchParams.delete('highlight_election');
+                        const qs = u.searchParams.toString();
+                        window.history.replaceState({}, '', u.pathname + (qs ? '?' + qs : '') + u.hash);
+                    }
+                }
+            @endif
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runElectionIndexQueryFlags);
+        } else {
+            runElectionIndexQueryFlags();
+        }
+    })();
 </script>
 @endpush
 @endsection

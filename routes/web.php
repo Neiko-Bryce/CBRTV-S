@@ -12,10 +12,10 @@ Route::get('/', function () {
 });
 
 // Disable password reset pages — not used in this system
-Route::any('forgot-password', fn() => abort(404));
-Route::any('forgot-password/{any}', fn() => abort(404))->where('any', '.*');
-Route::any('reset-password', fn() => abort(404));
-Route::any('reset-password/{any}', fn() => abort(404))->where('any', '.*');
+Route::any('forgot-password', fn () => abort(404));
+Route::any('forgot-password/{any}', fn () => abort(404))->where('any', '.*');
+Route::any('reset-password', fn () => abort(404));
+Route::any('reset-password/{any}', fn () => abort(404))->where('any', '.*');
 
 // Public API for live election results (no auth required)
 Route::prefix('api')->group(function () {
@@ -51,7 +51,7 @@ Route::prefix('api')->group(function () {
     // Public maintenance status endpoint - used for real-time polling
     Route::get('/maintenance-status', function () {
         return response()->json([
-            'maintenance' => \App\Models\Setting::isMaintenanceModeEnabled()
+            'maintenance' => \App\Models\Setting::isMaintenanceModeEnabled(),
         ]);
     })->name('api.maintenance-status');
 });
@@ -81,6 +81,8 @@ Route::middleware(['auth'])->group(function () {
 // Admin-only routes:
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/global-search', \App\Http\Controllers\Admin\GlobalSearchController::class)->name('global-search');
 
     Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
 
@@ -179,7 +181,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
     Route::put('profile/password', [\App\Http\Controllers\Admin\ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('profile', [\App\Http\Controllers\Admin\ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // System Settings
     Route::post('settings/maintenance', [\App\Http\Controllers\SettingController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
 });

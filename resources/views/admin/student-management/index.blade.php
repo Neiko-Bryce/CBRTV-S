@@ -262,16 +262,29 @@
 
         <!-- Account Exists Message -->
         <div id="accountExistsCard" class="card" style="display: none;">
-            <div class="flex items-center space-x-3 p-4 rounded-lg"
+            <div class="p-4 rounded-lg space-y-3"
                 style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
-                <svg class="w-6 h-6" style="color: #3b82f6;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <p class="font-medium text-primary">Account Already Exists</p>
-                    <p class="text-sm text-secondary">This student already has an account. Email: <span id="existing_email"
-                            class="font-mono font-semibold"></span></p>
+                <div class="flex items-start space-x-3">
+                    <svg class="w-6 h-6 flex-shrink-0 mt-0.5" style="color: #3b82f6;" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-medium text-primary">Account Already Exists</p>
+                        <p class="text-sm text-secondary">This student already has a login account. Student ID (email):
+                            <span id="existing_email" class="font-mono font-semibold"></span>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 pt-1">
+                    <a id="viewExistingAccountLink" href="#"
+                        class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        style="background: linear-gradient(135deg, var(--cpsu-green) 0%, var(--cpsu-green-light) 100%);">
+                        View account in table &amp; use actions
+                    </a>
+                    <span class="text-xs text-secondary">Opens the list below (filtered to this student) so you can
+                        Regenerate password or Delete.</span>
                 </div>
             </div>
         </div>
@@ -279,6 +292,18 @@
         <!-- Student Accounts Table -->
         <div class="card">
             <h2 class="text-xl font-semibold text-primary mb-4">Created Student Accounts</h2>
+            @if (request()->filled('search'))
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm"
+                    style="background: rgba(22, 101, 52, 0.08); border: 1px solid var(--border-color);">
+                    <span class="text-primary">
+                        Showing accounts matching
+                        <strong class="font-mono">{{ request('search') }}</strong>
+                    </span>
+                    <a href="{{ route('admin.student-management.index') }}"
+                        class="font-medium underline-offset-2 hover:underline"
+                        style="color: var(--cpsu-green);">Clear filter</a>
+                </div>
+            @endif
             <div class="overflow-x-auto table-wrap">
                 <table class="min-w-full divide-y" style="border-collapse: separate; border-spacing: 0;">
                     <thead>
@@ -322,7 +347,9 @@
                     </thead>
                     <tbody class="divide-y" style="border-color: var(--border-color);">
                         @forelse($studentAccounts as $account)
-                            <tr class="hover:bg-[var(--hover-bg)] transition-colors">
+                            <tr id="student-mgmt-row-{{ $account->id }}"
+                                class="hover:bg-[var(--hover-bg)] transition-colors {{ (string) request('highlight_user') === (string) $account->id ? 'ring-2 ring-inset' : '' }}"
+                                style="{{ (string) request('highlight_user') === (string) $account->id ? 'box-shadow: inset 0 0 0 2px var(--cpsu-green);' : '' }}">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-semibold text-primary font-mono">{{ $account->email }}</div>
                                 </td>
@@ -641,8 +668,13 @@
                         search_term: searchTerm
                     })
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        errorDiv.textContent = data.message || 'Student not found.';
+                        hideAllCards();
+                        return;
+                    }
                     if (data.success) {
                         currentStudent = data.student;
                         displayStudentInfo(data.student);
@@ -718,6 +750,14 @@
             document.getElementById('existing_email').textContent = user.email;
             document.getElementById('accountExistsCard').style.display = 'block';
             document.getElementById('accountFormCard').style.display = 'none';
+            const link = document.getElementById('viewExistingAccountLink');
+            if (link && user && user.id) {
+                const base = '{{ url('/admin/student-management') }}';
+                link.href = base + '?search=' + encodeURIComponent(user.email) + '&highlight_user=' + encodeURIComponent(
+                    user.id);
+            } else if (link) {
+                link.href = '#';
+            }
         }
 
         function hideAllCards() {
@@ -1212,4 +1252,19 @@
             }, 4000);
         }
     </script>
+    @if (request('highlight_user'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const el = document.getElementById('student-mgmt-row-{{ (int) request('highlight_user') }}');
+                if (el) {
+                    setTimeout(function() {
+                        el.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 150);
+                }
+            });
+        </script>
+    @endif
 @endpush

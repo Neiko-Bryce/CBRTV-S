@@ -111,10 +111,7 @@
 
         <!-- Votes by course, year & section (single chart — same ballot total, no duplicate cards) -->
         <div class="card rounded-xl p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-primary mb-1">Votes by Course, Year &amp; Section</h3>
-            <p class="text-sm text-secondary mb-6">Each slice is one group on the voter’s <strong>student record</strong>:
-                <strong>course</strong> plus <strong>year level</strong> and <strong>section</strong> (e.g. BSIT · 1st Year — A).
-                One combined chart—no double-counting across separate graphs.</p>
+            <h3 class="text-lg font-bold text-primary mb-6">Votes by Course, Year &amp; Section</h3>
             @php
                 $totalUniqueVotersBreakdown = $votesByCourseAndSection->sum('voter_count');
                 $sliceCount = $votesByCourseAndSection->count();
@@ -395,7 +392,7 @@
                             <th class="text-left py-3 px-4 text-sm font-semibold text-secondary">Election</th>
                             <th class="text-left py-3 px-4 text-sm font-semibold text-secondary">Organization / Type</th>
                             <th class="text-left py-3 px-4 text-sm font-semibold text-secondary">Status</th>
-                            <th class="text-right py-3 px-4 text-sm font-semibold text-secondary">Votes</th>
+                            <th class="text-right py-3 px-4 text-sm font-semibold text-secondary">Students</th>
                             <th class="text-right py-3 px-4 text-sm font-semibold text-secondary">Participation</th>
                             <th class="text-right py-3 px-4 text-sm font-semibold text-secondary">Actions</th>
                         </tr>
