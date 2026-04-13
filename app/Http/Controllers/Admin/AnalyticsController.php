@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\SchoolScopedAdminQueries;
 use App\Http\Controllers\Controller;
-use App\Models\Election;
 use App\Models\Student;
-use App\Models\User;
-use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -14,94 +12,7 @@ use Illuminate\View\View;
 
 class AnalyticsController extends Controller
 {
-    /**
-     * Campus admins: restrict analytics to their school only. Super admins: all schools.
-     * Returns null for super admin (no extra where), int for campus admin, or -1 if admin has no campus (empty stats).
-     */
-    private function analyticsSchoolScopeId(): ?int
-    {
-        $user = auth()->user();
-        if (! $user) {
-            return -1;
-        }
-        if ($user->is_super_admin) {
-            return null;
-        }
-        if ($user->school_id) {
-            return (int) $user->school_id;
-        }
-
-        return -1;
-    }
-
-    /**
-     * Apply school filter to vote/election/student queries for campus admins.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder  $query
-     * @param  string  $column  Qualified column name, e.g. 'votes.school_id' or 'school_id'
-     */
-    private function applyAnalyticsSchoolFilter($query, string $column = 'school_id'): void
-    {
-        $scopeId = $this->analyticsSchoolScopeId();
-        if ($scopeId === null) {
-            return;
-        }
-        if ($scopeId < 0) {
-            $query->whereRaw('0 = 1');
-
-            return;
-        }
-        $query->where($column, $scopeId);
-    }
-
-    /**
-     * Vote rows for campus admins: match votes.school_id, or (legacy) null school_id on votes whose election belongs to the campus.
-     * Prevents cross-campus leaks while still counting ballots inserted without school_id before that was fixed.
-     */
-    private function applyVoteSchoolScopeForAnalytics($query): void
-    {
-        $scopeId = $this->analyticsSchoolScopeId();
-        if ($scopeId === null) {
-            return;
-        }
-        if ($scopeId < 0) {
-            $query->whereRaw('0 = 1');
-
-            return;
-        }
-
-        $table = (new Vote)->getTable();
-
-        $query->where(function ($q) use ($scopeId, $table) {
-            $q->where("{$table}.school_id", $scopeId)
-                ->orWhere(function ($q2) use ($scopeId, $table) {
-                    $q2->whereNull("{$table}.school_id")
-                        ->whereExists(function ($sub) use ($scopeId, $table) {
-                            $sub->from('elections')
-                                ->whereColumn('elections.id', "{$table}.election_id")
-                                ->where('elections.school_id', $scopeId);
-                        });
-                });
-        });
-    }
-
-    /**
-     * Eloquent base queries without BelongsToSchool global scope so we apply a strict school_id (no cross-campus NULL leak).
-     */
-    private function votesForAnalytics()
-    {
-        return Vote::withoutGlobalScopes()->tap(fn ($q) => $this->applyVoteSchoolScopeForAnalytics($q));
-    }
-
-    private function electionsForAnalytics()
-    {
-        return Election::withoutGlobalScopes()->tap(fn ($q) => $this->applyAnalyticsSchoolFilter($q));
-    }
-
-    private function usersForAnalytics()
-    {
-        return User::withoutGlobalScopes()->tap(fn ($q) => $this->applyAnalyticsSchoolFilter($q));
-    }
+    use SchoolScopedAdminQueries;
 
     /**
      * Display the analytics page: voting statistics, trends, and election breakdowns.

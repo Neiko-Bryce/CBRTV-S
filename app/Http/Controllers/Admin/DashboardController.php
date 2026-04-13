@@ -2,25 +2,28 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\SchoolScopedAdminQueries;
 use App\Http\Controllers\Controller;
-use App\Models\Election;
 use App\Models\School;
-use App\Models\User;
-use App\Models\Vote;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    use SchoolScopedAdminQueries;
+
     /**
      * Display the admin dashboard.
      */
     public function index()
     {
-        // Total Users (students only)
-        $totalUsers = User::where('usertype', 'student')->count();
+        // Total Users (students only) — scoped to campus for non–super-admins
+        $totalUsers = $this->usersForAnalytics()
+            ->where('usertype', 'student')
+            ->count();
 
-        $previousMonthUsers = User::where('usertype', 'student')
+        $previousMonthUsers = $this->usersForAnalytics()
+            ->where('usertype', 'student')
             ->where('created_at', '<', Carbon::now()->subMonth()->startOfMonth())
             ->count();
 
@@ -32,30 +35,41 @@ class DashboardController extends Controller
         $this->syncElectionStatuses();
 
         // Refresh the query to ensure we get updated statuses from database
-        $activeElections = Election::whereIn('status', ['ongoing', 'upcoming'])->count();
+        $activeElections = $this->electionsForAnalytics()
+            ->whereIn('status', ['ongoing', 'upcoming'])
+            ->count();
 
-        $endingSoon = Election::where('status', 'ongoing')
+        $endingSoon = $this->electionsForAnalytics()
+            ->where('status', 'ongoing')
             ->whereNotNull('time_ended')
             ->where('time_ended', '<=', Carbon::now()->addDays(3))
             ->where('time_ended', '>', Carbon::now())
             ->count();
 
-        // Total Votes
-        $totalVotes = Vote::count();
+        // Total Votes (same scoping as Analytics)
+        $totalVotes = $this->votesForAnalytics()->count();
 
-        $lastWeekVotes = Vote::where('created_at', '>=', Carbon::now()->subWeek())->count();
-        $previousWeekVotes = Vote::whereBetween('created_at', [
-            Carbon::now()->subWeeks(2)->startOfWeek(),
-            Carbon::now()->subWeek()->startOfWeek(),
-        ])->count();
+        $lastWeekVotes = $this->votesForAnalytics()
+            ->where('created_at', '>=', Carbon::now()->subWeek())
+            ->count();
+        $previousWeekVotes = $this->votesForAnalytics()
+            ->whereBetween('created_at', [
+                Carbon::now()->subWeeks(2)->startOfWeek(),
+                Carbon::now()->subWeek()->startOfWeek(),
+            ])
+            ->count();
 
         $voteGrowth = $previousWeekVotes > 0
             ? round((($lastWeekVotes - $previousWeekVotes) / $previousWeekVotes) * 100, 1)
             : 0;
 
         // Participation Rate
-        $totalStudents = User::where('usertype', 'student')->count();
-        $uniqueVoters = Vote::distinct('voter_id')->count('voter_id');
+        $totalStudents = $this->usersForAnalytics()
+            ->where('usertype', 'student')
+            ->count();
+        $uniqueVoters = $this->votesForAnalytics()
+            ->distinct('voter_id')
+            ->count('voter_id');
         $participationRate = $totalStudents > 0
             ? round(($uniqueVoters / $totalStudents) * 100, 1)
             : 0;
@@ -63,23 +77,30 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities();
 
         // Active Elections table: ONLY ongoing and upcoming elections (exclude completed and cancelled)
-        $activeElectionIds = Election::whereIn('status', ['ongoing', 'upcoming'])
+        $activeElectionIds = $this->electionsForAnalytics()
+            ->whereIn('status', ['ongoing', 'upcoming'])
             ->orderBy('id', 'asc')
             ->pluck('id');
 
         // Load models with relationships only for the filtered IDs
-        $activeElectionsList = Election::whereIn('id', $activeElectionIds)
+        $activeElectionsList = $this->electionsForAnalytics()
+            ->whereIn('id', $activeElectionIds)
             ->with('organization')
-            ->withCount('votes')
+            ->withCount([
+                'votes' => function ($q) {
+                    $q->withoutGlobalScopes();
+                    $this->applyVoteSchoolScopeForAnalytics($q);
+                },
+            ])
             ->orderBy('id', 'asc')
             ->get();
 
         // Election Status Distribution for Pie Chart
         $electionStatusCounts = [
-            'ongoing' => Election::where('status', 'ongoing')->count(),
-            'upcoming' => Election::where('status', 'upcoming')->count(),
-            'completed' => Election::where('status', 'completed')->count(),
-            'cancelled' => Election::where('status', 'cancelled')->count(),
+            'ongoing' => $this->electionsForAnalytics()->where('status', 'ongoing')->count(),
+            'upcoming' => $this->electionsForAnalytics()->where('status', 'upcoming')->count(),
+            'completed' => $this->electionsForAnalytics()->where('status', 'completed')->count(),
+            'cancelled' => $this->electionsForAnalytics()->where('status', 'cancelled')->count(),
         ];
         $totalElectionsCount = array_sum($electionStatusCounts);
 
@@ -114,7 +135,7 @@ class DashboardController extends Controller
     private function syncElectionStatuses(): void
     {
         try {
-            $allElections = Election::all();
+            $allElections = $this->electionsForAnalytics()->get();
             foreach ($allElections as $election) {
                 if ($election->status === 'cancelled') {
                     $calculatedStatus = $this->calculateStatus($election->toArray());
@@ -300,7 +321,11 @@ class DashboardController extends Controller
     {
         $activities = [];
 
-        foreach (Election::with('organization')->orderBy('created_at', 'desc')->limit(3)->get() as $election) {
+        foreach ($this->electionsForAnalytics()
+            ->with('organization')
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
+            ->get() as $election) {
             $activities[] = [
                 'type' => 'election_created',
                 'icon' => 'check',
@@ -312,7 +337,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $recentVotes = Vote::with(['election', 'voter'])
+        $recentVotes = $this->votesForAnalytics()
+            ->with(['election', 'voter'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -332,7 +358,11 @@ class DashboardController extends Controller
             ];
         }
 
-        foreach (User::where('usertype', 'student')->orderBy('created_at', 'desc')->limit(2)->get() as $user) {
+        foreach ($this->usersForAnalytics()
+            ->where('usertype', 'student')
+            ->orderBy('created_at', 'desc')
+            ->limit(2)
+            ->get() as $user) {
             $activities[] = [
                 'type' => 'user_registered',
                 'icon' => 'user',
