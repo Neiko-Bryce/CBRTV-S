@@ -519,7 +519,7 @@
                 existing.forEach(n => n.remove());
                 const el = document.createElement('div');
                 el.className =
-                    'notification-toast fixed top-4 right-4 z-[9999] p-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[280px] ' +
+                    'notification-toast admin-notification-toast ' +
                     (type === 'success' ? 'bg-green-500' : 'bg-red-500') + ' text-white';
                 el.style.cssText = 'transform:translateX(100%);opacity:0;transition:all 0.3s ease-out';
                 el.innerHTML = '<div class="flex-shrink-0">' + (type === 'success' ?

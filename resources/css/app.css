@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Admin panel: toasts and tables — safe on narrow phones (320px+) and notched devices */
+@layer components {
+    .admin-notification-toast {
+        @apply flex items-center gap-3 rounded-lg p-4 shadow-lg;
+        position: fixed;
+        z-index: 9999;
+        top: max(0.75rem, env(safe-area-inset-top, 0px));
+        left: max(0.75rem, env(safe-area-inset-left, 0px));
+        right: max(0.75rem, env(safe-area-inset-right, 0px));
+        max-width: min(20rem, calc(100vw - 1.5rem));
+        min-width: 0;
+        width: auto;
+    }
+
+    @media (min-width: 640px) {
+        .admin-notification-toast {
+            left: auto;
+            width: min(20rem, calc(100vw - 2rem));
+            right: max(0.75rem, env(safe-area-inset-right, 0px));
+        }
+    }
+
+    .admin-table-horizontal-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

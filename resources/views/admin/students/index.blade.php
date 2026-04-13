@@ -1155,7 +1155,7 @@
 
         // Create notification element
         const notification = document.createElement('div');
-        notification.className = `notification-toast fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[300px] ${
+        notification.className = `notification-toast admin-notification-toast ${
             type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`;
         

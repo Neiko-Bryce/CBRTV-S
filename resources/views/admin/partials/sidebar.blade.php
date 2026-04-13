@@ -6,7 +6,7 @@
     style="background-color: rgba(0, 0, 0, 0.5);" @click="$store.sidebarOpen = false" x-cloak></div>
 
 <aside
-    class="sidebar fixed lg:static inset-y-0 left-0 z-40 flex-shrink-0 w-64 h-full flex flex-col transition-transform duration-300 ease-in-out"
+    class="sidebar fixed lg:static inset-y-0 left-0 z-40 flex-shrink-0 h-full w-[min(16rem,calc(100vw-1rem))] max-w-[85vw] lg:w-64 lg:max-w-none flex flex-col transition-transform duration-300 ease-in-out"
     :class="$store.sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
     <div class="h-full flex flex-col relative z-40 transition-colors sidebar-container"

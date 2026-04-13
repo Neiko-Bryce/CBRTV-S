@@ -11,7 +11,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard') - CpsuVotewisely.com</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -518,21 +519,33 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             background-color: rgba(22, 101, 52, 0.15);
             color: #4ade80;
         }
+
+        /* Full-height shell on phones (dynamic viewport avoids URL-bar jump) + no horizontal bleed */
+        .admin-app-root {
+            max-width: 100vw;
+            overflow-x: hidden;
+            min-height: 100vh;
+            min-height: 100dvh;
+            height: 100vh;
+            height: 100dvh;
+        }
     </style>
 
     @stack('styles')
 </head>
 
-<body class="antialiased">
-    <div class="flex h-screen overflow-hidden">
+<body class="antialiased overflow-x-hidden">
+    <div class="admin-app-root flex overflow-hidden">
         <!-- Sidebar -->
         @include('admin.partials.sidebar')
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
-            <header class="header-gradient border-b transition-colors" style="border-color: var(--border-color);">
-                <div class="px-6 py-3">
+        <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <!-- Top Header (z-10: stay above scrolled <main> so dropdowns are not covered by page content) -->
+            <header class="header-gradient relative z-10 border-b transition-colors shrink-0"
+                style="border-color: var(--border-color);">
+                <div
+                    class="pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3">
                     <div class="flex flex-wrap items-center justify-between gap-3 w-full min-w-0">
                         <div class="flex items-center space-x-4 flex-1 min-w-0">
                             <!-- Mobile Menu Button -->
@@ -667,7 +680,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                     x-transition:leave="transition ease-in duration-75"
                                     x-transition:leave-start="transform opacity-100 scale-100"
                                     x-transition:leave-end="transform opacity-0 scale-95"
-                                    class="absolute right-0 mt-2 w-56 rounded-lg shadow-xl py-2 z-50"
+                                    class="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-lg shadow-xl py-2 z-50"
                                     style="background: var(--card-bg); border: 1px solid var(--border-color); display: none;">
                                     <div class="px-4 py-3 border-b" style="border-color: var(--border-color);">
                                         <div class="flex items-center justify-between gap-2">
@@ -706,7 +719,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                             <svg class="w-4 h-4 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="isMaintenance ? 'text-yellow-500' : 'text-gray-400'">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                             </svg>
-                                            <span class="whitespace-nowrap" x-text="isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance'"></span>
+                                            <span class="text-left break-words sm:whitespace-nowrap" x-text="isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance'"></span>
                                         </div>
                                         <!-- Toggle Switch UI -->
                                         <div class="relative inline-flex items-center cursor-pointer ml-2">
@@ -740,12 +753,13 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             </header>
 
             <!-- Mobile search: dimmed overlay on current page (not a separate full-screen white page) -->
-            <div id="adminGlobalSearchMobileSheet" class="fixed inset-0 z-[110] md:!hidden hidden" role="dialog"
+            <div id="adminGlobalSearchMobileSheet"
+                class="fixed inset-0 z-[110] pt-[env(safe-area-inset-top,0px)] md:!hidden hidden" role="dialog"
                 aria-modal="true" aria-label="Search" aria-hidden="true">
                 <button type="button" id="adminGlobalSearchMobileBackdrop"
                     class="absolute inset-0 z-0 block w-full h-full cursor-default border-0 p-0 bg-black/45 backdrop-blur-[2px]"
                     style="-webkit-tap-highlight-color: transparent;" aria-label="Dismiss search"></button>
-                <div class="relative z-10 flex max-h-[min(90vh,560px)] w-full flex-col overflow-hidden rounded-b-2xl border-b shadow-2xl"
+                <div class="relative z-10 flex max-h-[min(90dvh,560px)] w-full min-h-0 flex-col overflow-hidden rounded-b-2xl border-b shadow-2xl"
                     style="background: var(--header-bg, var(--card-bg)); border-color: var(--border-color);">
                     <div class="flex flex-shrink-0 items-center gap-2 border-b px-3 py-3"
                         style="border-color: var(--border-color);">
@@ -778,7 +792,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                             </button>
                         </div>
                     </div>
-                    <div class="min-h-0 max-h-[min(70vh,420px)] flex flex-col overflow-y-auto px-3 pb-3 pt-2">
+                    <div class="min-h-0 max-h-[min(70dvh,420px)] flex flex-col overflow-y-auto px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2">
                         <div id="adminGlobalSearchPanelMobile" role="listbox" hidden
                             class="admin-global-search-panel w-full max-h-52 overflow-y-auto overflow-x-hidden rounded-lg border text-left shadow-xl"
                             style="background: var(--card-bg); border-color: var(--border-color);">
@@ -788,7 +802,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             </div>
 
             <!-- Page Content – balanced spacing, landing-style background -->
-            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
+            <main class="relative z-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-4 pb-4 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:pt-6 sm:pb-6 lg:pl-8 lg:pr-8 lg:pt-8 lg:pb-8"
                 style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
                 @if (session('success'))
                     <div class="mb-6 p-4 rounded-xl flex items-center space-x-3 shadow-sm"
@@ -820,8 +834,9 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             </main>
 
             <!-- Footer -->
-            <footer class="footer-gradient border-t transition-colors" style="border-color: var(--border-color);">
-                <div class="px-6 py-3">
+            <footer class="footer-gradient shrink-0 border-t transition-colors" style="border-color: var(--border-color);">
+                <div
+                    class="pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
                     <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
                         <div class="flex items-center space-x-3">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -849,9 +864,9 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
     <!-- Restricted Access Modal -->
     <div id="restrictedAccessModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-300"
-        style="display: none; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);" x-cloak>
-        <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all"
+        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain transition-all duration-300"
+        style="display: none; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));" x-cloak>
+        <div class="relative my-auto w-full max-w-md max-h-[min(90dvh,100%)] transform overflow-y-auto overflow-x-hidden rounded-2xl p-5 sm:p-6 text-left align-middle shadow-xl transition-all"
             style="background: var(--card-bg); border: 1px solid var(--border-color);">
 
             <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full"

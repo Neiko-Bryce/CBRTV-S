@@ -423,7 +423,7 @@ function showNotification(message, type) {
     const existing = document.querySelectorAll('.notification-toast');
     existing.forEach(n => n.remove());
     const el = document.createElement('div');
-    el.className = 'notification-toast fixed top-4 right-4 z-[9999] p-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[280px] ' + (type === 'success' ? 'bg-green-500' : 'bg-red-500') + ' text-white';
+    el.className = 'notification-toast admin-notification-toast ' + (type === 'success' ? 'bg-green-500' : 'bg-red-500') + ' text-white';
     el.style.cssText = 'transform:translateX(100%);opacity:0;transition:all 0.3s ease-out';
     el.innerHTML = '<div class="flex-shrink-0">' + (type === 'success' ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>') + '</div><div class="flex-1"><p class="font-medium">' + message + '</p></div>';
     document.body.appendChild(el);

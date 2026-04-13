@@ -214,7 +214,7 @@
                 @endphp
 
                 @if ($totalElectionsCount > 0)
-                    <div class="flex items-center gap-6">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 w-full min-w-0">
                         <div class="relative flex-shrink-0">
                             <div class="w-32 h-32 rounded-full" style="background: conic-gradient({{ $gradient }});">
                             </div>
@@ -226,7 +226,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 space-y-2">
+                        <div class="flex-1 min-w-0 w-full sm:w-auto space-y-2">
                             @foreach ($legendItems as $item)
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
@@ -254,7 +254,7 @@
                     $participationGradient = "#22c55e 0% {$votedPercent}%, #e5e7eb {$votedPercent}% 100%";
                 @endphp
 
-                <div class="flex items-center gap-6">
+                <div class="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 w-full min-w-0">
                     <div class="relative flex-shrink-0">
                         <div class="w-32 h-32 rounded-full"
                             style="background: conic-gradient({{ $participationGradient }});"></div>
@@ -266,7 +266,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex-1 space-y-3">
+                    <div class="flex-1 min-w-0 w-full sm:w-auto space-y-3">
                         <div class="p-3 rounded-lg" style="background: rgba(22, 101, 52, 0.08);">
                             <p class="text-xs text-secondary">Voted</p>
                             <p class="text-lg font-bold" style="color: var(--cpsu-green);">
@@ -339,7 +339,7 @@
                         @csrf
                         <input type="hidden" name="school_id" value="{{ auth()->user()->school_id }}">
                         <input type="hidden" name="maintenance_mode" value="{{ (isset($maintenanceMode) && $maintenanceMode) ? '0' : '1' }}">
-                        <button type="submit" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-md cursor-pointer border-none text-left"
+                        <button type="submit" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-md cursor-pointer border-none text-left min-w-0"
                             style="background: {{ (isset($maintenanceMode) && $maintenanceMode) ? 'linear-gradient(135deg, #166534 0%, #22c55e 100%)' : 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)' }};">
                             
                             <div class="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -354,7 +354,7 @@
                                     </svg>
                                 @endif
                             </div>
-                            <span class="text-sm font-medium text-white">
+                            <span class="text-sm font-medium text-white min-w-0 break-words">
                                 {{ (isset($maintenanceMode) && $maintenanceMode) ? 'Restore System (Disable Maintenance)' : 'Emergency Stop (Enable Maintenance)' }}
                             </span>
                         </button>
@@ -420,14 +420,14 @@
         </div>
 
         <!-- Active Elections Table -->
-        <div class="card rounded-xl p-6 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
+        <div class="card rounded-xl p-4 sm:p-6 shadow-sm">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4 min-w-0">
                 <h3 class="text-base font-semibold text-primary">Active Elections</h3>
                 <a href="{{ route('admin.elections.index') }}"
-                    class="text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                    class="text-xs font-medium px-3 py-1.5 rounded-lg transition-all self-start sm:self-auto shrink-0"
                     style="background: var(--cpsu-green); color: white;">View All</a>
             </div>
-            <div class="overflow-x-auto -mx-6">
+            <div class="admin-table-horizontal-scroll overflow-x-auto -mx-4 sm:-mx-6">
                 <table class="w-full min-w-[600px]">
                     <thead>
                         <tr class="border-b" style="border-color: var(--border-color);">
