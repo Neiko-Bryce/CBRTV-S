@@ -48,10 +48,22 @@ Route::prefix('api')->group(function () {
         ]);
     })->name('api.landing-page.settings');
 
-    // Public maintenance status endpoint - used for real-time polling
+    // Public maintenance status endpoint - used for real-time polling (per school)
     Route::get('/maintenance-status', function () {
+        $schoolId = request('school_id');
+        if ($schoolId === null || $schoolId === '') {
+            $slug = request('slug');
+            if ($slug) {
+                $school = \App\Models\School::where('slug', $slug)->first();
+                $schoolId = $school?->id;
+            }
+        }
+        if ($schoolId === null || $schoolId === '') {
+            $schoolId = session('school_id');
+        }
+
         return response()->json([
-            'maintenance' => \App\Models\Setting::isMaintenanceModeEnabled(),
+            'maintenance' => \App\Models\School::maintenanceEnabledForId($schoolId ? (int) $schoolId : null),
         ]);
     })->name('api.maintenance-status');
 });

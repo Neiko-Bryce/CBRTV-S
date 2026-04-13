@@ -75,8 +75,12 @@ export default function LiveResults() {
     const fetchResults = async () => {
         try {
             const schoolId = window.SCHOOL_CONTEXT?.id;
-            const url = `/api/live-results?t=${Date.now()}${schoolId ? `&school_id=${schoolId}` : ''}`;
-            const response = await fetch(url, { cache: 'no-store' });
+            const schoolQs =
+                schoolId != null && schoolId !== ''
+                    ? `&school_id=${encodeURIComponent(schoolId)}`
+                    : '';
+            const url = `/api/live-results?t=${Date.now()}${schoolQs}`;
+            const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
             const data = await response.json();
             if (data.success && Array.isArray(data.elections)) {
                 const sorted = [...data.elections].sort((a, b) => (b.id || 0) - (a.id || 0));

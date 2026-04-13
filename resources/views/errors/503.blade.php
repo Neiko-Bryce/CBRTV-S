@@ -361,10 +361,15 @@
 </body>
 
 <script>
-    // Auto-redirect when admin disables maintenance mode
+    // Auto-redirect when this school's lockdown ends (must use maintenanceSchoolId from middleware when session was never set)
     (function() {
+        var schoolId = @json(isset($maintenanceSchoolId) ? $maintenanceSchoolId : session('school_id'));
         var interval = setInterval(function() {
-            fetch('/api/maintenance-status', { cache: 'no-store' })
+            if (schoolId == null) {
+                return;
+            }
+            var url = '/api/maintenance-status?school_id=' + encodeURIComponent(schoolId);
+            fetch(url, { cache: 'no-store' })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                     if (!data.maintenance) {

@@ -614,9 +614,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
 
                             <!-- User Profile Dropdown -->
+                            @php
+                                $adminSchoolForMaintenance = auth()->user()->school_id
+                                    ? \App\Models\School::find(auth()->user()->school_id)
+                                    : null;
+                            @endphp
                             <div class="relative" x-data="{ 
                                 open: false, 
-                                isMaintenance: {{ \App\Models\Setting::isMaintenanceModeEnabled() ? 'true' : 'false' }}, 
+                                isMaintenance: {{ $adminSchoolForMaintenance && $adminSchoolForMaintenance->maintenance_mode ? 'true' : 'false' }}, 
                                 toggleMaintenance() {
                                     this.isMaintenance = !this.isMaintenance;
                                     fetch('{{ route('admin.settings.maintenance.toggle') }}', {
@@ -626,7 +631,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                             'Accept': 'application/json'
                                         },
-                                        body: JSON.stringify({ maintenance_mode: this.isMaintenance ? 1 : 0 })
+                                        body: JSON.stringify({ maintenance_mode: this.isMaintenance ? 1 : 0, school_id: @json(auth()->user()->school_id) })
                                     }).then(res => res.json()).then(data => {
                                         if(!data.success) { 
                                             this.isMaintenance = !this.isMaintenance; 
@@ -692,8 +697,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
                                         Profile Settings
                                     </a>
 
-                                    @if(auth()->user()->usertype === 'admin' || auth()->user()->usertype === 'super_admin' || auth()->user()->is_super_admin)
-                                    <!-- Maintenance Mode Toggle via Ajax -->
+                                    @if((auth()->user()->usertype === 'admin' || auth()->user()->usertype === 'super_admin' || auth()->user()->is_super_admin) && auth()->user()->school_id)
+                                    <!-- Maintenance Mode Toggle via Ajax (school-scoped) -->
                                     <button @click.prevent="toggleMaintenance()" type="button"
                                         class="w-full flex items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-[var(--hover-bg)]"
                                         style="color: var(--text-primary);">

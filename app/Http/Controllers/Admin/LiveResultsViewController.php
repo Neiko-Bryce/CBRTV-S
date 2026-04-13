@@ -13,11 +13,19 @@ class LiveResultsViewController extends Controller
 {
     /**
      * List elections for controlling live results visibility on the landing page.
+     * Campus admins only see their school's elections (BelongsToSchool also allows null school_id — excluded here).
      */
     public function index()
     {
-        $elections = Election::with('organization')
-            ->whereIn('status', ['upcoming', 'ongoing', 'completed'])
+        $query = Election::query()->with('organization')
+            ->whereIn('status', ['upcoming', 'ongoing', 'completed']);
+
+        $user = auth()->user();
+        if (! $user->is_super_admin && $user->school_id) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $elections = $query
             ->orderByRaw("CASE WHEN status = 'ongoing' THEN 0 WHEN status = 'upcoming' THEN 1 ELSE 2 END")
             ->orderBy('election_date', 'desc')
             ->orderBy('timestarted', 'desc')
@@ -32,6 +40,7 @@ class LiveResultsViewController extends Controller
     public function display(Request $request, $electionId)
     {
         $election = Election::findOrFail($electionId);
+        $this->assertElectionManagedByCurrentAdmin($election);
 
         try {
             $election->update(['show_live_results' => true]);
@@ -59,6 +68,7 @@ class LiveResultsViewController extends Controller
     public function hide(Request $request, $electionId)
     {
         $election = Election::findOrFail($electionId);
+        $this->assertElectionManagedByCurrentAdmin($election);
 
         try {
             $election->update(['show_live_results' => false]);
@@ -93,6 +103,8 @@ class LiveResultsViewController extends Controller
         if (! $election) {
             return response()->json(['success' => false, 'message' => 'Election not found.'], 404);
         }
+
+        $this->assertElectionManagedByCurrentAdmin($election);
 
         // Use live vote count from votes table (alias to avoid conflict with candidates.votes_count column)
         $candidatesByPosition = Candidate::where('election_id', $election->id)
@@ -161,5 +173,22 @@ class LiveResultsViewController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Campus admins may only manage elections for their school; super admins may manage all.
+     */
+    private function assertElectionManagedByCurrentAdmin(Election $election): void
+    {
+        $user = auth()->user();
+        if ($user->is_super_admin) {
+            return;
+        }
+        if (! $user->school_id) {
+            abort(403, 'No school is assigned to your account.');
+        }
+        if ($election->school_id === null || (int) $election->school_id !== (int) $user->school_id) {
+            abort(403, 'This election belongs to another school.');
+        }
     }
 }

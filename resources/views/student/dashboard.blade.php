@@ -858,10 +858,15 @@
 </body>
 
 <script>
-    // Real-time maintenance check: auto-redirect logged-in students when admin enables maintenance
+    // Real-time maintenance check for this student's school
     (function() {
+        var schoolId = @json(auth()->user()->school_id);
         var interval = setInterval(function() {
-            fetch('/api/maintenance-status', { cache: 'no-store' })
+            var url = '/api/maintenance-status';
+            if (schoolId != null) {
+                url += '?school_id=' + encodeURIComponent(schoolId);
+            }
+            fetch(url, { cache: 'no-store' })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                     if (data.maintenance) {

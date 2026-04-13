@@ -17,6 +17,32 @@ use Illuminate\Support\Facades\Schema;
 class LiveResultsController extends Controller
 {
     /**
+     * First URL segment values that are never campus slugs (aligned with EmergencyMaintenanceMiddleware).
+     *
+     * @var list<string>
+     */
+    private const RESERVED_FIRST_SEGMENTS = [
+        'admin',
+        'student',
+        'login',
+        'register',
+        'api',
+        'build',
+        'logout',
+        'dashboard',
+        'profile',
+        'verify-email',
+        'email',
+        'forgot-password',
+        'reset-password',
+        'confirm-password',
+        'password',
+        'candidates',
+        'storage',
+        'sanctum',
+    ];
+
+    /**
      * Get elections whose live results are displayed on the landing page (admin-controlled).
      * Only elections with show_live_results = true are returned.
      */
@@ -35,9 +61,7 @@ class LiveResultsController extends Controller
         }
 
         try {
-            // Admin-published elections on landing page.
-            // If school_id is provided (school portal), filter by school.
-            // If not provided (root domain), show all published elections.
+            // Admin-published elections on landing page (scoped by resolveSchoolIdFromRequest()).
             $elections = Election::withoutGlobalScopes()
                 ->where('show_live_results', true)
                 ->whereIn('status', ['upcoming', 'ongoing', 'completed'])
@@ -465,23 +489,65 @@ class LiveResultsController extends Controller
     }
 
     /**
-     * Resolve school_id from query string (numeric ID or slug).
-     * Null means "no school filter" (used by root landing page).
+     * Resolve which school's published results apply.
+     * Client calls /api/live-results (first segment is "api"), so campus comes from ?school_id=, then Referer path (/sipalay), then session, then main-campus.
+     * Referer beats session so a stale session never overrides the portal page the user is on.
      */
     private function resolveSchoolIdFromRequest(): ?int
     {
-        $schoolParam = request('school_id');
-        if ($schoolParam === null || $schoolParam === '') {
+        $request = request();
+
+        $schoolParam = $request->query('school_id');
+        if ($schoolParam !== null && $schoolParam !== '') {
+            if (is_numeric($schoolParam)) {
+                return (int) $schoolParam;
+            }
+
+            $school = School::withoutGlobalScopes()->where('slug', $schoolParam)->first();
+
+            return $school?->id;
+        }
+
+        $fromReferer = $this->resolveSchoolIdFromReferer();
+        if ($fromReferer !== null) {
+            return $fromReferer;
+        }
+
+        if ($request->session()->has('school_id')) {
+            return (int) $request->session()->get('school_id');
+        }
+
+        return School::withoutGlobalScopes()->where('slug', 'main-campus')->value('id');
+    }
+
+    /**
+     * Infer campus from the page URL (e.g. Referer http://host/sipalay → Sipalay school id, / → main-campus).
+     */
+    private function resolveSchoolIdFromReferer(): ?int
+    {
+        $referer = request()->header('Referer');
+        if (! $referer) {
             return null;
         }
 
-        if (is_numeric($schoolParam)) {
-            return (int) $schoolParam;
+        $path = parse_url($referer, PHP_URL_PATH);
+        if ($path === false || $path === null) {
+            return null;
         }
 
-        $school = School::withoutGlobalScopes()->where('slug', $schoolParam)->first();
+        $trimmed = trim($path, '/');
+        if ($trimmed === '') {
+            return School::withoutGlobalScopes()->where('slug', 'main-campus')->value('id');
+        }
 
-        return $school?->id;
+        $first = explode('/', $trimmed)[0] ?? '';
+        if ($first === '' || in_array($first, self::RESERVED_FIRST_SEGMENTS, true)) {
+            return null;
+        }
+
+        $school = School::withoutGlobalScopes()->where('slug', $first)->first();
+
+        return $school ? (int) $school->id : null;
     }
 
     /**

@@ -41,8 +41,9 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // Both students (using Student ID) and admins (using Email) authenticate via the 'email' field
-        // Student accounts have student_id_number stored in the email field
+        // Both students (using Student ID) and admins (using Email) authenticate via the 'email' field.
+        // Student accounts have student_id_number stored in the email field.
+        // Role routing is enforced in AuthenticatedSessionController (student vs admin login routes).
         $credentials = $this->only('email', 'password');
 
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {

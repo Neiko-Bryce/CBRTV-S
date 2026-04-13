@@ -16,7 +16,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->check()) {
-            return redirect()->route('login')->with('error', 'Please login to access this page.');
+            return redirect()->route('admin.login')->with('error', 'Please sign in to access this page.');
         }
 
         $user = auth()->user();

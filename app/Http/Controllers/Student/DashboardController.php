@@ -403,11 +403,13 @@ class DashboardController extends Controller
                 $candidateIdsToIncrement = [];
 
                 foreach ($votes as $candidateId) {
-                    // Prepare bulk insert
+                    // Prepare bulk insert (school_id must match election for per-campus analytics)
                     $votesToInsert[] = [
                         'election_id' => $electionId,
                         'candidate_id' => $candidateId,
                         'voter_id' => $userId,
+                        'school_id' => $electionLocked->school_id,
+                        'organization_id' => $electionLocked->organization_id,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

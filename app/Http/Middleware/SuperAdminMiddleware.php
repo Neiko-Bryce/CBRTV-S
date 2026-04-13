@@ -14,7 +14,7 @@ class SuperAdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->route('admin.login');
         }
 
         // Allow read-only access (GET/HEAD/OPTIONS) for any admin

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Election;
+use App\Models\School;
 use App\Models\User;
 use App\Models\Vote;
 use Carbon\Carbon;
@@ -82,7 +83,12 @@ class DashboardController extends Controller
         ];
         $totalElectionsCount = array_sum($electionStatusCounts);
 
-        $maintenanceMode = \App\Models\Setting::isMaintenanceModeEnabled();
+        $maintenanceMode = false;
+        if (auth()->user()->school_id) {
+            $maintenanceMode = (bool) School::query()
+                ->whereKey(auth()->user()->school_id)
+                ->value('maintenance_mode');
+        }
 
         return view('admin.dashboard', compact(
             'totalUsers',

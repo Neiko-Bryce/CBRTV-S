@@ -318,10 +318,15 @@
 </body>
 
 <script>
-    // Real-time maintenance mode detection: auto-redirect to maintenance page when admin enables it
+    // Real-time maintenance: reload when this portal's school is locked (per-school)
     (function() {
+        var schoolId = @json(isset($school) ? $school->id : null);
         var interval = setInterval(function() {
-            fetch('/api/maintenance-status', { cache: 'no-store' })
+            var url = '/api/maintenance-status';
+            if (schoolId != null) {
+                url += '?school_id=' + encodeURIComponent(schoolId);
+            }
+            fetch(url, { cache: 'no-store' })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                     if (data.maintenance) {

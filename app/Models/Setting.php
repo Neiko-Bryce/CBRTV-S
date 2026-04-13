@@ -9,20 +9,15 @@ class Setting extends Model
     protected $fillable = ['key', 'value', 'description'];
 
     /**
-     * Check if Maintenance Mode is enabled globally.
+     * @deprecated Use per-school lockdown: {@see School::maintenance_mode} and {@see School::maintenanceEnabledForId()}.
      */
     public static function isMaintenanceModeEnabled(): bool
     {
-        try {
-            $setting = self::where('key', 'maintenance_mode')->first();
-            return $setting && $setting->value === 'true';
-        } catch (\Exception $e) {
-            return false;
-        }
+        return false;
     }
 
     /**
-     * Enable or disable Maintenance Mode.
+     * @deprecated Use per-school lockdown on the schools table.
      */
     public static function setMaintenanceMode(bool $enabled): void
     {
@@ -30,7 +25,7 @@ class Setting extends Model
             ['key' => 'maintenance_mode'],
             [
                 'value' => $enabled ? 'true' : 'false',
-                'description' => 'Global Emergency Maintenance Mode toggle (true/false)'
+                'description' => 'Legacy global key (unused); maintenance is per school.',
             ]
         );
     }

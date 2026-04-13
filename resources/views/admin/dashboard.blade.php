@@ -7,7 +7,7 @@
     <div class="space-y-6">
         <!-- Maintenance Mode Warning Banner -->
         <div x-data="{ 
-                isMaintenance: {{ \App\Models\Setting::isMaintenanceModeEnabled() ? 'true' : 'false' }},
+                isMaintenance: {{ (isset($maintenanceMode) && $maintenanceMode) ? 'true' : 'false' }},
                 disableMaintenance() {
                     this.isMaintenance = false;
                     fetch('{{ route('admin.settings.maintenance.toggle') }}', {
@@ -17,7 +17,7 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ maintenance_mode: 0 })
+                        body: JSON.stringify({ maintenance_mode: 0, school_id: @json(auth()->user()->school_id) })
                     }).then(res => res.json()).then(data => {
                         window.dispatchEvent(new CustomEvent('maintenance-toggled', { detail: { state: false } }));
                     });
@@ -334,9 +334,10 @@
             <div class="card rounded-xl p-6 shadow-sm">
                 <h3 class="text-base font-semibold text-primary mb-4">Quick Actions</h3>
                 <div class="space-y-3">
-                    
+                    @if(auth()->user()->school_id)
                     <form action="{{ route('admin.settings.maintenance.toggle') }}" method="POST" class="block m-0 p-0">
                         @csrf
+                        <input type="hidden" name="school_id" value="{{ auth()->user()->school_id }}">
                         <input type="hidden" name="maintenance_mode" value="{{ (isset($maintenanceMode) && $maintenanceMode) ? '0' : '1' }}">
                         <button type="submit" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-md cursor-pointer border-none text-left"
                             style="background: {{ (isset($maintenanceMode) && $maintenanceMode) ? 'linear-gradient(135deg, #166534 0%, #22c55e 100%)' : 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)' }};">
@@ -358,6 +359,7 @@
                             </span>
                         </button>
                     </form>
+                    @endif
 
                     <a href="{{ route('admin.elections.index') }}"
                         class="flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-md"
