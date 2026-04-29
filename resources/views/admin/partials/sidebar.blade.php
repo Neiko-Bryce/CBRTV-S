@@ -3,7 +3,7 @@
     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
     x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0" class="fixed inset-0 lg:hidden z-30 transition-colors"
-    style="background-color: rgba(0, 0, 0, 0.5);" @click="$store.sidebarOpen = false" x-cloak></div>
+    style="background-color: var(--admin-modal-backdrop); backdrop-filter: blur(var(--admin-modal-backdrop-blur)); -webkit-backdrop-filter: blur(var(--admin-modal-backdrop-blur));" @click="$store.sidebarOpen = false" x-cloak></div>
 
 <aside
     class="sidebar fixed lg:static inset-y-0 left-0 z-40 flex-shrink-0 h-full w-[min(16rem,calc(100vw-1rem))] max-w-[85vw] lg:w-64 lg:max-w-none flex flex-col transition-transform duration-300 ease-in-out"

@@ -73,6 +73,9 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             --accent-dark: var(--cpsu-green-dark);
             --header-bg: rgba(255, 255, 255, 0.98);
             --footer-bg: rgba(248, 250, 252, 0.95);
+            /* Admin modal/backdrop tokens (used by every admin modal/overlay) */
+            --admin-modal-backdrop: rgba(15, 23, 42, 0.45);
+            --admin-modal-backdrop-blur: 10px;
         }
 
         /* Dark Mode */
@@ -91,6 +94,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             --accent-dark: var(--cpsu-green-dark);
             --header-bg: rgba(15, 23, 42, 0.98);
             --footer-bg: rgba(30, 41, 59, 0.95);
+            --admin-modal-backdrop: rgba(0, 0, 0, 0.55);
         }
 
         /* Ensure proper contrast in dark mode */
@@ -107,6 +111,32 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             background-color: var(--bg-secondary);
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Lock background scroll when any admin modal is open */
+        body:has(.modal.active),
+        body:has(.profile-modal.active),
+        body:has(.modal-overlay.active),
+        body:has(#restrictedAccessModal[style*="display: flex"]),
+        body:has(#adminGlobalSearchMobileSheet:not(.hidden)) {
+            overflow: hidden;
+        }
+
+        /* Smooth fade transition for admin modal backdrops */
+        .modal,
+        .profile-modal,
+        .modal-overlay,
+        #restrictedAccessModal {
+            transition: background-color 0.2s ease, backdrop-filter 0.2s ease, -webkit-backdrop-filter 0.2s ease;
+        }
+
+        /* Avoid scroll chaining behind overlays */
+        .modal,
+        .profile-modal,
+        .modal-overlay,
+        #restrictedAccessModal,
+        #adminGlobalSearchMobileSheet {
+            overscroll-behavior: contain;
         }
 
         /* Ensure smooth transitions for all elements */
@@ -802,7 +832,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
             </div>
 
             <!-- Page Content – balanced spacing, landing-style background -->
-            <main class="relative z-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-4 pb-4 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:pt-6 sm:pb-6 lg:pl-8 lg:pr-8 lg:pt-8 lg:pb-8"
+            <main class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-4 pb-4 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:pt-6 sm:pb-6 lg:pl-8 lg:pr-8 lg:pt-8 lg:pb-8"
                 style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
                 @if (session('success'))
                     <div class="mb-6 p-4 rounded-xl flex items-center space-x-3 shadow-sm"
@@ -865,7 +895,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
     <!-- Restricted Access Modal -->
     <div id="restrictedAccessModal"
         class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overscroll-contain transition-all duration-300"
-        style="display: none; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));" x-cloak>
+        style="display: none; background-color: var(--admin-modal-backdrop); backdrop-filter: blur(var(--admin-modal-backdrop-blur)); -webkit-backdrop-filter: blur(var(--admin-modal-backdrop-blur)); padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));" x-cloak>
         <div class="relative my-auto w-full max-w-md max-h-[min(90dvh,100%)] transform overflow-y-auto overflow-x-hidden rounded-2xl p-5 sm:p-6 text-left align-middle shadow-xl transition-all"
             style="background: var(--card-bg); border: 1px solid var(--border-color);">
 

@@ -45,12 +45,9 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        .dark .profile-modal {
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: var(--admin-modal-backdrop);
+            backdrop-filter: blur(var(--admin-modal-backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--admin-modal-backdrop-blur));
         }
 
         .profile-modal.active {

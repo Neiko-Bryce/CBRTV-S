@@ -44,8 +44,9 @@
             position: fixed;
             inset: 0;
             z-index: 50;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            background-color: var(--admin-modal-backdrop);
+            backdrop-filter: blur(var(--admin-modal-backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--admin-modal-backdrop-blur));
             align-items: center;
             justify-content: center;
         }
