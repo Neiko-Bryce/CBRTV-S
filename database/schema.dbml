@@ -1,0 +1,343 @@
+// =============================================================================
+// Cloud-Based Real-Time Voting System (CBRTV-S)
+// Database schema for dbdiagram.io
+//
+// Generated from Laravel migrations in `database/migrations/` and Eloquent models
+// in `app/Models/`.
+//
+// Paste this file into https://dbdiagram.io/d to render the ER diagram.
+// =============================================================================
+
+Project CBRTV_S {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Cloud-Based Real-Time Voting System.
+    Multi-tenant: rows are scoped by `school_id` (tenant) and `organization_id`
+    (e.g. SSG, FLP, Classroom). Standard `created_at` / `updated_at` timestamps
+    are present on every table.
+  '''
+}
+
+// -----------------------------------------------------------------------------
+// Tenancy
+// -----------------------------------------------------------------------------
+
+Table schools {
+  id bigint [pk, increment]
+  name varchar [not null]
+  slug varchar [unique, not null]
+  location varchar [null]
+  is_active boolean [not null, default: true]
+  maintenance_mode boolean [not null, default: false]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table organizations {
+  id bigint [pk, increment]
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  name varchar [not null]
+  slug varchar [null]
+  code varchar [null]
+  description text [null]
+  logo_path varchar [null]
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (slug, school_id) [unique, name: 'organizations_slug_school_id_unique']
+    (code, school_id) [unique, name: 'organizations_code_school_id_unique']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Users / Students
+// -----------------------------------------------------------------------------
+
+Table users {
+  id bigint [pk, increment]
+  organization_id bigint [ref: > organizations.id, null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'set null on delete']
+  name varchar [not null]
+  email varchar [not null]
+  email_verified_at timestamp [null]
+  password varchar [not null]
+  usertype varchar [not null, default: 'student', note: 'admin or student']
+  is_super_admin boolean [not null, default: false]
+  password_regenerated_count int [not null, default: 0]
+  remember_token varchar [null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (organization_id, email) [unique, name: 'users_organization_id_email_unique']
+  }
+}
+
+Table students {
+  id bigint [pk, increment]
+  organization_id bigint [ref: > organizations.id, null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  student_id_number varchar [not null]
+  campus varchar [not null]
+  fname varchar [null]
+  lname varchar [not null]
+  mname varchar [null]
+  ext varchar [null]
+  gender varchar [null]
+  course varchar [null]
+  yearlevel varchar [null]
+  section varchar [null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (organization_id, student_id_number) [unique, name: 'students_organization_id_student_id_number_unique']
+    (student_id_number, school_id) [unique, name: 'students_student_id_number_school_id_unique']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Election structure
+// -----------------------------------------------------------------------------
+
+Table positions {
+  id bigint [pk, increment]
+  organization_id bigint [ref: > organizations.id, not null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  name varchar [not null]
+  description text [null]
+  number_of_slots int [not null, default: 1]
+  "order" int [not null, default: 0]
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table elections {
+  id bigint [pk, increment]
+  organization_id bigint [ref: > organizations.id, null, note: 'set null on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  election_id varchar [null, note: 'human-friendly election code']
+  election_name varchar [not null]
+  type_of_election varchar [not null]
+  description text [null]
+  venue varchar [null]
+  election_date date [not null]
+  timestarted time [null]
+  time_ended time [null]
+  status varchar [not null, default: 'upcoming']
+  show_live_results boolean [not null, default: false]
+  voter_capacity int [null]
+  course_filter_mode varchar(20) [not null, default: 'all']
+  allowed_courses json [null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (election_id, school_id) [unique, name: 'elections_election_id_school_id_unique']
+  }
+}
+
+Table partylists {
+  id bigint [pk, increment]
+  election_id bigint [ref: > elections.id, not null, note: 'cascade on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  name varchar [not null]
+  code varchar [null]
+  description text [null]
+  color varchar [null]
+  logo varchar [null]
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table candidates {
+  id bigint [pk, increment]
+  election_id bigint [ref: > elections.id, not null, note: 'cascade on delete']
+  position_id bigint [ref: > positions.id, not null, note: 'cascade on delete']
+  partylist_id bigint [ref: > partylists.id, null, note: 'set null on delete']
+  student_id bigint [ref: > students.id, null, note: 'set null on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  candidate_name varchar [not null]
+  photo varchar [null]
+  biography text [null]
+  platform text [null]
+  votes_count int [not null, default: 0]
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table votes {
+  id bigint [pk, increment]
+  election_id bigint [ref: > elections.id, not null, note: 'cascade on delete']
+  candidate_id bigint [ref: > candidates.id, not null, note: 'cascade on delete']
+  voter_id bigint [ref: > users.id, not null, note: 'cascade on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (election_id, voter_id, candidate_id) [unique, name: 'unique_vote']
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Auxiliary
+// -----------------------------------------------------------------------------
+
+Table password_regeneration_history {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id, not null, note: 'cascade on delete']
+  student_id varchar [not null]
+  regenerated_at timestamp [not null]
+  regenerated_by varchar [null, note: 'admin who regenerated']
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    user_id
+    student_id
+  }
+}
+
+Table landing_page_settings {
+  id bigint [pk, increment]
+  organization_id bigint [ref: > organizations.id, null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'cascade on delete']
+  section varchar [not null, note: 'about / features / team / etc.']
+  "key" varchar [not null]
+  value text [null]
+  image varchar [null]
+  extra json [null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (section, "key") [unique]
+  }
+}
+
+Table settings {
+  id bigint [pk, increment]
+  "key" varchar [unique, not null]
+  value text [null]
+  description varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// -----------------------------------------------------------------------------
+// Archive (frozen snapshot of completed elections)
+// -----------------------------------------------------------------------------
+
+Table archived_elections {
+  id bigint [pk, increment]
+  original_election_id bigint [unique, not null]
+  school_id bigint [ref: > schools.id, null, note: 'set null on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'set null on delete']
+  archived_by bigint [ref: > users.id, null, note: 'set null on delete']
+  election_id varchar [null]
+  election_name varchar [not null]
+  type_of_election varchar [null]
+  description text [null]
+  venue varchar [null]
+  election_date date [null]
+  timestarted time [null]
+  time_ended time [null]
+  status varchar [not null, default: 'completed']
+  show_live_results boolean [not null, default: false]
+  archived_at timestamp [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (school_id, archived_at)
+    (status, archived_at)
+    show_live_results
+    organization_id
+  }
+}
+
+Table archived_partylists {
+  id bigint [pk, increment]
+  original_partylist_id bigint [null]
+  archived_election_id bigint [ref: > archived_elections.id, not null, note: 'cascade on delete']
+  school_id bigint [ref: > schools.id, null, note: 'set null on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'set null on delete']
+  name varchar [not null]
+  code varchar [null]
+  description text [null]
+  color varchar [null]
+  logo varchar [null]
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    archived_election_id
+    school_id
+    organization_id
+    original_partylist_id
+  }
+}
+
+Table archived_candidates {
+  id bigint [pk, increment]
+  original_candidate_id bigint [null]
+  archived_election_id bigint [ref: > archived_elections.id, not null, note: 'cascade on delete']
+  archived_partylist_id bigint [ref: > archived_partylists.id, null, note: 'set null on delete']
+  original_position_id bigint [null]
+  student_id bigint [ref: > students.id, null, note: 'set null on delete']
+  school_id bigint [ref: > schools.id, null, note: 'set null on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'set null on delete']
+  position_name varchar [null]
+  position_order int [not null, default: 0]
+  number_of_slots int [not null, default: 1]
+  candidate_name varchar [not null]
+  photo varchar [null]
+  biography text [null]
+  platform text [null]
+  votes_count int [not null, default: 0]
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    archived_election_id
+    archived_partylist_id
+    school_id
+    organization_id
+    original_candidate_id
+    original_position_id
+  }
+}
+
+Table archived_votes {
+  id bigint [pk, increment]
+  original_vote_id bigint [null]
+  archived_election_id bigint [ref: > archived_elections.id, not null, note: 'cascade on delete']
+  archived_candidate_id bigint [ref: > archived_candidates.id, not null, note: 'cascade on delete']
+  voter_id bigint [ref: > users.id, null, note: 'set null on delete']
+  school_id bigint [ref: > schools.id, null, note: 'set null on delete']
+  organization_id bigint [ref: > organizations.id, null, note: 'set null on delete']
+  voted_at timestamp [null]
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    archived_election_id
+    archived_candidate_id
+    voter_id
+    school_id
+    organization_id
+    original_vote_id
+    voted_at
+  }
+}
